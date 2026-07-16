@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Dashboard from '@/components/Dashboard.vue'
 import Features from '@/components/Features.vue'
 import HowItWorks from '@/components/HowItWorks.vue'
 import LandingPage from '@/components/LandingPage.vue'
@@ -15,6 +14,9 @@ import StudentProfileS from '@/components/StudentProfileS.vue'
 import StudentProfileT from '@/components/StudentProfileS.vue'
 import Testimonials from '@/components/Testimonials.vue'
 import UploadCentre from '@/components/UploadCentre.vue'
+import Leaderboard from '@/components/Leaderboard.vue'
+import AdminDashboard from '@/components/AdminDashboard.vue'
+import UserDashboard from '@/components/UserDashboard.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,8 +34,16 @@ const router = createRouter({
       component: HowItWorks
     },
     {
-      path: '/dashboard',
-      component: Dashboard
+      path: '/admin-dashboard',
+      component: AdminDashboard
+    },
+    {
+      path: '/user-dashboard',
+      component: UserDashboard
+    },
+    {
+      path: '/dashboard/leaderboard',
+      component: Leaderboard
     },
     {
       path: '/login',
