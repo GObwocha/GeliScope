@@ -27,6 +27,7 @@ class ExamSeeder extends Seeder
 
         if ($c1 && $math && $t1) {
             $e1 = Exam::create([
+                'exam_code' => 'EXAM-2025-MATH-F1E',
                 'name' => 'Form 1 East Mathematics Mid-Term 1',
                 'subject_id' => $math->id,
                 'class_id' => $c1->id,
@@ -73,6 +74,7 @@ class ExamSeeder extends Seeder
 
         if ($c2 && $english && $t2) {
             $e2 = Exam::create([
+                'exam_code' => 'EXAM-2025-ENG-F2W',
                 'name' => 'Form 2 West English Mid-Term 1',
                 'subject_id' => $english->id,
                 'class_id' => $c2->id,

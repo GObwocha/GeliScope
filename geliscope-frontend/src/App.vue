@@ -47,7 +47,7 @@ const navItems = [
         <v-btn variant="text" to="/features" prepend-icon="mdi-line-scan">AI Vision</v-btn>
         <!-- <v-btn variant="text" to="/profile" color="accent" prepend-icon="mdi-account">Profile</v-btn> --> 
         <!-- Will review this after I set up the logins and sessions -->
-        <v-btn variant="text" to="/admin-dashboard" prepend-icon="mdi-view-dashboard">Dashboard</v-btn>
+        <v-btn variant="text" to="/user-dashboard" prepend-icon="mdi-view-dashboard">Dashboard</v-btn>
         <v-btn variant="text" to="/dashboard/upload-centre" color="accent" prepend-icon="mdi-cloud-upload">Uploading Base</v-btn>
         <v-btn variant="text" to="/dashboard/student-performance" prepend-icon="mdi-speedometer">Performance</v-btn>
         <v-btn variant="text" to="/dashboard/leaderboard" prepend-icon="mdi-clipboard">Leaderboard</v-btn>

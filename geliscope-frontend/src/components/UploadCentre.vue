@@ -182,8 +182,16 @@ const saveToMongoDB = async () => {
             <template v-slot:selection="{ item }">
               <div class="d-flex align-center font-weight-medium">
                 <v-icon color="secondary" size="18" class="mr-2">mdi-file-document-check</v-icon>
+                <v-chip v-if="item.raw.exam_code" size="x-small" color="secondary" variant="tonal" class="mr-2 font-mono font-weight-bold">{{ item.raw.exam_code }}</v-chip>
                 {{ item.raw.name }} (Term {{ item.raw.term }})
               </div>
+            </template>
+            <template v-slot:item="{ item, props }">
+              <v-list-item v-bind="props" :title="item.raw.name" :subtitle="item.raw.exam_code ? `Code: ${item.raw.exam_code} • Term ${item.raw.term}` : `Term ${item.raw.term}`">
+                <template v-slot:prepend>
+                  <v-chip size="x-small" color="secondary" variant="outlined" class="mr-2 font-mono font-weight-bold">{{ item.raw.exam_code || 'EX' }}</v-chip>
+                </template>
+              </v-list-item>
             </template>
           </v-select>
 

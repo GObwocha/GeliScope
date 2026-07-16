@@ -13,9 +13,9 @@ const skillProfile = ref({
   critical_evaluation: 65,
   careers: ['Data Scientist', 'Civil Engineer', 'Actuarial Analyst', 'AI Specialist'],
   recent_exams: [
-    { name: 'Form 2 Mid-Term 1 - Mathematics', date: '2026-03-15', score: '78/100', grade: 'B+' },
-    { name: 'Form 2 Mid-Term 1 - Physics', date: '2026-03-18', score: '84/100', grade: 'A-' },
-    { name: 'Form 2 Mid-Term 1 - Chemistry', date: '2026-03-20', score: '71/100', grade: 'B' }
+    { exam_code: 'EXAM-2026-M1-MATH', name: 'Form 2 Mid-Term 1 - Mathematics', date: '2026-03-15', score: '78/100', grade: 'B+' },
+    { exam_code: 'EXAM-2026-M1-PHYS', name: 'Form 2 Mid-Term 1 - Physics', date: '2026-03-18', score: '84/100', grade: 'A-' },
+    { exam_code: 'EXAM-2026-M1-CHEM', name: 'Form 2 Mid-Term 1 - Chemistry', date: '2026-03-20', score: '71/100', grade: 'B' }
   ]
 })
 
@@ -171,7 +171,10 @@ onMounted(async () => {
               </thead>
               <tbody>
                 <tr v-for="exam in skillProfile.recent_exams" :key="exam.name">
-                  <td class="font-weight-bold">{{ exam.name }}</td>
+                  <td class="font-weight-bold">
+                    <div>{{ exam.name }}</div>
+                    <v-chip v-if="exam.exam_code" size="x-small" color="secondary" variant="tonal" class="font-mono mt-1">{{ exam.exam_code }}</v-chip>
+                  </td>
                   <td class="text-caption text-medium-emphasis">{{ exam.date }}</td>
                   <td class="font-weight-black text-primary">{{ exam.score }}</td>
                   <td><v-chip size="small" color="success" variant="flat" class="font-weight-bold">{{ exam.grade }}</v-chip></td>

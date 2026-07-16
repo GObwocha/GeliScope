@@ -37,6 +37,7 @@ class ExamController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'exam_code' => 'nullable|string|unique:exams,exam_code|max:100',
             'name' => 'required|string|max:255',
             'subject_id' => 'required|exists:subjects,id',
             'class_id' => 'required|exists:classes,id',
@@ -68,6 +69,7 @@ class ExamController extends Controller
         $exam = Exam::findOrFail($id);
 
         $validated = $request->validate([
+            'exam_code' => 'sometimes|nullable|string|unique:exams,exam_code,' . $id . '|max:100',
             'name' => 'sometimes|required|string|max:255',
             'subject_id' => 'sometimes|required|exists:subjects,id',
             'class_id' => 'sometimes|required|exists:classes,id',

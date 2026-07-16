@@ -20,6 +20,7 @@ class ExamFactory extends Factory
     public function definition(): array
     {
         return [
+            'exam_code' => strtoupper(fake()->unique()->bothify('EX-####-????')),
             'name' => fake()->randomElement(['Mid-Term Exam 1', 'End of Term Exam 1', 'Mid-Term Exam 2', 'End of Term Exam 2']),
             'subject_id' => Subject::factory(),
             'class_id' => ClassGroup::factory(),
