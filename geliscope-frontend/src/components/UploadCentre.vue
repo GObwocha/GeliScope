@@ -5,8 +5,13 @@ import axios from 'axios'
 const schools = ref([])
 const students = ref([])
 const exams = ref([])
-const selectedStudent = ref(1)
-const selectedExam = ref(1)
+
+// Initialize as null instead of 1 to prevent the render crash
+const selectedStudent = ref(null)
+const selectedExam = ref(null)
+
+// Added a loading state for the initial API fetch
+const loadingData = ref(true)
 
 const files = ref([])
 const analyzing = ref(false)
@@ -15,25 +20,34 @@ const progressStep = ref('')
 const analysisResult = ref(null)
 
 onMounted(async () => {
+  loadingData.value = true // Start loading
   try {
     const [sRes, eRes] = await Promise.all([
       axios.get('/api/v1/schools'),
       axios.get('/api/v1/exams')
     ])
+    
     if (sRes.data && sRes.data.length > 0) {
       let allStus = []
       sRes.data.forEach(sc => {
         if (sc.students) allStus = allStus.concat(sc.students)
       })
       students.value = allStus
-      if (allStus.length > 0) selectedStudent.value = allStus[0].id
+      // Safely assign the first item's ID only after the array is populated
+      if (allStus.length > 0) {
+        selectedStudent.value = allStus[0].id
+      }
     }
+    
     if (eRes.data && eRes.data.length > 0) {
       exams.value = eRes.data
+      // Safely assign the first item's ID only after the array is populated
       selectedExam.value = eRes.data[0].id
     }
   } catch (err) {
     console.error('Error fetching dropdowns:', err)
+  } finally {
+    loadingData.value = false // Stop loading regardless of success or error
   }
 })
 
@@ -125,6 +139,7 @@ const saveToMongoDB = async () => {
             <v-icon color="primary" class="mr-2">mdi-cogs</v-icon> Assessment Configuration
           </h3>
 
+          <!-- FIX 4: Bound :loading and :disabled props to the new loadingData state -->
           <v-select
             v-model="selectedStudent"
             :items="students"
@@ -134,6 +149,8 @@ const saveToMongoDB = async () => {
             variant="outlined"
             density="comfortable"
             class="mb-4"
+            :loading="loadingData"
+            :disabled="loadingData"
           >
             <template v-slot:selection="{ item }">
               <div class="d-flex align-center">
@@ -149,6 +166,7 @@ const saveToMongoDB = async () => {
             </template>
           </v-select>
 
+          <!-- FIX 4: Bound :loading and :disabled props to the new loadingData state -->
           <v-select
             v-model="selectedExam"
             :items="exams"
@@ -158,6 +176,8 @@ const saveToMongoDB = async () => {
             variant="outlined"
             density="comfortable"
             class="mb-6"
+            :loading="loadingData"
+            :disabled="loadingData"
           >
             <template v-slot:selection="{ item }">
               <div class="d-flex align-center font-weight-medium">
