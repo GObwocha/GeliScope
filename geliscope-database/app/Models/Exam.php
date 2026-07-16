@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * created by a teacher.
  *
  * @property int    $id
+ * @property string|null $exam_code
  * @property string $name
  * @property int    $subject_id
  * @property int    $class_id
@@ -34,6 +35,7 @@ class Exam extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'exam_code',
         'name',
         'subject_id',
         'class_id',
