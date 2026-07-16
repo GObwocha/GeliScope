@@ -416,9 +416,9 @@ const switchRole = (role) => {
             </v-avatar>
             <div>
               <div class="d-flex align-center gap-2">
-                <v-chip v-if="activeExamPoint.exam_code" color="secondary" size="x-small" variant="outlined" class="font-mono font-weight-bold">{{ activeExamPoint.exam_code }}</v-chip>
+                <v-chip v-if="activeExamPoint.exam_code" color="secondary" size="x-small" variant="outlined" class="font-mono font-weight-bold ma-5">{{ activeExamPoint.exam_code }}</v-chip>
                 <span class="font-weight-black text-h6">{{ activeExamPoint.name }}</span>
-                <v-chip color="success" size="x-small" variant="flat" class="font-weight-bold">{{ activeExamPoint.grade }} Grade</v-chip>
+                <v-chip color="success" size="x-small" variant="flat" class="font-weight-bold ma-5">{{ activeExamPoint.grade }} Grade</v-chip>
               </div>
               <div class="text-caption text-medium-emphasis mt-0">
                 Period: {{ activeExamPoint.period }} &bull; Stream Benchmark: {{ activeExamPoint.stream_avg }}% &bull; Status: {{ activeExamPoint.status }}
@@ -428,16 +428,17 @@ const switchRole = (role) => {
 
           <div class="d-flex align-center gap-4">
             <div class="text-md-right border-l pl-4">
-              <div class="text-caption text-medium-emphasis font-weight-bold uppercase">Student Average vs Stream</div>
+              <div class="text-caption text-medium-emphasis font-weight-bold uppercas">Student Average vs Stream</div>
               <div class="text-h5 font-weight-black text-primary">
                 {{ activeExamPoint.avg }}%
                 <span class="text-body-2 font-weight-bold text-success ml-1">(+{{ (activeExamPoint.avg - activeExamPoint.stream_avg).toFixed(1) }}% vs stream)</span>
               </div>
             </div>
-            <v-btn color="primary" variant="tonal" to="/dashboard/upload-centre" prepend-icon="mdi-file-find-outline" class="rounded-xl font-weight-bold">
+            <v-spacer/>
+          </div>
+          <v-btn color="primary" variant="tonal" to="/dashboard/upload-centre" prepend-icon="mdi-file-find-outline" class="rounded-xl font-weight-bold" height="120" >
               View AI OCR Script
             </v-btn>
-          </div>
         </div>
       </v-card>
     </div>
