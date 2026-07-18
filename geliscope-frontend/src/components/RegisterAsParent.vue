@@ -27,23 +27,6 @@ const submit = () => {
 
 <template>
   <div class="w-100">
-    <!-- Google Auth Button -->
-    <v-btn 
-      block 
-      variant="outlined" 
-      size="large" 
-      class="mb-6 rounded-lg font-weight-bold text-none border-medium"
-      prepend-icon="mdi-google"
-    >
-      Sign up with Google
-    </v-btn>
-
-    <div class="d-flex align-center mb-6">
-      <v-divider></v-divider>
-      <span class="px-4 text-caption text-medium-emphasis font-weight-bold text-uppercase">Or sign up with email</span>
-      <v-divider></v-divider>
-    </div>
-
     <!-- Registration Form -->
     <v-form @submit.prevent="submit">
       <v-row dense>

@@ -55,7 +55,7 @@ const roleComponents = {
               @click="activeRole = 'teacher'"
               size="large"
             >
-              <v-icon start>mdi-human-chalkboard</v-icon> Teacher
+              <v-icon start>mdi-account-tie</v-icon> Teacher
             </v-btn>
             <v-btn 
               variant="tonal" 
@@ -67,6 +67,23 @@ const roleComponents = {
               <v-icon start>mdi-account-child-outline</v-icon> Parent
             </v-btn>
           </div>
+
+          <!-- Google Auth Button -->
+            <v-btn 
+              block 
+              variant="outlined" 
+              size="large" 
+              class="mb-6 rounded-lg font-weight-bold text-none border-medium"
+              prepend-icon="mdi-google"
+            >
+              Sign up with Google
+            </v-btn>
+
+            <div class="d-flex align-center mb-6">
+              <v-divider></v-divider>
+              <span class="text-medium-emphasis font-weight-bold text-uppercase">Or sign up with email</span>
+              <v-divider></v-divider>
+            </div>
 
           <!-- Dynamic Component Rendering -->
           <component :is="roleComponents[activeRole]" />
