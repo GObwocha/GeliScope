@@ -1,5 +1,393 @@
-<template>
-    <h1>Leaderboard</h1>
-</template>
 <script setup>
+import { ref, computed, onMounted } from 'vue'
+
+const loading = ref(true)
+const modalLoading = ref(false)
+const isModalOpen = ref(false)
+
+const exams = ref([
+  { id: 'exam1', name: 'Form 2 Mid Term - 2026' },
+  { id: 'exam2', name: 'Form 2 Term 1 - 2026' },
+  { id: 'exam3', name: 'Form 1 End of Year - 2025' },
+])
+
+const selectedExam = ref(exams.value[0].id)
+const leaderboardData = ref([])
+
+const selectedStudent = ref(null)
+
+// --- MOCK API CALLS --- //
+// Setup for future API integration
+const apiService = {
+  getLeaderboard(examId) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Mock data logic based on exam
+        let baseData = [
+          { id: 1, rank: 1, name: 'Alice Njoroge', score: 95, school: 'Alliance Girls High', county: 'Kiambu' },
+          { id: 2, rank: 2, name: 'Brian Otieno', score: 92, school: 'Maseno School', county: 'Kisumu' },
+          { id: 3, rank: 3, name: 'Grace Mumbua', score: 91, school: 'Mangu High School', county: 'Kiambu' },
+          { id: 4, rank: 4, name: 'Kevin Kiprop', score: 89, school: 'Kapsabet Boys', county: 'Nandi' },
+          { id: 5, rank: 5, name: 'Susan Wanjiku', score: 88, school: 'Kenya High School', county: 'Nairobi' },
+          { id: 6, rank: 6, name: 'David Ochieng', score: 85, school: 'Maranda High', county: 'Siaya' },
+        ]
+        
+        // Shuffle or change scores a bit based on examId for realism
+        if (examId === 'exam2') {
+           baseData[0].score = 91; baseData[0].rank = 2;
+           baseData[1].score = 94; baseData[1].rank = 1;
+           baseData.sort((a,b) => b.score - a.score)
+        } else if (examId === 'exam3') {
+           baseData[3].score = 93; baseData[3].rank = 1;
+           baseData[0].score = 92; baseData[0].rank = 2;
+           baseData[1].score = 90; baseData[1].rank = 3;
+           baseData[2].score = 88; baseData[2].rank = 4;
+           baseData.sort((a,b) => b.score - a.score)
+        }
+        
+        resolve({ data: baseData })
+      }, 600)
+    })
+  },
+  
+  getStudentSummary(studentId, examId) {
+     return new Promise((resolve) => {
+       setTimeout(() => {
+         const summary = {
+           marksHistory: [
+             { id: 'T1', score: 78 },
+             { id: 'T2', score: 85 },
+             { id: 'T3', score: 91 },
+             { id: 'Mid', score: Math.floor(Math.random() * 10) + 85 },
+           ],
+           strengths: [
+             { title: 'Quantitative Analysis', detail: 'Consistently scores above 90% in Mathematics and Physics.' },
+             { title: 'Language Arts', detail: 'Excellent essay structuring and vocabulary in English.' }
+           ]
+         }
+         resolve({ data: summary })
+       }, 500)
+     })
+  }
+}
+
+// --- LOGIC --- //
+
+const fetchLeaderboard = async () => {
+  loading.value = true
+  try {
+    const response = await apiService.getLeaderboard(selectedExam.value)
+    leaderboardData.value = response.data
+  } catch(e) {
+    console.error(e)
+  } finally {
+    loading.value = false
+  }
+}
+
+const openStudentProfile = async (student) => {
+  selectedStudent.value = { ...student } // Set basic info immediately
+  isModalOpen.value = true
+  modalLoading.value = true
+  
+  try {
+    const response = await apiService.getStudentSummary(student.id, selectedExam.value)
+    selectedStudent.value = { ...selectedStudent.value, ...response.data }
+  } catch (e) {
+    console.error(e)
+  } finally {
+    modalLoading.value = false
+  }
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+}
+
+// --- STYLING HELPERS --- //
+const getRankColor = (rank) => {
+  if (rank === 1) return 'text-warning' // Gold
+  if (rank === 2) return 'text-grey-darken-1' // Silver
+  if (rank === 3) return 'text-brown-darken-2' // Bronze
+  return 'text-high-emphasis'
+}
+
+const getScoreColor = (score) => {
+  if (score >= 90) return 'success'
+  if (score >= 80) return 'primary'
+  if (score >= 70) return 'warning'
+  return 'error'
+}
+
+// Chart Logic for Modal
+const chartMetrics = computed(() => {
+  if (!selectedStudent.value || !selectedStudent.value.marksHistory) return { points: [], polylineStr: '', width: 0, height: 0 }
+  
+  const history = selectedStudent.value.marksHistory
+  const scores = history.map(e => e.score)
+  const maxScore = Math.max(...scores)
+  const minScore = Math.min(...scores)
+  
+  const width = 400
+  const height = 160
+  const padLeft = 20
+  const padRight = 20
+  const padTop = 20
+  const padBottom = 25
+  
+  const plotWidth = width - padLeft - padRight
+  const plotHeight = height - padTop - padBottom
+  
+  const points = history.map((e, idx) => {
+    const x = padLeft + (idx / (history.length - 1)) * plotWidth
+    const y = height - padBottom - (e.score / 100) * plotHeight
+    return { ...e, x, y, isMax: e.score === maxScore, isMin: e.score === minScore }
+  })
+  
+  const polylineStr = points.map(p => `${p.x},${p.y}`).join(' ')
+  
+  return { points, maxScore, minScore, polylineStr, width, height }
+})
+
+const getBarColor = (score) => {
+  if (score === chartMetrics.value.maxScore) return 'bg-success text-success'
+  if (score === chartMetrics.value.minScore) return 'bg-error text-error'
+  return 'bg-high-emphasis text-high-emphasis'
+}
+
+onMounted(() => {
+  fetchLeaderboard()
+})
 </script>
+
+<template>
+  <v-container fluid class="bg-background min-vh-100 pa-6 font-family-sans">
+    <!-- Header Section -->
+    <v-row class="mb-4">
+       <v-col cols="12" class="d-flex justify-space-between align-center">
+         <div>
+           <h1 class="text-h3 font-weight-medium lh-tight mb-2">National Leaderboard</h1>
+           <div class="text-caption text-medium-emphasis">Top performing students across standard exams.</div>
+         </div>
+         <div style="width: 300px;">
+           <v-select
+             v-model="selectedExam"
+             :items="exams"
+             item-title="name"
+             item-value="id"
+             variant="outlined"
+             density="compact"
+             bg-color="surface"
+             hide-details
+             @update:modelValue="fetchLeaderboard"
+           >
+             <template v-slot:prepend-inner>
+               <v-icon size="small" class="mr-2 text-medium-emphasis">mdi-file-document-edit-outline</v-icon>
+             </template>
+           </v-select>
+         </div>
+       </v-col>
+    </v-row>
+
+    <!-- Loading State -->
+    <v-row v-if="loading">
+      <v-col class="d-flex justify-center my-12">
+        <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
+      </v-col>
+    </v-row>
+
+    <!-- Table Section -->
+    <v-row v-else>
+      <v-col cols="12">
+        <v-card class="rounded-xl bg-surface elevation-2 border overflow-hidden">
+           <v-table class="bg-transparent" hover>
+             <thead>
+               <tr>
+                 <th class="text-left font-weight-bold text-caption text-medium-emphasis text-uppercase px-6 py-4">Rank</th>
+                 <th class="text-left font-weight-bold text-caption text-medium-emphasis text-uppercase py-4">Student Name</th>
+                 <th class="text-left font-weight-bold text-caption text-medium-emphasis text-uppercase py-4">Average Score</th>
+                 <th class="text-left font-weight-bold text-caption text-medium-emphasis text-uppercase py-4">School</th>
+                 <th class="text-left font-weight-bold text-caption text-medium-emphasis text-uppercase py-4">County</th>
+                 <th class="text-right font-weight-bold text-caption text-medium-emphasis text-uppercase px-6 py-4">Actions</th>
+               </tr>
+             </thead>
+             <tbody>
+               <tr v-for="student in leaderboardData" :key="student.id" class="border-bottom-light align-middle">
+                 <td class="px-6 py-4">
+                   <div class="d-flex align-center gap-2">
+                     <span class="font-weight-bold text-body-1" :class="getRankColor(student.rank)">#{{ student.rank }}</span>
+                     <v-icon v-if="student.rank <= 3" size="small" color="warning" :class="getRankColor(student.rank).replace('text-', 'text-')">mdi-trophy</v-icon>
+                   </div>
+                 </td>
+                 <td class="py-4 font-weight-bold text-body-2">{{ student.name }}</td>
+                 <td class="py-4">
+                   <v-chip size="small" :color="getScoreColor(student.score)" variant="flat" class="font-weight-bold px-3">
+                     {{ student.score }}%
+                   </v-chip>
+                 </td>
+                 <td class="py-4 text-body-2 text-medium-emphasis">{{ student.school }}</td>
+                 <td class="py-4 text-body-2 text-medium-emphasis">{{ student.county }}</td>
+                 <td class="text-right px-6 py-4">
+                   <v-btn 
+                     size="small" 
+                     variant="tonal" 
+                     color="primary" 
+                     class="font-weight-bold rounded-lg text-none"
+                     @click="openStudentProfile(student)"
+                   >
+                     View Profile
+                   </v-btn>
+                 </td>
+               </tr>
+             </tbody>
+           </v-table>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Student Profile Modal -->
+    <v-dialog v-model="isModalOpen" max-width="600px" persistent>
+      <v-card class="rounded-xl bg-background border" v-if="selectedStudent">
+        <!-- Modal Header -->
+        <div class="d-flex justify-space-between align-center pa-6 border-bottom-light bg-surface">
+          <div class="d-flex align-center gap-4">
+            <v-avatar size="48" color="primary" variant="tonal">
+              <span class="font-weight-bold text-h6">{{ selectedStudent.name[0] }}</span>
+            </v-avatar>
+            <div>
+              <div class="text-h6 font-weight-bold lh-tight">{{ selectedStudent.name }}</div>
+              <div class="text-caption text-medium-emphasis">{{ selectedStudent.school }} • {{ selectedStudent.county }}</div>
+            </div>
+          </div>
+          <v-btn icon="mdi-close" variant="text" density="compact" @click="closeModal"></v-btn>
+        </div>
+
+        <div class="pa-6" style="max-height: 70vh; overflow-y: auto;">
+           <div class="text-caption text-medium-emphasis font-weight-bold text-uppercase mb-4">Academic Year Progress</div>
+           
+           <!-- Graph -->
+           <v-card class="bg-surface border elevation-0 rounded-lg pa-4 mb-6">
+             <div v-if="modalLoading" class="d-flex justify-center align-center py-8">
+               <v-progress-circular indeterminate color="primary" size="32"></v-progress-circular>
+             </div>
+             <div v-else class="position-relative w-100 d-flex flex-column justify-end pt-2" style="height: 180px;">
+                <svg :viewBox="`0 0 ${chartMetrics.width} ${chartMetrics.height}`" class="w-100 overflow-visible" style="max-height: 160px;">
+                 <polyline 
+                    :points="chartMetrics.polylineStr" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="3" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    class="text-primary" 
+                  />
+                 <g v-for="(p, i) in chartMetrics.points" :key="i">
+                   <circle 
+                      :cx="p.x" 
+                      :cy="p.y" 
+                      :r="4" 
+                      fill="currentColor" 
+                      class="text-surface" 
+                      stroke="currentColor" 
+                      stroke-width="2.5" 
+                      :class="getBarColor(p.score).split(' ')[1]" 
+                    />
+                    <text 
+                      :x="p.x" 
+                      :y="p.y - 12" 
+                      text-anchor="middle" 
+                      font-size="12" 
+                      font-weight="bold" 
+                      fill="currentColor" 
+                      :class="getBarColor(p.score).split(' ')[1]"
+                    >
+                      {{ p.score }}%
+                    </text>
+                    <text 
+                      :x="p.x" 
+                      :y="chartMetrics.height - 5" 
+                      text-anchor="middle" 
+                      font-size="10" 
+                      font-weight="bold" 
+                      fill="currentColor" 
+                      class="text-medium-emphasis"
+                    >
+                      {{ p.id }}
+                    </text>
+                 </g>
+                </svg>
+             </div>
+           </v-card>
+
+           <div class="text-caption text-medium-emphasis font-weight-bold text-uppercase mb-4">Core Competencies</div>
+           
+           <!-- Strengths Dropdown -->
+           <v-expansion-panels variant="accordion" v-if="!modalLoading">
+             <v-expansion-panel class="bg-surface border rounded-lg overflow-hidden">
+               <v-expansion-panel-title class="font-weight-bold text-success">
+                 <div class="d-flex align-center">
+                   <v-icon color="success" class="mr-3">mdi-star-circle-outline</v-icon> Academic Strengths
+                 </div>
+               </v-expansion-panel-title>
+               <v-expansion-panel-text class="pt-4 bg-background">
+                  <div v-for="(str, i) in selectedStudent.strengths" :key="i" class="mb-4 border-bottom-light pb-4 last:border-none last:pb-0">
+                     <div class="text-body-2 font-weight-bold">{{ str.title }}</div>
+                     <div class="text-caption text-medium-emphasis">{{ str.detail }}</div>
+                  </div>
+               </v-expansion-panel-text>
+             </v-expansion-panel>
+           </v-expansion-panels>
+           <div v-else class="d-flex justify-center align-center py-4">
+             <v-progress-circular indeterminate color="primary" size="24"></v-progress-circular>
+           </div>
+        </div>
+      </v-card>
+    </v-dialog>
+
+  </v-container>
+</template>
+
+<style scoped>
+.lh-tight {
+  line-height: 1.1 !important;
+}
+
+.gap-1 { gap: 4px; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.gap-6 { gap: 24px; }
+
+.hover-primary:hover {
+  color: rgb(var(--v-theme-primary)) !important;
+}
+
+.transition-colors {
+  transition: color 0.2s ease;
+}
+
+.bg-high-emphasis {
+  background-color: rgba(var(--v-theme-on-background), 0.9) !important;
+  color: rgb(var(--v-theme-background)) !important;
+}
+
+.text-high-emphasis {
+  color: rgba(var(--v-theme-on-background), 0.9) !important;
+}
+
+.border-bottom-light {
+  border-bottom: 1px solid rgba(var(--v-border-color), 0.05);
+}
+
+.last\:border-none:last-child {
+  border-bottom: none;
+}
+
+.last\:pb-0:last-child {
+  padding-bottom: 0 !important;
+}
+
+.font-family-sans {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+</style>

@@ -63,12 +63,17 @@
             </v-btn>
             
             <!--Form footer-->
-            <p class="text-caption text-medium-emphasis ">
-                By clicking continue, you agree to out 
+            <p class="text-caption text-medium-emphasis mb-4">
+                By clicking continue, you agree to our 
                 <a class="text-decoration-none text-high-emphasis font-weight-medium">Terms of Services</a>
                 and 
                 <a class="text-decoration-none text-high-emphasis font-weight-medium">Privacy Policy</a>
             </p>
+
+            <div class="text-body-2">
+                Don't have an account? 
+                <router-link to="/register" class="text-primary font-weight-bold text-decoration-none">Sign up</router-link>
+            </div>
 
         </v-card>       
     </v-container>

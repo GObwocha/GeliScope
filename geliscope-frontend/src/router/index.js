@@ -4,9 +4,7 @@ import HowItWorks from '@/components/HowItWorks.vue'
 import LandingPage from '@/components/LandingPage.vue'
 import Login from '@/components/Login.vue'
 import Pricing from '@/components/Pricing.vue'
-import RegisterAsParent from '@/components/RegisterAsParent.vue'
-import RegisterAsStudent from '@/components/RegisterAsStudent.vue'
-import RegisterAsTutor from '@/components/RegisterAsTutor.vue'
+import Register from '@/components/Register.vue'
 import Settings from '@/components/Settings.vue'
 import StudentPerformance from '@/components/StudentPerformance.vue'
 import StudentProfileP from '@/components/StudentProfileP.vue'
@@ -54,16 +52,8 @@ const router = createRouter({
       component: Pricing
     },
     {
-      path: '/register-as-parent',
-      component: RegisterAsParent
-    },
-    {
-      path: '/register-as-student',
-      component: RegisterAsStudent
-    },
-    {
-      path: '/register-as-tutor',
-      component: RegisterAsTutor
+      path: '/register',
+      component: Register
     },
     {
       path: '/dashboard/settings',
