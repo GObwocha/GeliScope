@@ -1,30 +1,35 @@
 <script setup>
 import { ref } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { computed } from 'vue'
 
+const authStore = useAuthStore()
 const loading = ref(false)
 
 // Simulating logged-in user context
-const currentUser = ref({
-  role: 'student', // 'student', 'teacher', or 'parent'
-  first_name: 'Isabella',
-  last_name: 'Lewis',
-  email: 'isabella.lewis@example.com',
-  password: '',
-  profile_photo_url: null,
-  
-  // Student specific
-  admission_number: 'ADM-2024-001',
-  school_id: 1,
-  current_class_id: 2,
-  date_of_birth: '2010-05-14',
+const currentUser = computed(() => {
+  return authStore.currentUser || {
+    role: 'student', // 'student', 'teacher', or 'parent'
+    first_name: 'Isabella',
+    last_name: 'Lewis',
+    email: 'isabella.lewis@example.com',
+    password: '',
+    profile_photo_url: null,
+    
+    // Student specific
+    admission_number: '',
+    school_id: 1,
+    current_class_id: 2,
+    date_of_birth: '',
 
-  // Parent specific
-  phone_number: '',
-  occupation: '',
+    // Parent specific
+    phone_number: '',
+    occupation: '',
 
-  // Teacher specific
-  employee_number: '',
-  specialization: ''
+    // Teacher specific
+    employee_number: '',
+    specialization: ''
+  }
 })
 
 const schools = ref([

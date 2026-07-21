@@ -1,24 +1,24 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 // Default / active role view switcher ('student' | 'parent' | 'teacher')
-const activeRole = ref('student')
+const activeRole = computed(() => authStore.activeRole || 'student')
 const loading = ref(true)
 
 // User Identity State
-const userProfile = ref({
-  first_name: 'Brian',
-  last_name: 'Otieno',
-  email: 'brian.otieno@student.geliscope.com',
-  role: 'student',
-  admission_number: 'ADM/2026/001',
-  employee_number: 'TSC/10001',
-  school: { name: 'Nairobi Academy Secondary', county: 'Nairobi' },
-  class_group: 'Form 2 East'
+const userProfile = computed(() => {
+  return authStore.currentUser || {
+    first_name: 'Guest',
+    last_name: 'User',
+    email: '',
+    role: 'student',
+    school: { name: 'Unknown School', county: '' },
+    class_group: 'Unknown Class'
+  }
 })
 
 // Chronological Trend of Student Average Marks (`exam_results` table sync across all historical terms)
@@ -106,48 +106,21 @@ const teacherStreamSummary = ref({
 })
 
 // Load active session from local storage or backend API
-onMounted(async () => {
-  try {
-    const savedUser = localStorage.getItem('geliscope_user')
-    if (savedUser) {
-      const parsed = JSON.parse(savedUser)
-      userProfile.value = { ...userProfile.value, ...parsed }
-      if (parsed.role) activeRole.value = parsed.role
-    } else {
-      const res = await axios.get('/api/v1/users?role=student')
-      if (res.data && res.data.length > 0) {
-        userProfile.value = { ...userProfile.value, ...res.data[0] }
-      }
-    }
-  } catch (err) {
-    console.log('Using default local profile state for UserDashboard')
-  } finally {
+onMounted(() => {
+  if (!authStore.isAuthenticated) {
+    router.push('/login')
+  } else {
     loading.value = false
   }
 })
 
-const switchRole = (role) => {
-  activeRole.value = role
-  userProfile.value.role = role
-  if (role === 'parent') {
-    userProfile.value.first_name = 'David'
-    userProfile.value.last_name = 'Otieno'
-  } else if (role === 'teacher') {
-    userProfile.value.first_name = 'John'
-    userProfile.value.last_name = 'Kamau'
-  } else {
-    userProfile.value.first_name = 'Brian'
-    userProfile.value.last_name = 'Otieno'
-  }
-}
-</script>
 
 <template>
   <v-container class="py-8">
     <!-- Top Welcome Banner & Role Switcher -->
     <v-card class="pa-6 rounded-3xl border bg-cardBg shadow-glow mb-8" elevation="4">
       <v-row align="center">
-        <v-col cols="12" md="7" class="d-flex align-center">
+        <v-col cols="12" md="12" class="d-flex align-center">
           <v-avatar :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="76" class="mr-6 font-weight-black text-h4 shadow-glow">
             <span class="text-white">{{ userProfile.first_name[0] }}{{ userProfile.last_name[0] }}</span>
           </v-avatar>
@@ -156,32 +129,19 @@ const switchRole = (role) => {
               <v-chip :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="small" variant="flat" class="font-weight-black uppercase">
                 {{ activeRole }} DASHBOARD
               </v-chip>
-              <v-chip :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="small" variant="outlined" class="font-weight-bold ma-5">
-                {{ activeRole === 'teacher' ? userProfile.employee_number : userProfile.admission_number }}
+              <v-chip :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="small" variant="outlined" class="font-weight-bold ma-5" v-if="activeRole === 'teacher' && userProfile.teacher">
+                {{ userProfile.teacher?.employee_number }}
+              </v-chip>
+              <v-chip :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="small" variant="outlined" class="font-weight-bold ma-5" v-if="activeRole === 'student' && userProfile.student">
+                {{ userProfile.student?.admission_number }}
               </v-chip>
             </div>
             <h1 class="text-h3 font-weight-black">Welcome back, {{ userProfile.first_name }}!</h1>
             <p class="text-subtitle-1 text-medium-emphasis mb-0 d-flex align-center mt-1">
               <v-icon size="18" color="primary" class="mr-1">mdi-school-outline</v-icon>
-              {{ userProfile.school.name }} &bull; {{ activeRole === 'teacher' ? 'TSC Examiner' : userProfile.class_group }}
+              {{ userProfile.student?.school?.name || userProfile.teacher?.school?.name || 'GeliScope Academy' }} &bull; {{ activeRole === 'teacher' ? 'TSC Examiner' : userProfile.class_group }}
             </p>
           </div>
-        </v-col>
-
-        <v-col cols="12" md="5" class="d-flex flex-column align-md-end justify-center">
-          <div class="text-caption font-weight-bold uppercase text-medium-emphasis mb-2">Preview Role Workspace</div>
-          <v-btn-toggle
-            v-model="activeRole"
-            mandatory
-            divided
-            variant="outlined"
-            color="primary"
-            class="rounded-xl overflow-hidden bg-surface"
-          >
-            <v-btn value="student" @click="switchRole('student')" prepend-icon="mdi-school-outline" class="font-weight-bold px-4">Student</v-btn>
-            <v-btn value="teacher" @click="switchRole('teacher')" prepend-icon="mdi-presentation-play" class="font-weight-bold px-4">Teacher</v-btn>
-            <v-btn value="parent" @click="switchRole('parent')" prepend-icon="mdi-account-heart-outline" class="font-weight-bold px-4">Parent</v-btn>
-          </v-btn-toggle>
         </v-col>
       </v-row>
     </v-card>

@@ -1,12 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 
-const activeRole = ref('parent')
+const authStore = useAuthStore()
+const activeRole = computed(() => authStore.activeRole || 'student')
 const graphType = ref('bar')
-
-const switchRole = (role) => {
-  activeRole.value = role
-}
 
 const displayData = computed(() => {
   if (activeRole.value === 'parent') {
@@ -171,25 +169,7 @@ const getBarColor = (score) => {
 <template>
   <v-container fluid class="bg-background min-vh-100 pa-6 font-family-sans">
     
-    <!-- Temporary Role Switcher -->
-    <v-row class="mb-4">
-      <v-col cols="12" class="d-flex justify-end align-center">
-        <span class="text-caption text-medium-emphasis mr-4 font-weight-bold uppercase">Preview Role Dashboard:</span>
-        <v-btn-toggle
-          v-model="activeRole"
-          mandatory
-          divided
-          variant="outlined"
-          color="primary"
-          class="rounded-lg bg-surface"
-          density="compact"
-        >
-          <v-btn value="student" class="font-weight-bold text-caption px-3">Student</v-btn>
-          <v-btn value="teacher" class="font-weight-bold text-caption px-3">Teacher</v-btn>
-          <v-btn value="parent" class="font-weight-bold text-caption px-3">Parent</v-btn>
-        </v-btn-toggle>
-      </v-col>
-    </v-row>
+    <!-- Role Switcher removed in favor of Auth state -->
 
     <!-- Header Navigation -->
     <!-- <v-row align="center" class="mb-8 px-4">

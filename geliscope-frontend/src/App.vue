@@ -1,11 +1,18 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useTheme } from 'vuetify'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const theme = useTheme()
 const router = useRouter()
+const authStore = useAuthStore()
 const drawer = ref(false)
+
+const handleLogout = async () => {
+  await authStore.logout()
+  router.push('/login')
+}
 
 const toggleTheme = () => {
   theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
@@ -58,9 +65,19 @@ const navItems = [
         <v-icon>{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
       </v-btn>
 
-      <v-btn color="primary" variant="flat" to="/login" prepend-icon="mdi-login" class="ml-2">
-        Log In
-      </v-btn>
+      <template v-if="authStore.isAuthenticated">
+        <v-btn variant="text" to="/user-dashboard" prepend-icon="mdi-view-dashboard" class="ml-2">
+          Dashboard
+        </v-btn>
+        <v-btn color="error" variant="flat" @click="handleLogout" prepend-icon="mdi-logout" class="ml-2">
+          Log Out
+        </v-btn>
+      </template>
+      <template v-else>
+        <v-btn color="primary" variant="flat" to="/login" prepend-icon="mdi-login" class="ml-2">
+          Log In
+        </v-btn>
+      </template>
     </v-app-bar>
 
     <!-- Navigation Drawer for Mobile / Sidebar -->

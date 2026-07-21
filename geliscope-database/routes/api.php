@@ -7,8 +7,13 @@ use App\Http\Controllers\Api\V1\ExamController;
 use App\Http\Controllers\Api\V1\AnalysisController;
 use App\Http\Controllers\Api\V1\LeaderboardController;
 use App\Http\Controllers\Api\V1\ParentController;
+use App\Http\Controllers\Api\V1\AuthController;
 
 Route::prefix('v1')->group(function () {
+    Route::post('auth/check-email', [AuthController::class, 'checkEmail']);
+    Route::post('auth/login', [AuthController::class, 'login']);
+    Route::middleware('auth:sanctum')->post('auth/logout', [AuthController::class, 'logout']);
+
     Route::apiResource('users', UserController::class);
 
     Route::apiResource('schools', SchoolController::class);
