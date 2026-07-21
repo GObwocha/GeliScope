@@ -44,7 +44,7 @@ const handleLogin = async () => {
   errorMsg.value = '';
   try {
     await authStore.login(email.value, password.value);
-    router.push('/user-dashboard'); // Or the active role dashboard
+    router.push('/dashboard'); // Or the active role dashboard
   } catch (error) {
     errorMsg.value = error.response?.data?.message || 'Incorrect password.';
   } finally {

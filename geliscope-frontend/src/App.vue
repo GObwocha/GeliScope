@@ -49,34 +49,36 @@ const navItems = [
 
       <v-spacer></v-spacer>
 
-      <div class="hidden-sm-and-down d-flex align-center gap-2 mr-3">
-        <v-btn variant="text" to="/" prepend-icon="mdi-home">Home</v-btn>
-        <v-btn variant="text" to="/features" prepend-icon="mdi-line-scan">AI Vision</v-btn>
+      <div >
+        
         <!-- <v-btn variant="text" to="/profile" color="accent" prepend-icon="mdi-account">Profile</v-btn> --> 
         <!-- Will review this after I set up the logins and sessions -->
-        <v-btn variant="text" to="/user-dashboard" prepend-icon="mdi-view-dashboard">Dashboard</v-btn>
+        
+        
+      </div>
+
+      
+
+      <template v-if="authStore.isAuthenticated" class="hidden-sm-and-down d-flex align-center gap-2 mr-3">
+        <v-btn variant="text" to="/dashboard" prepend-icon="mdi-view-dashboard">Dashboard</v-btn>
         <v-btn variant="text" to="/dashboard/upload-centre" prepend-icon="mdi-cloud-upload">Uploading Base</v-btn>
         <v-btn variant="text" to="/dashboard/student-performance" prepend-icon="mdi-speedometer">Performance</v-btn>
         <v-btn variant="text" to="/dashboard/leaderboard" prepend-icon="mdi-clipboard">Leaderboard</v-btn>
         <v-btn variant="text" to="/dashboard/settings" prepend-icon="mdi-cog">Settings</v-btn>
-      </div>
-
-      <v-btn icon @click="toggleTheme" variant="text" color="primary">
+        <v-btn icon @click="toggleTheme" variant="text" color="primary">
         <v-icon>{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
       </v-btn>
-
-      <template v-if="authStore.isAuthenticated">
-        <v-btn variant="text" to="/user-dashboard" prepend-icon="mdi-view-dashboard" class="ml-2">
-          Dashboard
-        </v-btn>
         <v-btn color="error" variant="flat" @click="handleLogout" prepend-icon="mdi-logout" class="ml-2">
           Log Out
         </v-btn>
       </template>
-      <template v-else>
-        <v-btn color="primary" variant="flat" to="/login" prepend-icon="mdi-login" class="ml-2">
-          Log In
-        </v-btn>
+      <template v-else >
+        <v-btn variant="text" to="/" prepend-icon="mdi-home">Home</v-btn>
+        <v-btn variant="text" to="/features" prepend-icon="mdi-line-scan">AI Vision</v-btn>
+        <v-btn icon @click="toggleTheme" variant="text" color="primary">
+        <v-icon>{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
+      </v-btn>
+        <v-btn color="primary" variant="flat" to="/login" prepend-icon="mdi-login" class="ml-2">Log In</v-btn>
       </template>
     </v-app-bar>
 

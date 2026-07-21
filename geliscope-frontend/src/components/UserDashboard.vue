@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -113,6 +114,7 @@ onMounted(() => {
     loading.value = false
   }
 })
+</script>
 
 
 <template>

@@ -36,7 +36,7 @@ const router = createRouter({
       component: AdminDashboard
     },
     {
-      path: '/user-dashboard',
+      path: '/dashboard',
       component: UserDashboard
     },
     {
