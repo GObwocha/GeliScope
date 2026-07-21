@@ -6,6 +6,14 @@ body {
   color: #FFFFFF;
 }
 
+.v-application {
+  font-family: 'Outfit', sans-serif !important;
+}
+
+.v-application [class*="text-"] {
+  font-family: 'Outfit', sans-serif !important;
+}
+
 /* Animations */
 @keyframes float {
   0% { transform: translateY(0px); }
