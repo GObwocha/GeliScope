@@ -2,11 +2,17 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useTheme } from 'vuetify'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const theme = useTheme()
 const drawer = ref(false)
+
+const toggleTheme = () => {
+  theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+}
 
 const handleLogout = async () => {
   await authStore.logout()
@@ -48,7 +54,7 @@ const isDashboard = computed(() => {
           <v-avatar color="secondary" size="40" class="mr-3 shadow-glow" rounded="lg">
             <v-icon color="background">mdi-shield-check</v-icon>
           </v-avatar>
-          <div class="text-h6 font-weight-bold d-flex align-center text-white">
+          <div class="text-h6 font-weight-bold d-flex align-center">
             GeliScope 
           </div>
         </div>
@@ -73,12 +79,18 @@ const isDashboard = computed(() => {
             <template v-else>
               <v-btn color="secondary" variant="flat" to="/dashboard" class="pill-btn px-6 mx-2">Go to Dashboard</v-btn>
             </template>
-            <v-btn color="error" variant="text" @click="handleLogout" class="pill-btn ml-2">Log Out</v-btn>
+            <v-btn icon @click="toggleTheme" variant="text" class="ml-2">
+              <v-icon>{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
+            </v-btn>
+            <v-btn color="error" variant="flat" @click="handleLogout" class="pill-btn ml-2 text-white">Log Out</v-btn>
           </div>
         </template>
         <template v-else>
           <div class="hidden-sm-and-down d-flex align-center">
-            <v-btn variant="outlined" color="muted" class="pill-btn px-6 text-white border-opacity-50 mx-4" to="/login">Log In</v-btn>
+            <v-btn icon @click="toggleTheme" variant="text" class="mx-2">
+              <v-icon>{{ theme.global.current.value.dark ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
+            </v-btn>
+            <v-btn variant="outlined" color="muted" class="pill-btn px-6 text-white border-opacity-50 mx-2" to="/login">Log In</v-btn>
             <v-btn color="secondary" variant="flat" class="pill-btn px-6 text-background font-weight-bold" to="/register">Get started for free</v-btn>
           </div>
         </template>
@@ -91,7 +103,7 @@ const isDashboard = computed(() => {
         <v-avatar color="secondary" size="32" class="mr-3" rounded="sm">
           <v-icon color="background" size="small">mdi-shield-check</v-icon>
         </v-avatar>
-        <span class="font-weight-bold text-white">GeliScope</span>
+        <span class="font-weight-bold ">GeliScope</span>
       </div>
       <v-list density="compact" nav>
         <template v-if="isDashboard && authStore.isAuthenticated">
@@ -103,7 +115,16 @@ const isDashboard = computed(() => {
       </v-list>
       <div class="pa-4" v-if="!authStore.isAuthenticated">
         <v-btn block variant="outlined" color="white" class="mb-4 pill-btn" to="/login">Log In</v-btn>
-        <v-btn block color="secondary" variant="flat" class="pill-btn text-background" to="/register">Get started</v-btn>
+        <v-btn block color="secondary" variant="flat" class="pill-btn text-background mb-4" to="/register">Get started</v-btn>
+        <v-btn block variant="tonal" @click="toggleTheme" class="pill-btn">
+          Toggle {{ theme.global.current.value.dark ? 'Light' : 'Dark' }} Mode
+        </v-btn>
+      </div>
+      <div class="pa-4" v-else>
+        <v-btn block variant="tonal" @click="toggleTheme" class="pill-btn">
+          Toggle {{ theme.global.current.value.dark ? 'Light' : 'Dark' }} Mode
+        </v-btn>
+        <v-btn block color="error" variant="flat" @click="handleLogout" class="pill-btn text-white">Log Out</v-btn>
       </div>
     </v-navigation-drawer>
 
@@ -124,7 +145,7 @@ const isDashboard = computed(() => {
         <v-avatar color="secondary" size="24" class="mr-2" rounded="sm">
           <v-icon color="background" size="x-small">mdi-shield-check</v-icon>
         </v-avatar>
-        <span class="font-weight-bold text-white">GeliScope</span>
+        <span class="font-weight-bold">GeliScope</span>
       </div>
       <div class="text-caption text-muted max-w-xl">
         AI Vision Assessment Engine built for inclusive and quality education.

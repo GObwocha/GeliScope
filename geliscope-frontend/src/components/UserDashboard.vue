@@ -352,9 +352,9 @@ onMounted(() => {
           </svg>
 
           <!-- Timeline Scroller Chips -->
-          <div class="d-flex align-center justify-space-between mt-2 pt-3 border-t">
-            <span class="text-caption font-weight-bold text-medium-emphasis">Select Exam Checkpoint (E1 - E12):</span>
-            <div class="d-flex gap-2 overflow-x-auto py-1">
+          <div class="d-flex flex-column flex-md-row align-start align-md-center justify-space-between mt-2 pt-3 border-t gap-2">
+            <span class="text-caption font-weight-bold text-medium-emphasis mb-2 mb-md-0">Select Exam Checkpoint (E1 - E12):</span>
+            <div class="d-flex gap-2 overflow-x-auto py-1 w-100" style="scrollbar-width: none;">
               <v-chip
                 v-for="pt in trendExams"
                 :key="pt.id"
@@ -362,7 +362,7 @@ onMounted(() => {
                 :variant="activeExamPoint.id === pt.id ? 'flat' : 'outlined'"
                 size="small"
                 @click="activeExamPoint = pt"
-                class="font-weight-bold cursor-pointer"
+                class="font-weight-bold cursor-pointer flex-shrink-0"
               >
                 E{{ pt.id }}: {{ pt.avg }}%
               </v-chip>
@@ -371,36 +371,35 @@ onMounted(() => {
         </div>
 
         <!-- Selected Assessment Checkpoint Detail Card -->
-        <div class="pa-5 rounded-2xl border bg-surface d-flex flex-column flex-md-row justify-space-between align-md-center">
-          <div class="d-flex align-center mb-3 mb-md-0">
-            <v-avatar color="primary" size="52" variant="tonal" class="mr-4 font-weight-black text-h6">
+        <div class="pa-4 pa-sm-5 rounded-2xl border bg-surface d-flex flex-column justify-space-between">
+          <div class="d-flex flex-column flex-sm-row align-sm-center mb-4">
+            <v-avatar color="primary" size="52" variant="tonal" class="mr-sm-4 mb-3 mb-sm-0 font-weight-black text-h6 align-self-start align-self-sm-center">
               E{{ activeExamPoint.id }}
             </v-avatar>
-            <div>
-              <div class="d-flex align-center gap-2">
-                <v-chip v-if="activeExamPoint.exam_code" color="secondary" size="x-small" variant="outlined" class="font-mono font-weight-bold ma-5">{{ activeExamPoint.exam_code }}</v-chip>
-                <span class="font-weight-black text-h6">{{ activeExamPoint.name }}</span>
-                <v-chip color="success" size="x-small" variant="flat" class="font-weight-bold ma-5">{{ activeExamPoint.grade }} Grade</v-chip>
+            <div class="w-100">
+              <div class="d-flex flex-wrap align-center gap-2 mb-1">
+                <v-chip v-if="activeExamPoint.exam_code" color="secondary" size="x-small" variant="outlined" class="font-mono font-weight-bold">{{ activeExamPoint.exam_code }}</v-chip>
+                <span class="font-weight-black text-h6" style="line-height: 1.2;">{{ activeExamPoint.name }}</span>
+                <v-chip color="success" size="x-small" variant="flat" class="font-weight-bold">{{ activeExamPoint.grade }} Grade</v-chip>
               </div>
-              <div class="text-caption text-medium-emphasis mt-0">
+              <div class="text-caption text-medium-emphasis mt-1" style="line-height: 1.4;">
                 Period: {{ activeExamPoint.period }} &bull; Stream Benchmark: {{ activeExamPoint.stream_avg }}% &bull; Status: {{ activeExamPoint.status }}
               </div>
             </div>
           </div>
 
-          <div class="d-flex align-center gap-4">
-            <div class="text-md-right border-l pl-4">
-              <div class="text-caption text-medium-emphasis font-weight-bold uppercas">Student Average vs Stream</div>
+          <div class="d-flex flex-column flex-md-row align-start align-md-center gap-4 pt-3 border-t">
+            <div class="w-100">
+              <div class="text-caption text-medium-emphasis font-weight-bold uppercase">Student Average vs Stream</div>
               <div class="text-h5 font-weight-black text-primary">
                 {{ activeExamPoint.avg }}%
                 <span class="text-body-2 font-weight-bold text-success ml-1">(+{{ (activeExamPoint.avg - activeExamPoint.stream_avg).toFixed(1) }}% vs stream)</span>
               </div>
             </div>
-            <v-spacer/>
-          </div>
-          <v-btn color="primary" variant="tonal" to="/dashboard/upload-centre" prepend-icon="mdi-file-find-outline" class="rounded-xl font-weight-bold" height="120" >
+            <v-btn color="primary" variant="tonal" to="/dashboard/upload-centre" prepend-icon="mdi-file-find-outline" class="rounded-xl font-weight-bold align-self-stretch align-self-md-center" height="48">
               View AI OCR Script
             </v-btn>
+          </div>
         </div>
       </v-card>
     </div>
@@ -520,53 +519,55 @@ onMounted(() => {
     </div>
 
     <!-- MySQL Relational Assessment Table (Shown strictly for Parent and Teacher workspaces) -->
-    <v-card v-if="activeRole !== 'student'" class="pa-6 rounded-3xl border bg-cardBg mt-8 shadow-glow" elevation="4">
-      <div class="d-flex justify-space-between align-center mb-4">
-        <div>
-          <h2 class="text-h5 font-weight-black d-flex align-center">
+    <v-card v-if="activeRole !== 'student'" class="pa-4 pa-md-6 rounded-3xl border bg-cardBg mt-8 shadow-glow" elevation="4">
+      <div class="d-flex flex-column flex-md-row justify-space-between align-md-center mb-4">
+        <div class="mb-3 mb-md-0">
+          <h2 class="text-h5 font-weight-black d-flex align-center" style="word-break: break-word;">
             <v-icon color="primary" class="mr-2">mdi-table-check</v-icon>
             Verified Assessment Records (exam_results MySQL Table)
           </h2>
           <p class="text-caption text-medium-emphasis mb-0">Structured ACID grade sync linked via mongo_analysis_id to detailed vision reports</p>
         </div>
-        <v-btn size="small" color="primary" variant="tonal" to="/dashboard/leaderboard">View Academic Leaderboard</v-btn>
+        <v-btn color="primary" variant="tonal" to="/dashboard/leaderboard" class="align-self-start align-self-md-center">View Academic Leaderboard</v-btn>
       </div>
 
-      <v-table class="bg-transparent">
-        <thead>
-          <tr>
-            <th class="font-weight-bold text-medium-emphasis">Exam / Assessment Name</th>
-            <th class="font-weight-bold text-medium-emphasis">Date Recorded</th>
-            <th class="font-weight-bold text-medium-emphasis">Score</th>
-            <th class="font-weight-bold text-medium-emphasis">Grade</th>
-            <th class="font-weight-bold text-medium-emphasis">Verification Status</th>
-            <th class="font-weight-bold text-medium-emphasis text-right">Diagnostic Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="exam in recentExams" :key="exam.id">
-            <td class="font-weight-bold py-4">
-              <div>{{ exam.title }}</div>
-              <v-chip v-if="exam.exam_code" size="x-small" color="primary" variant="tonal" class="font-mono mt-1">{{ exam.exam_code }}</v-chip>
-            </td>
-            <td class="text-medium-emphasis py-4">{{ exam.date }}</td>
-            <td class="font-weight-black text-primary py-4">{{ exam.score }} / {{ exam.max_score }}</td>
-            <td class="py-4">
-              <v-chip :color="exam.grade.startsWith('A') ? 'success' : (exam.grade.startsWith('B') ? 'primary' : 'warning')" size="small" variant="flat" class="font-weight-bold">
-                {{ exam.grade }}
-              </v-chip>
-            </td>
-            <td class="py-4">
-              <v-chip :color="exam.status === 'Verified' ? 'success' : 'warning'" size="small" variant="tonal" class="font-weight-bold">
-                {{ exam.status }}
-              </v-chip>
-            </td>
-            <td class="py-4 text-right">
-              <v-btn size="small" variant="tonal" color="accent" to="/dashboard/upload-centre" prepend-icon="mdi-eye">AI Vision Report</v-btn>
-            </td>
-          </tr>
-        </tbody>
-      </v-table>
+      <div class="overflow-x-auto">
+        <v-table class="bg-transparent" style="min-width: 800px;">
+          <thead>
+            <tr>
+              <th class="font-weight-bold text-medium-emphasis text-no-wrap">Exam / Assessment Name</th>
+              <th class="font-weight-bold text-medium-emphasis text-no-wrap">Date Recorded</th>
+              <th class="font-weight-bold text-medium-emphasis text-no-wrap">Score</th>
+              <th class="font-weight-bold text-medium-emphasis text-no-wrap">Grade</th>
+              <th class="font-weight-bold text-medium-emphasis text-no-wrap">Verification Status</th>
+              <th class="font-weight-bold text-medium-emphasis text-right text-no-wrap">Diagnostic Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="exam in recentExams" :key="exam.id">
+              <td class="font-weight-bold py-4">
+                <div>{{ exam.title }}</div>
+                <v-chip v-if="exam.exam_code" size="x-small" color="primary" variant="tonal" class="font-mono mt-1">{{ exam.exam_code }}</v-chip>
+              </td>
+              <td class="text-medium-emphasis py-4 text-no-wrap">{{ exam.date }}</td>
+              <td class="font-weight-black text-primary py-4 text-no-wrap">{{ exam.score }} / {{ exam.max_score }}</td>
+              <td class="py-4">
+                <v-chip :color="exam.grade.startsWith('A') ? 'success' : (exam.grade.startsWith('B') ? 'primary' : 'warning')" size="small" variant="flat" class="font-weight-bold">
+                  {{ exam.grade }}
+                </v-chip>
+              </td>
+              <td class="py-4 text-no-wrap">
+                <v-chip :color="exam.status === 'Verified' ? 'success' : 'warning'" size="small" variant="tonal" class="font-weight-bold">
+                  {{ exam.status }}
+                </v-chip>
+              </td>
+              <td class="py-4 text-right text-no-wrap">
+                <v-btn size="small" variant="tonal" color="accent" to="/dashboard/upload-centre" prepend-icon="mdi-eye">AI Vision Report</v-btn>
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
+      </div>
     </v-card>
   </v-container>
 </template>
