@@ -88,7 +88,7 @@ const isDashboard = computed(() => {
         <template v-else>
           <div class="hidden-sm-and-down d-flex align-center">
             <v-btn icon @click="toggleTheme" variant="text" class="mx-2">
-              <v-icon>{{ theme.global.current.value.dark ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
+              <v-icon>{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
             </v-btn>
             <v-btn variant="outlined" color="muted" class="pill-btn px-6 text-white border-opacity-50 mx-2" to="/login">Log In</v-btn>
             <v-btn color="secondary" variant="flat" class="pill-btn px-6 text-background font-weight-bold" to="/register">Get started for free</v-btn>

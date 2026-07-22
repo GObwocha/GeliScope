@@ -163,7 +163,7 @@ onMounted(() => {
               </div>
               <h2 class="text-h5 font-weight-black mb-2">Scan & Evaluate Exam Script</h2>
               <p class="text-subtitle-2 text-medium-emphasis mb-6">
-                Upload your handwritten paper (.jpg, .png, .pdf) for instant diagram OCR extraction and question-by-question Bloom's taxonomy breakdown.
+                Upload your handwritten paper (.jpg, .png, .pdf) .
               </p>
             </div>
             <div>
@@ -186,7 +186,7 @@ onMounted(() => {
                   <v-icon color="secondary" class="mr-2">mdi-brain</v-icon>
                   Bloom's Taxonomy Cognitive Breakdown
                 </h2>
-                <p class="text-caption text-medium-emphasis mb-0">Unstructured AI diagnostics synced from MongoDB (exam_analyses collection)</p>
+                
               </div>
               <v-chip color="secondary" variant="tonal" size="small" class="font-weight-bold">Updated: {{ bloomsMastery.last_analyzed }}</v-chip>
             </div>
@@ -246,11 +246,9 @@ onMounted(() => {
             </div>
             <h2 class="text-h4 font-weight-black d-flex align-center">
               <v-icon color="primary" size="32" class="mr-3">mdi-chart-line-variant</v-icon>
-              Chronological Trend of Student Average Marks (exam_results)
+              Chronological Trend of Student Average Marks
             </h2>
-            <p class="text-subtitle-2 text-medium-emphasis mb-0 mt-1">
-              Tracks continuous overall average mark performance across every term assessment from Form 1 Opener up until presently (`85.4%`).
-            </p>
+           
           </div>
 
           <!-- KPI Summary Cards -->
@@ -378,9 +376,9 @@ onMounted(() => {
             </v-avatar>
             <div class="w-100">
               <div class="d-flex flex-wrap align-center gap-2 mb-1">
-                <v-chip v-if="activeExamPoint.exam_code" color="secondary" size="x-small" variant="outlined" class="font-mono font-weight-bold">{{ activeExamPoint.exam_code }}</v-chip>
+                <v-chip v-if="activeExamPoint.exam_code" color="secondary" size="x-small" variant="outlined" class="font-mono font-weight-bold ma-3">{{ activeExamPoint.exam_code }}</v-chip>
                 <span class="font-weight-black text-h6" style="line-height: 1.2;">{{ activeExamPoint.name }}</span>
-                <v-chip color="success" size="x-small" variant="flat" class="font-weight-bold">{{ activeExamPoint.grade }} Grade</v-chip>
+                <v-chip color="success" size="x-small" variant="flat" class="font-weight-bold ma-3">{{ activeExamPoint.grade }} Grade</v-chip>
               </div>
               <div class="text-caption text-medium-emphasis mt-1" style="line-height: 1.4;">
                 Period: {{ activeExamPoint.period }} &bull; Stream Benchmark: {{ activeExamPoint.stream_avg }}% &bull; Status: {{ activeExamPoint.status }}
@@ -396,7 +394,7 @@ onMounted(() => {
                 <span class="text-body-2 font-weight-bold text-success ml-1">(+{{ (activeExamPoint.avg - activeExamPoint.stream_avg).toFixed(1) }}% vs stream)</span>
               </div>
             </div>
-            <v-btn color="primary" variant="tonal" to="/dashboard/upload-centre" prepend-icon="mdi-file-find-outline" class="rounded-xl font-weight-bold align-self-stretch align-self-md-center" height="48">
+            <v-btn color="primary" variant="tonal" to="/dashboard/upload-centre" prepend-icon="mdi-file-find-outline" class="rounded-xl font-weight-bold align-self-stretch align-self-md-center ma-3" height="48">
               View AI OCR Script
             </v-btn>
           </div>
