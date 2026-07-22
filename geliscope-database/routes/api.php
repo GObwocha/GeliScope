@@ -13,7 +13,9 @@ Route::prefix('v1')->group(function () {
     // Unprotected Routes (Login and Registration)
     Route::post('auth/check-email', [AuthController::class, 'checkEmail']);
     Route::post('auth/login', [AuthController::class, 'login']);
-    Route::post('users', [UserController::class, 'store']); // Registration
+    Route::post('register-user', [UserController::class, 'store']); // Registration
+    Route::get('schools', [SchoolController::class, 'index']); // For registration
+    Route::get('schools/{id}/classes', [SchoolController::class, 'classes']); // For registration
 
     // Protected Routes
     Route::middleware('auth:sanctum')->group(function () {
@@ -21,8 +23,7 @@ Route::prefix('v1')->group(function () {
 
         Route::apiResource('users', UserController::class)->except(['store']);
 
-        Route::apiResource('schools', SchoolController::class);
-        Route::get('schools/{id}/classes', [SchoolController::class, 'classes']);
+        Route::apiResource('schools', SchoolController::class)->except(['index']);
         Route::post('schools/{id}/classes', [SchoolController::class, 'storeClass']);
 
         Route::apiResource('exams', ExamController::class);
