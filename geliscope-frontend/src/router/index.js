@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import Features from '@/components/Features.vue'
 import HowItWorks from '@/components/HowItWorks.vue'
 import LandingPage from '@/components/LandingPage.vue'
@@ -21,69 +22,97 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      component: LandingPage
+      component: LandingPage,
+      meta: { requiresAuth: false }
     },
     {
       path: '/features',
-      component: Features
+      component: Features,
+      meta: { requiresAuth: false }
     },
     {
       path: '/how-it-works',
-      component: HowItWorks
+      component: HowItWorks,
+      meta: { requiresAuth: false }
     },
     {
       path: '/admin-dashboard',
-      component: AdminDashboard
+      component: AdminDashboard,
+      meta: { requiresAuth: true }
     },
     {
-      path: '/user-dashboard',
-      component: UserDashboard
+      path: '/dashboard',
+      component: UserDashboard,
+      meta: { requiresAuth: true }
     },
     {
       path: '/dashboard/leaderboard',
-      component: Leaderboard
+      component: Leaderboard,
+      meta: { requiresAuth: true }
     },
     {
       path: '/login',
-      component: Login
+      component: Login,
+      meta: { requiresAuth: false }
     },
     {
       path: '/pricing',
-      component: Pricing
+      component: Pricing,
+      meta: { requiresAuth: false }
     },
     {
       path: '/register',
-      component: Register
+      component: Register,
+      meta: { requiresAuth: false }
     },
     {
       path: '/dashboard/settings',
-      component: Settings
+      component: Settings,
+      meta: { requiresAuth: true }
     },
     {
       path: '/dashboard/student-performance',
-      component: StudentPerformance
+      component: StudentPerformance,
+      meta: { requiresAuth: true }
     },
     {
       path: '/dashboard/student-profile-parent',
-      component: StudentProfileP
+      component: StudentProfileP,
+      meta: { requiresAuth: true }
     },
     {
       path: '/dashboard/student-profile-student',
-      component: StudentProfileS
+      component: StudentProfileS,
+      meta: { requiresAuth: true }
     },
     {
       path: '/dashboard/student-profile-tutor',
-      component: StudentProfileT
+      component: StudentProfileT,
+      meta: { requiresAuth: true }
     },
     {
       path: '/testimonials',
-      component: Testimonials
+      component: Testimonials,
+      meta: { requiresAuth: false }
     },
     {
       path: '/dashboard/upload-centre',
-      component: UploadCentre
+      component: UploadCentre,
+      meta: { requiresAuth: true }
     }
   ],
+})
+
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next('/login')
+  } else if ((to.path === '/login' || to.path === '/register') && authStore.isAuthenticated) {
+    next('/dashboard')
+  } else {
+    next()
+  }
 })
 
 export default router

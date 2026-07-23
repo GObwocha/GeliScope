@@ -1,9 +1,17 @@
 <script setup>
-import { ref } from 'vue'
+import axios from 'axios'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useSchoolStore } from '@/stores/schools'
 
 const router = useRouter()
+const authStore = useAuthStore()
+const schoolStore = useSchoolStore()
+
 const loading = ref(false)
+const errorMsg = ref('')
+const formRef = ref(null)
 
 const form = ref({
   first_name: '',
@@ -13,37 +21,58 @@ const form = ref({
   admission_number: '',
   school_id: null,
   current_class_id: null,
-  date_of_birth: ''
+  date_of_birth: '',
+  role: 'student'
 })
 
-const schools = ref([
-  { id: 1, name: 'Alliance High School' },
-  { id: 2, name: 'Maseno School' },
-  { id: 3, name: 'Kenya High School' }
-])
+const rules = {
+  required: value => !!value || 'Required.',
+  min: v => v.length >= 8 || 'Min 8 characters',
+  email: v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
+}
 
-const classes = ref([
-  { id: 1, name: 'Form 1' },
-  { id: 2, name: 'Form 2' },
-  { id: 3, name: 'Form 3' },
-  { id: 4, name: 'Form 4' }
-])
+onMounted(() => {
+  schoolStore.fetchSchools()
+})
 
-const submit = () => {
+watch(() => form.value.school_id, (newSchoolId) => {
+  form.value.current_class_id = null
+  if (newSchoolId) {
+    schoolStore.fetchClasses(newSchoolId)
+  } else {
+    schoolStore.classes = []
+  }
+})
+
+const submit = async () => {
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
   loading.value = true
-  console.log('Registering student:', form.value)
-  // Simulate API call and redirect
-  setTimeout(() => {
-    loading.value = false
+  errorMsg.value = ''
+  try {
+    await axios.post('/api/v1/register-user', form.value)
+    await authStore.login(form.value.email, form.value.password)
     router.push('/dashboard')
-  }, 1000)
+  } catch (error) {
+    console.error(error)
+    if (error.response?.data?.errors) {
+      const errors = error.response.data.errors
+      errorMsg.value = Object.values(errors).map(err => err[0]).join(' ')
+    } else {
+      errorMsg.value = error.response?.data?.message || 'Registration failed.'
+    }
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
 <template>
   <div class="w-100">
+    <v-alert v-if="errorMsg" type="error" variant="tonal" class="mb-4 text-caption" density="compact">{{ errorMsg }}</v-alert>
     <!-- Registration Form -->
-    <v-form @submit.prevent="submit">
+    <v-form ref="formRef" @submit.prevent="submit">
       <v-row dense>
         <v-col cols="12" sm="6">
           <v-text-field
@@ -52,6 +81,7 @@ const submit = () => {
             variant="outlined"
             bg-color="surface"
             density="comfortable"
+            :rules="[rules.required]"
             required
           ></v-text-field>
         </v-col>
@@ -62,6 +92,7 @@ const submit = () => {
             variant="outlined"
             bg-color="surface"
             density="comfortable"
+            :rules="[rules.required]"
             required
           ></v-text-field>
         </v-col>
@@ -74,6 +105,7 @@ const submit = () => {
         variant="outlined"
         bg-color="surface"
         density="comfortable"
+        :rules="[rules.required, rules.email]"
         required
       ></v-text-field>
 
@@ -84,6 +116,7 @@ const submit = () => {
         variant="outlined"
         bg-color="surface"
         density="comfortable"
+        :rules="[rules.required, rules.min]"
         required
       ></v-text-field>
       
@@ -97,6 +130,7 @@ const submit = () => {
             variant="outlined"
             bg-color="surface"
             density="comfortable"
+            :rules="[rules.required]"
             required
           ></v-text-field>
         </v-col>
@@ -117,26 +151,30 @@ const submit = () => {
         <v-col cols="12" sm="6">
           <v-select
             v-model="form.school_id"
-            :items="schools"
+            :items="schoolStore.schools"
             item-title="name"
             item-value="id"
             label="School"
             variant="outlined"
             bg-color="surface"
             density="comfortable"
+            :rules="[rules.required]"
+            :loading="schoolStore.loading"
             required
           ></v-select>
         </v-col>
         <v-col cols="12" sm="6">
           <v-select
             v-model="form.current_class_id"
-            :items="classes"
+            :items="schoolStore.classes"
             item-title="name"
             item-value="id"
             label="Current Class"
             variant="outlined"
             bg-color="surface"
             density="comfortable"
+            :rules="[rules.required]"
+            :loading="schoolStore.loading"
             required
           ></v-select>
         </v-col>

@@ -1,104 +1,149 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
-const schools = ref([])
 const students = ref([])
 const exams = ref([])
 
-// Initialize as null instead of 1 to prevent the render crash
 const selectedStudent = ref(null)
 const selectedExam = ref(null)
 
-// Added a loading state for the initial API fetch
+const authStore = useAuthStore()
+const currentUser = authStore.currentUser
+
 const loadingData = ref(true)
 
 const files = ref([])
+const form = ref(null)
+
+const fileRules = [
+  v => !v || v.length <= 10 || 'Maximum 10 files allowed',
+  v => {
+    if (!v || v.length === 0) return true;
+    for (let i = 0; i < v.length; i++) {
+      if (v[i].size > 50 * 1024 * 1024) {
+        return 'File size cannot exceed 50MB';
+      }
+    }
+    return true;
+  },
+  v => {
+    if (!v || v.length === 0) return true;
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    for (let i = 0; i < v.length; i++) {
+      if (!allowedTypes.includes(v[i].type)) {
+        return 'Invalid file format. Only JPG, PNG, and PDF are allowed.';
+      }
+    }
+    return true;
+  }
+]
+
 const analyzing = ref(false)
 const progress = ref(0)
 const progressStep = ref('')
 const analysisResult = ref(null)
 
 onMounted(async () => {
-  loadingData.value = true // Start loading
+  loadingData.value = true
   try {
-    const [sRes, eRes] = await Promise.all([
-      axios.get('/api/v1/schools'),
-      axios.get('/api/v1/exams')
-    ])
+    const examResponse = await axios.get('/api/v1/exams')
     
-    if (sRes.data && sRes.data.length > 0) {
-      let allStus = []
-      sRes.data.forEach(sc => {
-        if (sc.students) allStus = allStus.concat(sc.students)
-      })
-      students.value = allStus
-      // Safely assign the first item's ID only after the array is populated
-      if (allStus.length > 0) {
-        selectedStudent.value = allStus[0].id
+    if (currentUser) {
+      if (currentUser.role === 'student' && currentUser.student) {
+        students.value = [{
+          id: currentUser.student.id,
+          user: currentUser,
+          admission_number: currentUser.student.admission_number 
+        }]
+        // FIX: Set to the ID to match item-value="id"
+        selectedStudent.value = currentUser.student.id 
+      } else if (currentUser.role === 'teacher' && currentUser.teacher) {
+        students.value = [{
+          id: currentUser.teacher.id,
+          user: currentUser,
+          admission_number: 'TEACHER'
+        }]
+        selectedStudent.value = currentUser.teacher.id
+      } else {
+        students.value = [{
+          id: currentUser.id,
+          user: currentUser,
+          admission_number: currentUser.role
+        }]
+        selectedStudent.value = currentUser.id
       }
     }
     
-    if (eRes.data && eRes.data.length > 0) {
-      exams.value = eRes.data
+    // FIX: Properly extract the array and set the ID of the first exam
+    if (examResponse.data && examResponse.data.data) {
+      exams.value = examResponse.data.data
+      
       // Safely assign the first item's ID only after the array is populated
-      selectedExam.value = eRes.data[0].id
+      if (exams.value.length > 0) {
+        selectedExam.value = exams.value[0].id
+      }
     }
   } catch (err) {
     console.error('Error fetching dropdowns:', err)
   } finally {
-    loadingData.value = false // Stop loading regardless of success or error
+    loadingData.value = false
   }
 })
 
 const startAnalysis = async () => {
+  if (form.value) {
+    const { valid } = await form.value.validate()
+    if (!valid) return
+  }
+
   if (files.value.length === 0) {
     alert('Please select or drag at least one exam paper image to scan.')
     return
   }
   analyzing.value = true
-  progress.value = 15
-  progressStep.value = 'Extracting handwritten text & mathematical symbols via OCR...'
-  
-  await new Promise(r => setTimeout(r, 1200))
-  progress.value = 45
-  progressStep.value = 'Segmenting answers against Teacher Marking Config & Rubric...'
-  
-  await new Promise(r => setTimeout(r, 1200))
-  progress.value = 75
-  progressStep.value = 'Classifying error modes across Bloom\'s Taxonomy tiers...'
-  
-  await new Promise(r => setTimeout(r, 1000))
-  progress.value = 100
-  progressStep.value = 'Finalizing diagnostic report and formatting suggestions...'
+  progress.value = 25
+  progressStep.value = 'Preparing exam script images and calling GELISCOPE VISION & OCR ENGINE...'
 
-  // Generate realistic high-fidelity analysis document
-  analysisResult.value = {
-    student_id: selectedStudent.value,
-    exam_id: selectedExam.value,
-    ocr_raw_text: `[Page 1 Header] FORM 2 EAST MID-TERM MATHEMATICS EXAM\nStudent Name: Brian Otieno | ADM: ADM/2025/001\n\nQ1: Evaluate (3x - 5)(2x + 4) = 6x^2 + 12x - 10x - 20 = 6x^2 + 2x - 20 [Mark: 3/3]\nQ2: Solve for x: 2x^2 + 7x + 3 = 0 -> (2x + 1)(x + 3) = 0 -> x = -0.5 or x = -3 [Mark: 4/4]\nQ3: Calculate surface area of cylinder radius 7cm, height 10cm. A = 2pi*r(r+h) = 2*(22/7)*7*(17) = 44*17 = 748 cm^2 [Mark: 4/4]\nQ4: Trigonometry angle of elevation... Student stopped halfway after calculating tan(30°). [Mark: 1/5]`,
-    blooms_taxonomy: {
-      remembering: 95,
-      understanding: 88,
-      applying: 82,
-      analyzing: 60,
-      evaluating: 45
-    },
-    question_breakdown: [
-      { q: 1, topic: 'Algebraic Expansion', score: 3, max: 3, status: 'Perfect', comment: 'Correct expansion of binomial products.' },
-      { q: 2, topic: 'Quadratic Equations', score: 4, max: 4, status: 'Perfect', comment: 'Excellent factorization technique.' },
-      { q: 3, topic: 'Mensuration (3D Geometry)', score: 4, max: 4, status: 'Perfect', comment: 'Flawless application of surface area formula.' },
-      { q: 4, topic: 'Trigonometry & Elevation', score: 1, max: 5, status: 'Needs Revision', comment: 'Struggled to set up right-angled triangle ratio. Missed final step.' }
-    ],
-    overall_summary: 'Brian demonstrates strong foundational mastery in Algebra and Geometry (Remembering & Applying). However, complex problem formulation in Trigonometry (Analyzing/Evaluating) requires targeted revision.',
-    suggestions: [
-      'Practice drawing clear right-angled triangles before writing trigonometric ratios (SOH-CAH-TOA).',
-      'Attempt 5 multi-step word problems from KCSE past papers focusing on angles of elevation/depression.',
-      'Schedule a 15-minute clarification session with Mr. Kamau during evening prep.'
-    ]
+  try {
+    const formData = new FormData()
+    files.value.forEach(file => {
+      formData.append('files[]', file)
+    })
+    
+    // FIX: selectedStudent and selectedExam now hold the primitive IDs directly
+    if (selectedStudent.value) {
+      formData.append('student_id', selectedStudent.value) 
+    }
+    
+    if (selectedExam.value) {
+      formData.append('exam_id', selectedExam.value)
+    }
+
+    progress.value = 60
+    progressStep.value = 'Analyzing mathematical symbols, extracting text, and generating diagnostic report...'
+
+    const response = await axios.post('/api/v1/analysis/process-vision', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    progress.value = 100
+    progressStep.value = 'Finalizing diagnostic report...'
+
+    analysisResult.value = response.data
+  } catch (err) {
+    console.error('Vision API Error:', err)
+    let errorMsg = 'Failed to process images via Vision AI.'
+    if (err.response && err.response.data && err.response.data.message) {
+      errorMsg = err.response.data.message
+    }
+    alert(errorMsg)
+  } finally {
+    analyzing.value = false
   }
-
-  analyzing.value = false
 }
 
 const saveToMongoDB = async () => {
@@ -110,7 +155,7 @@ const saveToMongoDB = async () => {
       suggestions: analysisResult.value.suggestions,
       overall_summary: analysisResult.value.overall_summary
     }
-    const res = await axios.post('/api/v1/analysis/exam', payload)
+    await axios.post('/api/v1/analysis/exam', payload)
     alert('Analysis successfully saved to MongoDB / MySQL backend!')
   } catch (err) {
     alert('Analysis saved locally! (Note: Live MongoDB driver will sync upon extension install as per Walkthrough step 1)')
@@ -120,26 +165,20 @@ const saveToMongoDB = async () => {
 
 <template>
   <v-container class="py-10">
-    <!-- Header -->
     <div class="mb-8">
       <v-chip color="accent" size="small" variant="flat" prepend-icon="mdi-camera-iris" class="mb-2 font-weight-bold">
         GELISCOPE VISION & OCR ENGINE
       </v-chip>
-      <h1 class="text-h3 font-weight-black">Exam Paper Upload & Diagnostic Centre</h1>
-      <p class="text-subtitle-1 text-medium-emphasis mt-1">
-        Upload scanned student answer sheets (`.jpg`, `.png`, `.pdf`) for instant OCR extraction, question-by-question grading, and Bloom's taxonomy mapping.
-      </p>
+      <h1 class="text-h3 font-weight-black">Exam Paper Upload & Diagnostic Centre</h1>  
     </div>
 
     <v-row>
-      <!-- Left Column: Upload Controls & Dropzone -->
       <v-col cols="12" lg="5">
-        <v-card class="pa-6 border mb-6" elevation="3">
+        <v-card class="pa-6 border mb-6 h-100" elevation="3">
           <h3 class="text-h6 font-weight-bold mb-4 d-flex align-center">
             <v-icon color="primary" class="mr-2">mdi-cogs</v-icon> Assessment Configuration
           </h3>
 
-          <!-- FIX 4: Bound :loading and :disabled props to the new loadingData state -->
           <v-select
             v-model="selectedStudent"
             :items="students"
@@ -155,18 +194,26 @@ const saveToMongoDB = async () => {
             <template v-slot:selection="{ item }">
               <div class="d-flex align-center">
                 <v-avatar color="accent" size="24" class="mr-2 text-caption font-weight-bold">
-                  {{ item.raw.user ? item.raw.user.first_name[0] : 'S' }}
+                  {{ item?.user ? item.user.first_name[0] : 'S' }}
                 </v-avatar>
-                {{ item.raw.user ? `${item.raw.user.first_name} ${item.raw.user.last_name}` : `Student #${item.raw.id}` }}
-                <v-chip size="x-small" color="primary" variant="outlined" class="ml-2 font-mono">{{ item.raw.admission_number }}</v-chip>
+                
+                {{ item?.user ? `${item.user.first_name} ${item.user.last_name}` : `Student #${item?.id || 'N/A'}` }}
+                
+                <v-chip size="x-small" color="primary" variant="outlined" class="ml-2 font-mono">
+                  {{ item?.admission_number || 'N/A' }}
+                </v-chip>
               </div>
             </template>
+            
             <template v-slot:item="{ item, props }">
-              <v-list-item v-bind="props" :title="item.raw.user ? `${item.raw.user.first_name} ${item.raw.user.last_name}` : `Student #${item.raw.id}`" :subtitle="item.raw.admission_number"></v-list-item>
+              <v-list-item 
+                v-bind="props" 
+                :title="item?.user ? `${item.user.first_name} ${item.user.last_name}` : `Student #${item?.id || 'N/A'}`" 
+                :subtitle="item?.admission_number || 'N/A'">
+              </v-list-item>
             </template>
           </v-select>
 
-          <!-- FIX 4: Bound :loading and :disabled props to the new loadingData state -->
           <v-select
             v-model="selectedExam"
             :items="exams"
@@ -182,60 +229,70 @@ const saveToMongoDB = async () => {
             <template v-slot:selection="{ item }">
               <div class="d-flex align-center font-weight-medium">
                 <v-icon color="secondary" size="18" class="mr-2">mdi-file-document-check</v-icon>
-                <v-chip v-if="item.raw.exam_code" size="x-small" color="secondary" variant="tonal" class="mr-2 font-mono font-weight-bold">{{ item.raw.exam_code }}</v-chip>
-                {{ item.raw.name }} (Term {{ item.raw.term }})
+                <v-chip v-if="item.exam_code" size="x-small" color="secondary" variant="tonal" class="mr-2 font-mono font-weight-bold">{{ item.exam_code }}</v-chip>
+                {{ item.name || 'Unknown Exam' }} (Term {{ item.term || '-' }})
               </div>
             </template>
             <template v-slot:item="{ item, props }">
-              <v-list-item v-bind="props" :title="item.raw.name" :subtitle="item.raw.exam_code ? `Code: ${item.raw.exam_code} • Term ${item.raw.term}` : `Term ${item.raw.term}`">
+              <v-list-item v-bind="props" :title="item.name || 'Unknown Exam'" :subtitle="item.exam_code ? `Code: ${item.exam_code} • Term ${item.term}` : `Term ${item.term || '-'}`">
                 <template v-slot:prepend>
-                  <v-chip size="x-small" color="secondary" variant="outlined" class="mr-2 font-mono font-weight-bold">{{ item.raw.exam_code || 'EX' }}</v-chip>
+                  <v-chip size="x-small" color="secondary" variant="outlined" class="mr-2 font-mono font-weight-bold">{{ item.exam_code || 'EX' }}</v-chip>
                 </template>
               </v-list-item>
             </template>
           </v-select>
 
-          <v-file-input
-            v-model="files"
-            label="Upload Exam Script Image(s)"
-            placeholder="Drag exam paper or click to browse"
-            prepend-icon="mdi-camera"
-            variant="outlined"
-            multiple
-            show-size
-            accept="image/*,.pdf"
-            color="primary"
-            class="mb-6"
-          ></v-file-input>
+          <v-form ref="form" @submit.prevent="startAnalysis">
+            <!-- FIX: Moved the custom template slot INSIDE the v-file-input and destructured fileNames -->
+            <v-file-input
+              v-model="files"
+              label="Upload Exam Script Image(s)"
+              prepend-icon="mdi-camera"
+              variant="outlined"
+              multiple
+              show-size
+              chips
+              counter
+              accept="image/.jpg, image/.jpeg, image/.png, .pdf"
+              color="primary"
+              class="mb-6"
+              :rules="fileRules"
+            >
+              <template #selection="{ fileNames }">
+                <template v-for="(fileName, index) in fileNames" :key="fileName">
+                  <v-chip size="small" color="primary" class="me-2">
+                    {{ fileName }}
+                  </v-chip>
+                </template>
+              </template>
+            </v-file-input>
 
-          <!-- Dropzone visual simulation -->
-          <div 
-            class="border-2 border-dashed border-primary border-opacity-50 rounded-2xl pa-8 text-center bg-surface cursor-pointer hover:bg-primary hover:bg-opacity-5 transition mb-6"
-            @click="() => {}"
-          >
-            <v-icon size="48" color="primary" class="mb-2">mdi-cloud-upload-outline</v-icon>
-            <div class="text-subtitle-1 font-weight-bold">Drag & Drop Scanned Sheets Here</div>
-            <div class="text-caption text-medium-emphasis">Supports high-res JPG, PNG, WEBP, and PDF scripts up to 25MB</div>
-          </div>
+            <div 
+              class="border-2 border-dashed border-primary border-opacity-50 rounded-2xl pa-8 text-center bg-surface cursor-pointer hover:bg-primary hover:bg-opacity-5 transition mb-6"
+              @click="() => {}"
+            >
+              <v-icon size="48" color="primary" class="mb-2">mdi-cloud-upload-outline</v-icon>
+              <div class="text-subtitle-1 font-weight-bold">Drag & Drop Scanned Sheets Here</div>
+              <div class="text-caption text-medium-emphasis">Supports high-res JPG, PNG, WEBP, and PDF scripts up to 50MB</div>
+            </div>
 
-          <v-btn
-            color="primary"
-            size="large"
-            block
-            @click="startAnalysis"
-            :loading="analyzing"
-            prepend-icon="mdi-sparkles"
-            elevation="4"
-            class="py-4 font-weight-bold"
-          >
-            Analyze Exam Script with Vision AI
-          </v-btn>
+            <v-btn
+              color="primary"
+              size="large"
+              block
+              type="submit"
+              :loading="analyzing"
+              prepend-icon="mdi-sparkles"
+              elevation="4"
+              class="py-4 font-weight-bold"
+            >
+              Analyze Exam Script with Vision AI
+            </v-btn>
+          </v-form>
         </v-card>
       </v-col>
 
-      <!-- Right Column: Processing / Diagnostic Output -->
       <v-col cols="12" lg="7">
-        <!-- Loading State -->
         <v-card v-if="analyzing" class="pa-10 text-center border h-100 d-flex flex-column justify-center align-center" elevation="3">
           <v-progress-circular :model-value="progress" color="primary" size="120" width="10" class="mb-6">
             <span class="text-h6 font-weight-black">{{ progress }}%</span>
@@ -247,7 +304,6 @@ const saveToMongoDB = async () => {
           </div>
         </v-card>
 
-        <!-- Empty State before analysis -->
         <v-card v-else-if="!analysisResult" class="pa-10 text-center border h-100 d-flex flex-column justify-center align-center bg-surface" elevation="2">
           <v-icon size="80" color="medium-emphasis" class="mb-4 opacity-30">mdi-file-find-outline</v-icon>
           <h3 class="text-h5 font-weight-bold text-medium-emphasis">Awaiting Exam Paper Upload</h3>
@@ -256,7 +312,6 @@ const saveToMongoDB = async () => {
           </p>
         </v-card>
 
-        <!-- Analysis Results Showcase -->
         <v-card v-else class="pa-6 border bg-cardBg" elevation="4">
           <div class="d-flex justify-space-between align-start mb-6">
             <div>
@@ -271,13 +326,11 @@ const saveToMongoDB = async () => {
             </v-btn>
           </div>
 
-          <!-- Overall Summary Alert -->
           <v-alert color="primary" variant="tonal" icon="mdi-lightbulb-on" border="start" class="mb-6">
             <div class="font-weight-bold mb-1">AI Executive Summary</div>
             <div class="text-body-2">{{ analysisResult.overall_summary }}</div>
           </v-alert>
 
-          <!-- Bloom's Taxonomy Bars -->
           <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
             <v-icon color="secondary" class="mr-2">mdi-chart-bubble</v-icon> Bloom's Taxonomy Cognitive Mastery (%)
           </h4>
@@ -296,7 +349,6 @@ const saveToMongoDB = async () => {
             </v-col>
           </v-row>
 
-          <!-- Question-by-Question Breakdown -->
           <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
             <v-icon color="accent" class="mr-2">mdi-format-list-checks</v-icon> Question-Level Diagnostics (`question_scores`)
           </h4>
@@ -325,7 +377,6 @@ const saveToMongoDB = async () => {
             </tbody>
           </v-table>
 
-          <!-- Actionable Revision Suggestions -->
           <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
             <v-icon color="warning" class="mr-2">mdi-clipboard-list</v-icon> Actionable Revision Steps for Student & Parent
           </h4>

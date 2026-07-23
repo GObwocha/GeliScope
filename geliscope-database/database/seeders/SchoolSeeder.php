@@ -12,17 +12,19 @@ class SchoolSeeder extends Seeder
      */
     public function run(): void
     {
+        // First get a subcounty for Nairobi and Mombasa (assuming CountySeeder ran first)
+        $nairobiSub = \App\Models\Subcounty::where('name', 'Westlands')->first();
+        $mombasaSub = \App\Models\Subcounty::where('name', 'Nyali')->first();
+
         School::create([
             'name' => 'Nairobi Academy',
-            'county' => 'Nairobi',
-            'sub_county' => 'Westlands',
+            'subcounty_id' => $nairobiSub ? $nairobiSub->id : 1,
             'school_type' => 'secondary',
         ]);
 
         School::create([
             'name' => 'Mombasa High School',
-            'county' => 'Mombasa',
-            'sub_county' => 'Nyali',
+            'subcounty_id' => $mombasaSub ? $mombasaSub->id : 2,
             'school_type' => 'secondary',
         ]);
     }

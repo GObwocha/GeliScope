@@ -1,24 +1,25 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 // Default / active role view switcher ('student' | 'parent' | 'teacher')
-const activeRole = ref('student')
+const activeRole = computed(() => authStore.activeRole || 'student')
 const loading = ref(true)
 
 // User Identity State
-const userProfile = ref({
-  first_name: 'Brian',
-  last_name: 'Otieno',
-  email: 'brian.otieno@student.geliscope.com',
-  role: 'student',
-  admission_number: 'ADM/2026/001',
-  employee_number: 'TSC/10001',
-  school: { name: 'Nairobi Academy Secondary', county: 'Nairobi' },
-  class_group: 'Form 2 East'
+const userProfile = computed(() => {
+  return authStore.currentUser || {
+    first_name: 'Guest',
+    last_name: 'User',
+    email: '',
+    role: 'student',
+    school: { name: 'Unknown School', subcounty: null },
+    class_group: 'Unknown Class'
+  }
 })
 
 // Chronological Trend of Student Average Marks (`exam_results` table sync across all historical terms)
@@ -106,48 +107,22 @@ const teacherStreamSummary = ref({
 })
 
 // Load active session from local storage or backend API
-onMounted(async () => {
-  try {
-    const savedUser = localStorage.getItem('geliscope_user')
-    if (savedUser) {
-      const parsed = JSON.parse(savedUser)
-      userProfile.value = { ...userProfile.value, ...parsed }
-      if (parsed.role) activeRole.value = parsed.role
-    } else {
-      const res = await axios.get('/api/v1/users?role=student')
-      if (res.data && res.data.length > 0) {
-        userProfile.value = { ...userProfile.value, ...res.data[0] }
-      }
-    }
-  } catch (err) {
-    console.log('Using default local profile state for UserDashboard')
-  } finally {
+onMounted(() => {
+  if (!authStore.isAuthenticated) {
+    router.push('/login')
+  } else {
     loading.value = false
   }
 })
-
-const switchRole = (role) => {
-  activeRole.value = role
-  userProfile.value.role = role
-  if (role === 'parent') {
-    userProfile.value.first_name = 'David'
-    userProfile.value.last_name = 'Otieno'
-  } else if (role === 'teacher') {
-    userProfile.value.first_name = 'John'
-    userProfile.value.last_name = 'Kamau'
-  } else {
-    userProfile.value.first_name = 'Brian'
-    userProfile.value.last_name = 'Otieno'
-  }
-}
 </script>
+
 
 <template>
   <v-container class="py-8">
     <!-- Top Welcome Banner & Role Switcher -->
     <v-card class="pa-6 rounded-3xl border bg-cardBg shadow-glow mb-8" elevation="4">
       <v-row align="center">
-        <v-col cols="12" md="7" class="d-flex align-center">
+        <v-col cols="12" md="12" class="d-flex align-center">
           <v-avatar :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="76" class="mr-6 font-weight-black text-h4 shadow-glow">
             <span class="text-white">{{ userProfile.first_name[0] }}{{ userProfile.last_name[0] }}</span>
           </v-avatar>
@@ -156,32 +131,19 @@ const switchRole = (role) => {
               <v-chip :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="small" variant="flat" class="font-weight-black uppercase">
                 {{ activeRole }} DASHBOARD
               </v-chip>
-              <v-chip :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="small" variant="outlined" class="font-weight-bold ma-5">
-                {{ activeRole === 'teacher' ? userProfile.employee_number : userProfile.admission_number }}
+              <v-chip :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="small" variant="outlined" class="font-weight-bold ma-5" v-if="activeRole === 'teacher' && userProfile.teacher">
+                {{ userProfile.teacher?.employee_number }}
+              </v-chip>
+              <v-chip :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="small" variant="outlined" class="font-weight-bold ma-5" v-if="activeRole === 'student' && userProfile.student">
+                {{ userProfile.student?.admission_number }}
               </v-chip>
             </div>
             <h1 class="text-h3 font-weight-black">Welcome back, {{ userProfile.first_name }}!</h1>
             <p class="text-subtitle-1 text-medium-emphasis mb-0 d-flex align-center mt-1">
               <v-icon size="18" color="primary" class="mr-1">mdi-school-outline</v-icon>
-              {{ userProfile.school.name }} &bull; {{ activeRole === 'teacher' ? 'TSC Examiner' : userProfile.class_group }}
+              {{ userProfile.student?.school?.name || userProfile.teacher?.school?.name || 'GeliScope Academy' }} &bull; {{ activeRole === 'teacher' ? 'TSC Examiner' : userProfile.class_group }}
             </p>
           </div>
-        </v-col>
-
-        <v-col cols="12" md="5" class="d-flex flex-column align-md-end justify-center">
-          <div class="text-caption font-weight-bold uppercase text-medium-emphasis mb-2">Preview Role Workspace</div>
-          <v-btn-toggle
-            v-model="activeRole"
-            mandatory
-            divided
-            variant="outlined"
-            color="primary"
-            class="rounded-xl overflow-hidden bg-surface"
-          >
-            <v-btn value="student" @click="switchRole('student')" prepend-icon="mdi-school-outline" class="font-weight-bold px-4">Student</v-btn>
-            <v-btn value="teacher" @click="switchRole('teacher')" prepend-icon="mdi-presentation-play" class="font-weight-bold px-4">Teacher</v-btn>
-            <v-btn value="parent" @click="switchRole('parent')" prepend-icon="mdi-account-heart-outline" class="font-weight-bold px-4">Parent</v-btn>
-          </v-btn-toggle>
         </v-col>
       </v-row>
     </v-card>
@@ -201,7 +163,7 @@ const switchRole = (role) => {
               </div>
               <h2 class="text-h5 font-weight-black mb-2">Scan & Evaluate Exam Script</h2>
               <p class="text-subtitle-2 text-medium-emphasis mb-6">
-                Upload your handwritten paper (.jpg, .png, .pdf) for instant diagram OCR extraction and question-by-question Bloom's taxonomy breakdown.
+                Upload your handwritten paper (.jpg, .png, .pdf) .
               </p>
             </div>
             <div>
@@ -224,7 +186,7 @@ const switchRole = (role) => {
                   <v-icon color="secondary" class="mr-2">mdi-brain</v-icon>
                   Bloom's Taxonomy Cognitive Breakdown
                 </h2>
-                <p class="text-caption text-medium-emphasis mb-0">Unstructured AI diagnostics synced from MongoDB (exam_analyses collection)</p>
+                
               </div>
               <v-chip color="secondary" variant="tonal" size="small" class="font-weight-bold">Updated: {{ bloomsMastery.last_analyzed }}</v-chip>
             </div>
@@ -284,11 +246,9 @@ const switchRole = (role) => {
             </div>
             <h2 class="text-h4 font-weight-black d-flex align-center">
               <v-icon color="primary" size="32" class="mr-3">mdi-chart-line-variant</v-icon>
-              Chronological Trend of Student Average Marks (exam_results)
+              Chronological Trend of Student Average Marks
             </h2>
-            <p class="text-subtitle-2 text-medium-emphasis mb-0 mt-1">
-              Tracks continuous overall average mark performance across every term assessment from Form 1 Opener up until presently (`85.4%`).
-            </p>
+           
           </div>
 
           <!-- KPI Summary Cards -->
@@ -390,9 +350,9 @@ const switchRole = (role) => {
           </svg>
 
           <!-- Timeline Scroller Chips -->
-          <div class="d-flex align-center justify-space-between mt-2 pt-3 border-t">
-            <span class="text-caption font-weight-bold text-medium-emphasis">Select Exam Checkpoint (E1 - E12):</span>
-            <div class="d-flex gap-2 overflow-x-auto py-1">
+          <div class="d-flex flex-column flex-md-row align-start align-md-center justify-space-between mt-2 pt-3 border-t gap-2">
+            <span class="text-caption font-weight-bold text-medium-emphasis mb-2 mb-md-0">Select Exam Checkpoint (E1 - E12):</span>
+            <div class="d-flex gap-2 overflow-x-auto py-1 w-100" style="scrollbar-width: none;">
               <v-chip
                 v-for="pt in trendExams"
                 :key="pt.id"
@@ -400,7 +360,7 @@ const switchRole = (role) => {
                 :variant="activeExamPoint.id === pt.id ? 'flat' : 'outlined'"
                 size="small"
                 @click="activeExamPoint = pt"
-                class="font-weight-bold cursor-pointer"
+                class="font-weight-bold cursor-pointer flex-shrink-0"
               >
                 E{{ pt.id }}: {{ pt.avg }}%
               </v-chip>
@@ -409,36 +369,35 @@ const switchRole = (role) => {
         </div>
 
         <!-- Selected Assessment Checkpoint Detail Card -->
-        <div class="pa-5 rounded-2xl border bg-surface d-flex flex-column flex-md-row justify-space-between align-md-center">
-          <div class="d-flex align-center mb-3 mb-md-0">
-            <v-avatar color="primary" size="52" variant="tonal" class="mr-4 font-weight-black text-h6">
+        <div class="pa-4 pa-sm-5 rounded-2xl border bg-surface d-flex flex-column justify-space-between">
+          <div class="d-flex flex-column flex-sm-row align-sm-center mb-4">
+            <v-avatar color="primary" size="52" variant="tonal" class="mr-sm-4 mb-3 mb-sm-0 font-weight-black text-h6 align-self-start align-self-sm-center">
               E{{ activeExamPoint.id }}
             </v-avatar>
-            <div>
-              <div class="d-flex align-center gap-2">
-                <v-chip v-if="activeExamPoint.exam_code" color="secondary" size="x-small" variant="outlined" class="font-mono font-weight-bold ma-5">{{ activeExamPoint.exam_code }}</v-chip>
-                <span class="font-weight-black text-h6">{{ activeExamPoint.name }}</span>
-                <v-chip color="success" size="x-small" variant="flat" class="font-weight-bold ma-5">{{ activeExamPoint.grade }} Grade</v-chip>
+            <div class="w-100">
+              <div class="d-flex flex-wrap align-center gap-2 mb-1">
+                <v-chip v-if="activeExamPoint.exam_code" color="secondary" size="x-small" variant="outlined" class="font-mono font-weight-bold ma-3">{{ activeExamPoint.exam_code }}</v-chip>
+                <span class="font-weight-black text-h6" style="line-height: 1.2;">{{ activeExamPoint.name }}</span>
+                <v-chip color="success" size="x-small" variant="flat" class="font-weight-bold ma-3">{{ activeExamPoint.grade }} Grade</v-chip>
               </div>
-              <div class="text-caption text-medium-emphasis mt-0">
+              <div class="text-caption text-medium-emphasis mt-1" style="line-height: 1.4;">
                 Period: {{ activeExamPoint.period }} &bull; Stream Benchmark: {{ activeExamPoint.stream_avg }}% &bull; Status: {{ activeExamPoint.status }}
               </div>
             </div>
           </div>
 
-          <div class="d-flex align-center gap-4">
-            <div class="text-md-right border-l pl-4">
-              <div class="text-caption text-medium-emphasis font-weight-bold uppercas">Student Average vs Stream</div>
+          <div class="d-flex flex-column flex-md-row align-start align-md-center gap-4 pt-3 border-t">
+            <div class="w-100">
+              <div class="text-caption text-medium-emphasis font-weight-bold uppercase">Student Average vs Stream</div>
               <div class="text-h5 font-weight-black text-primary">
                 {{ activeExamPoint.avg }}%
                 <span class="text-body-2 font-weight-bold text-success ml-1">(+{{ (activeExamPoint.avg - activeExamPoint.stream_avg).toFixed(1) }}% vs stream)</span>
               </div>
             </div>
-            <v-spacer/>
-          </div>
-          <v-btn color="primary" variant="tonal" to="/dashboard/upload-centre" prepend-icon="mdi-file-find-outline" class="rounded-xl font-weight-bold" height="120" >
+            <v-btn color="primary" variant="tonal" to="/dashboard/upload-centre" prepend-icon="mdi-file-find-outline" class="rounded-xl font-weight-bold align-self-stretch align-self-md-center ma-3" height="48">
               View AI OCR Script
             </v-btn>
+          </div>
         </div>
       </v-card>
     </div>
@@ -558,53 +517,55 @@ const switchRole = (role) => {
     </div>
 
     <!-- MySQL Relational Assessment Table (Shown strictly for Parent and Teacher workspaces) -->
-    <v-card v-if="activeRole !== 'student'" class="pa-6 rounded-3xl border bg-cardBg mt-8 shadow-glow" elevation="4">
-      <div class="d-flex justify-space-between align-center mb-4">
-        <div>
-          <h2 class="text-h5 font-weight-black d-flex align-center">
+    <v-card v-if="activeRole !== 'student'" class="pa-4 pa-md-6 rounded-3xl border bg-cardBg mt-8 shadow-glow" elevation="4">
+      <div class="d-flex flex-column flex-md-row justify-space-between align-md-center mb-4">
+        <div class="mb-3 mb-md-0">
+          <h2 class="text-h5 font-weight-black d-flex align-center" style="word-break: break-word;">
             <v-icon color="primary" class="mr-2">mdi-table-check</v-icon>
             Verified Assessment Records (exam_results MySQL Table)
           </h2>
           <p class="text-caption text-medium-emphasis mb-0">Structured ACID grade sync linked via mongo_analysis_id to detailed vision reports</p>
         </div>
-        <v-btn size="small" color="primary" variant="tonal" to="/dashboard/leaderboard">View Academic Leaderboard</v-btn>
+        <v-btn color="primary" variant="tonal" to="/dashboard/leaderboard" class="align-self-start align-self-md-center">View Academic Leaderboard</v-btn>
       </div>
 
-      <v-table class="bg-transparent">
-        <thead>
-          <tr>
-            <th class="font-weight-bold text-medium-emphasis">Exam / Assessment Name</th>
-            <th class="font-weight-bold text-medium-emphasis">Date Recorded</th>
-            <th class="font-weight-bold text-medium-emphasis">Score</th>
-            <th class="font-weight-bold text-medium-emphasis">Grade</th>
-            <th class="font-weight-bold text-medium-emphasis">Verification Status</th>
-            <th class="font-weight-bold text-medium-emphasis text-right">Diagnostic Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="exam in recentExams" :key="exam.id">
-            <td class="font-weight-bold py-4">
-              <div>{{ exam.title }}</div>
-              <v-chip v-if="exam.exam_code" size="x-small" color="primary" variant="tonal" class="font-mono mt-1">{{ exam.exam_code }}</v-chip>
-            </td>
-            <td class="text-medium-emphasis py-4">{{ exam.date }}</td>
-            <td class="font-weight-black text-primary py-4">{{ exam.score }} / {{ exam.max_score }}</td>
-            <td class="py-4">
-              <v-chip :color="exam.grade.startsWith('A') ? 'success' : (exam.grade.startsWith('B') ? 'primary' : 'warning')" size="small" variant="flat" class="font-weight-bold">
-                {{ exam.grade }}
-              </v-chip>
-            </td>
-            <td class="py-4">
-              <v-chip :color="exam.status === 'Verified' ? 'success' : 'warning'" size="small" variant="tonal" class="font-weight-bold">
-                {{ exam.status }}
-              </v-chip>
-            </td>
-            <td class="py-4 text-right">
-              <v-btn size="small" variant="tonal" color="accent" to="/dashboard/upload-centre" prepend-icon="mdi-eye">AI Vision Report</v-btn>
-            </td>
-          </tr>
-        </tbody>
-      </v-table>
+      <div class="overflow-x-auto">
+        <v-table class="bg-transparent" style="min-width: 800px;">
+          <thead>
+            <tr>
+              <th class="font-weight-bold text-medium-emphasis text-no-wrap">Exam / Assessment Name</th>
+              <th class="font-weight-bold text-medium-emphasis text-no-wrap">Date Recorded</th>
+              <th class="font-weight-bold text-medium-emphasis text-no-wrap">Score</th>
+              <th class="font-weight-bold text-medium-emphasis text-no-wrap">Grade</th>
+              <th class="font-weight-bold text-medium-emphasis text-no-wrap">Verification Status</th>
+              <th class="font-weight-bold text-medium-emphasis text-right text-no-wrap">Diagnostic Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="exam in recentExams" :key="exam.id">
+              <td class="font-weight-bold py-4">
+                <div>{{ exam.title }}</div>
+                <v-chip v-if="exam.exam_code" size="x-small" color="primary" variant="tonal" class="font-mono mt-1">{{ exam.exam_code }}</v-chip>
+              </td>
+              <td class="text-medium-emphasis py-4 text-no-wrap">{{ exam.date }}</td>
+              <td class="font-weight-black text-primary py-4 text-no-wrap">{{ exam.score }} / {{ exam.max_score }}</td>
+              <td class="py-4">
+                <v-chip :color="exam.grade.startsWith('A') ? 'success' : (exam.grade.startsWith('B') ? 'primary' : 'warning')" size="small" variant="flat" class="font-weight-bold">
+                  {{ exam.grade }}
+                </v-chip>
+              </td>
+              <td class="py-4 text-no-wrap">
+                <v-chip :color="exam.status === 'Verified' ? 'success' : 'warning'" size="small" variant="tonal" class="font-weight-bold">
+                  {{ exam.status }}
+                </v-chip>
+              </td>
+              <td class="py-4 text-right text-no-wrap">
+                <v-btn size="small" variant="tonal" color="accent" to="/dashboard/upload-centre" prepend-icon="mdi-eye">AI Vision Report</v-btn>
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
+      </div>
     </v-card>
   </v-container>
 </template>

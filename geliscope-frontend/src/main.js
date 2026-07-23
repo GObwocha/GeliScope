@@ -1,10 +1,22 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import vue3GoogleLogin from 'vue3-google-login'
+import axios from 'axios'
+
+// Configure Axios
+axios.defaults.baseURL = '' // Handled by proxy
+axios.interceptors.request.use(config => {
+  const token = localStorage.getItem('geliscope_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
 
 import App from './App.vue'
 import router from './router'
 import vuetify from './plugins/vuetify'
+import './assets/main.css'
 
 const app = createApp(App)
 

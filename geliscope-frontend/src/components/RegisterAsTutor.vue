@@ -1,9 +1,17 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
+import { useSchoolStore } from '@/stores/schools'
 
 const router = useRouter()
+const authStore = useAuthStore()
+const schoolStore = useSchoolStore()
+
 const loading = ref(false)
+const errorMsg = ref('')
+const formRef = ref(null)
 
 const form = ref({
   first_name: '',
@@ -12,30 +20,49 @@ const form = ref({
   password: '',
   employee_number: '',
   school_id: null,
-  specialization: ''
+  specialization: '',
+  role: 'teacher'
 })
 
-const schools = ref([
-  { id: 1, name: 'Alliance High School' },
-  { id: 2, name: 'Maseno School' },
-  { id: 3, name: 'Kenya High School' }
-])
+const rules = {
+  required: value => !!value || 'Required.',
+  min: v => v.length >= 8 || 'Min 8 characters',
+  email: v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
+}
 
-const submit = () => {
+onMounted(() => {
+  schoolStore.fetchSchools()
+})
+
+const submit = async () => {
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
   loading.value = true
-  console.log('Registering teacher:', form.value)
-  // Simulate API call and redirect
-  setTimeout(() => {
-    loading.value = false
+  errorMsg.value = ''
+  try {
+    await axios.post('/api/v1/register-user', form.value)
+    await authStore.login(form.value.email, form.value.password)
     router.push('/admin-dashboard')
-  }, 1000)
+  } catch (error) {
+    console.error(error)
+    if (error.response?.data?.errors) {
+      const errors = error.response.data.errors
+      errorMsg.value = Object.values(errors).map(err => err[0]).join(' ')
+    } else {
+      errorMsg.value = error.response?.data?.message || 'Registration failed.'
+    }
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
 <template>
   <div class="w-100">
+    <v-alert v-if="errorMsg" type="error" variant="tonal" class="mb-4 text-caption" density="compact">{{ errorMsg }}</v-alert>
     <!-- Registration Form -->
-    <v-form @submit.prevent="submit">
+    <v-form ref="formRef" @submit.prevent="submit">
       <v-row dense>
         <v-col cols="12" sm="6">
           <v-text-field
@@ -44,6 +71,7 @@ const submit = () => {
             variant="outlined"
             bg-color="surface"
             density="comfortable"
+            :rules="[rules.required]"
             required
           ></v-text-field>
         </v-col>
@@ -54,6 +82,7 @@ const submit = () => {
             variant="outlined"
             bg-color="surface"
             density="comfortable"
+            :rules="[rules.required]"
             required
           ></v-text-field>
         </v-col>
@@ -66,6 +95,7 @@ const submit = () => {
         variant="outlined"
         bg-color="surface"
         density="comfortable"
+        :rules="[rules.required, rules.email]"
         required
       ></v-text-field>
 
@@ -76,6 +106,7 @@ const submit = () => {
         variant="outlined"
         bg-color="surface"
         density="comfortable"
+        :rules="[rules.required, rules.min]"
         required
       ></v-text-field>
       
@@ -89,6 +120,7 @@ const submit = () => {
             variant="outlined"
             bg-color="surface"
             density="comfortable"
+            :rules="[rules.required]"
             required
           ></v-text-field>
         </v-col>
@@ -105,13 +137,15 @@ const submit = () => {
 
       <v-select
         v-model="form.school_id"
-        :items="schools"
+        :items="schoolStore.schools"
         item-title="name"
         item-value="id"
         label="Assigned School"
         variant="outlined"
         bg-color="surface"
         density="comfortable"
+        :rules="[rules.required]"
+        :loading="schoolStore.loading"
         required
       ></v-select>
 
