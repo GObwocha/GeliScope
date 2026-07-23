@@ -17,7 +17,7 @@ const userProfile = computed(() => {
     last_name: 'User',
     email: '',
     role: 'student',
-    school: { name: 'Unknown School', county: '' },
+    school: { name: 'Unknown School', subcounty: null },
     class_group: 'Unknown Class'
   }
 })

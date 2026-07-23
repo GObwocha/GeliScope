@@ -166,7 +166,7 @@ const selectSchool = async (id) => {
                   @click="selectSchool(s.id)"
                   class="font-weight-bold"
                 >
-                  {{ s.name }} ({{ s.county }})
+                  {{ s.name }} ({{ s.subcounty?.county?.name }})
                 </v-chip>
               </v-chip-group>
             </div>
@@ -178,7 +178,7 @@ const selectSchool = async (id) => {
                 <div>
                   <div class="text-h6 font-weight-bold">{{ selectedSchool.name }}</div>
                   <div class="text-caption text-medium-emphasis">
-                    <v-icon size="14" color="primary">mdi-map-marker</v-icon> {{ selectedSchool.county }} County &bull; {{ selectedSchool.sub_county }} Sub-county &bull; <v-chip size="x-small" color="info" variant="flat">{{ selectedSchool.school_type }}</v-chip>
+                    <v-icon size="14" color="primary">mdi-map-marker</v-icon> {{ selectedSchool.subcounty?.county?.name }} County &bull; {{ selectedSchool.subcounty?.name }} Sub-county &bull; <v-chip size="x-small" color="info" variant="flat">{{ selectedSchool.school_type }}</v-chip>
                   </div>
                 </div>
                 <div class="text-right">

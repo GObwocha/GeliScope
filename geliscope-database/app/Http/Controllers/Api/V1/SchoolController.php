@@ -14,7 +14,7 @@ class SchoolController extends Controller
      */
     public function index()
     {
-        $schools = School::withCount(['classes', 'students', 'teachers'])->get();
+        $schools = School::with(['subcounty.county'])->withCount(['classes', 'students', 'teachers'])->get();
         return response()->json($schools);
     }
 
@@ -25,8 +25,7 @@ class SchoolController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'county' => 'required|string|max:255',
-            'sub_county' => 'required|string|max:255',
+            'subcounty_id' => 'required|exists:subcounties,id',
             'school_type' => 'required|in:primary,secondary,tertiary',
         ]);
 
@@ -40,7 +39,7 @@ class SchoolController extends Controller
      */
     public function show($id)
     {
-        $school = School::with(['classes', 'students.user', 'teachers.user'])->findOrFail($id);
+        $school = School::with(['subcounty.county', 'classes', 'students.user', 'teachers.user'])->findOrFail($id);
         return response()->json($school);
     }
 
@@ -53,8 +52,7 @@ class SchoolController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'county' => 'sometimes|required|string|max:255',
-            'sub_county' => 'sometimes|required|string|max:255',
+            'subcounty_id' => 'sometimes|required|exists:subcounties,id',
             'school_type' => 'sometimes|required|in:primary,secondary,tertiary',
         ]);
 

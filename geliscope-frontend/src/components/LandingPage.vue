@@ -17,7 +17,7 @@ const activeTab = ref('parents')
             AI Vision Assessment Engine
           </v-chip>
           
-          <h1 class="text-h2 font-weight-black tracking-tight mb-4 leading-tight text-white" style="font-size: 4rem !important; line-height: 1.1 !important;">
+          <h1 class="text-h2 font-weight-black tracking-tight mb-4 leading-tight" style="font-size: 4rem !important; line-height: 1.1 !important;">
             Educational Analytics That <br />
             <span class="text-gradient">Exceeds Expectations</span>
           </h1>

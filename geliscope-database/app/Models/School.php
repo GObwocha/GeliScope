@@ -31,10 +31,17 @@ class School extends Model
      */
     protected $fillable = [
         'name',
-        'county',
-        'sub_county',
+        'subcounty_id',
         'school_type',
     ];
+
+    /**
+     * Get the subcounty the school belongs to.
+     */
+    public function subcounty(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Subcounty::class);
+    }
 
     /**
      * Get all classes belonging to this school.
