@@ -32,6 +32,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('analysis/exam/{studentId}/{examId}', [AnalysisController::class, 'examAnalysis']);
         Route::post('analysis/exam', [AnalysisController::class, 'storeExamAnalysis']);
+        Route::post('analysis/process-vision', [AnalysisController::class, 'processVision']);
         Route::get('analysis/skills/{studentId}', [AnalysisController::class, 'skillProfile']);
         Route::post('analysis/skills', [AnalysisController::class, 'storeSkillProfile']);
         Route::get('analysis/class/{classId}/{examId}', [AnalysisController::class, 'classAnalysis']);
