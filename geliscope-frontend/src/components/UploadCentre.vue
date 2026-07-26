@@ -350,7 +350,7 @@ const saveToMongoDB = async () => {
           </v-row>
 
           <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
-            <v-icon color="accent" class="mr-2">mdi-format-list-checks</v-icon> Question-Level Diagnostics (`question_scores`)
+            <v-icon color="accent" class="mr-2">mdi-format-list-checks</v-icon> Question-Level Diagnostics
           </h4>
           <v-table class="bg-surface border rounded-xl mb-6">
             <thead>
