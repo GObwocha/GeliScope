@@ -387,7 +387,7 @@ const saveToMongoDB = async () => {
                   {{ idx + 1 }}
                 </v-avatar>
               </template>
-              <v-list-item-title class="text-body-2 font-weight-medium">{{ sug }}</v-list-item-title>
+              <v-list-item-title class="text-body-2 font-weight-medium w-auto" >{{ sug }}</v-list-item-title>
             </v-list-item>
           </v-list>
         </v-card>

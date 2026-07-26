@@ -153,4 +153,19 @@ class ExamController extends Controller
             return response()->json(['message' => 'Failed to save question scores', 'error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Fetch exam results for a specific student, sorted chronologically.
+     */
+    public function studentResults($studentId)
+    {
+        $results = ExamResult::with('exam')
+            ->where('student_id', $studentId)
+            ->join('exams', 'exam_results.exam_id', '=', 'exams.id')
+            ->orderBy('exams.exam_date', 'asc')
+            ->select('exam_results.*') // prevent id conflict
+            ->get();
+
+        return response()->json($results);
+    }
 }

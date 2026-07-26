@@ -1,85 +1,37 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
 
 const loading = ref(true)
 const modalLoading = ref(false)
 const isModalOpen = ref(false)
 
-const exams = ref([
-  { id: 'exam1', name: 'Form 2 Mid Term - 2026' },
-  { id: 'exam2', name: 'Form 2 Term 1 - 2026' },
-  { id: 'exam3', name: 'Form 1 End of Year - 2025' },
-])
-
-const selectedExam = ref(exams.value[0].id)
+const exams = ref([])
+const selectedExam = ref(null)
 const leaderboardData = ref([])
 
 const selectedStudent = ref(null)
 
-// --- MOCK API CALLS --- //
-// Setup for future API integration
-const apiService = {
-  getLeaderboard(examId) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Mock data logic based on exam
-        let baseData = [
-          { id: 1, rank: 1, name: 'Alice Njoroge', score: 95, school: 'Alliance Girls High', county: 'Kiambu' },
-          { id: 2, rank: 2, name: 'Brian Otieno', score: 92, school: 'Maseno School', county: 'Kisumu' },
-          { id: 3, rank: 3, name: 'Grace Mumbua', score: 91, school: 'Mangu High School', county: 'Kiambu' },
-          { id: 4, rank: 4, name: 'Kevin Kiprop', score: 89, school: 'Kapsabet Boys', county: 'Nandi' },
-          { id: 5, rank: 5, name: 'Susan Wanjiku', score: 88, school: 'Kenya High School', county: 'Nairobi' },
-          { id: 6, rank: 6, name: 'David Ochieng', score: 85, school: 'Maranda High', county: 'Siaya' },
-        ]
-        
-        // Shuffle or change scores a bit based on examId for realism
-        if (examId === 'exam2') {
-           baseData[0].score = 91; baseData[0].rank = 2;
-           baseData[1].score = 94; baseData[1].rank = 1;
-           baseData.sort((a,b) => b.score - a.score)
-        } else if (examId === 'exam3') {
-           baseData[3].score = 93; baseData[3].rank = 1;
-           baseData[0].score = 92; baseData[0].rank = 2;
-           baseData[1].score = 90; baseData[1].rank = 3;
-           baseData[2].score = 88; baseData[2].rank = 4;
-           baseData.sort((a,b) => b.score - a.score)
-        }
-        
-        resolve({ data: baseData })
-      }, 600)
-    })
-  },
-  
-  getStudentSummary(studentId, examId) {
-     return new Promise((resolve) => {
-       setTimeout(() => {
-         const summary = {
-           marksHistory: [
-             { id: 'T1', score: 78 },
-             { id: 'T2', score: 85 },
-             { id: 'T3', score: 91 },
-             { id: 'Mid', score: Math.floor(Math.random() * 10) + 85 },
-           ],
-           strengths: [
-             { title: 'Quantitative Analysis', detail: 'Consistently scores above 90% in Mathematics and Physics.' },
-             { title: 'Language Arts', detail: 'Excellent essay structuring and vocabulary in English.' }
-           ]
-         }
-         resolve({ data: summary })
-       }, 500)
-     })
-  }
-}
-
 // --- LOGIC --- //
 
 const fetchLeaderboard = async () => {
+  if (!selectedExam.value) return
+  
   loading.value = true
   try {
-    const response = await apiService.getLeaderboard(selectedExam.value)
+    const studentId = authStore.currentUser?.student?.id || ''
+    const response = await axios.get(`/api/v1/leaderboard`, {
+      params: {
+        exam_id: selectedExam.value,
+        student_id: studentId
+      }
+    })
     leaderboardData.value = response.data
   } catch(e) {
-    console.error(e)
+    console.error('Failed to fetch leaderboard:', e)
   } finally {
     loading.value = false
   }
@@ -91,8 +43,10 @@ const openStudentProfile = async (student) => {
   modalLoading.value = true
   
   try {
-    const response = await apiService.getStudentSummary(student.id, selectedExam.value)
-    selectedStudent.value = { ...selectedStudent.value, ...response.data }
+    // Note: To make the modal work fully with real data, we would need a new endpoint 
+    // for student summaries. For now, we will leave the modal chart blank but show the basic info.
+    selectedStudent.value.marksHistory = []
+    selectedStudent.value.strengths = []
   } catch (e) {
     console.error(e)
   } finally {
@@ -155,8 +109,23 @@ const getBarColor = (score) => {
   return 'bg-high-emphasis text-high-emphasis'
 }
 
-onMounted(() => {
-  fetchLeaderboard()
+onMounted(async () => {
+  try {
+    const response = await axios.get('/api/v1/exams')
+    if (response.data && response.data.data) {
+      exams.value = [
+        { id: 'all', name: 'All Exams (Overall Average)' },
+        ...response.data.data
+      ]
+      if (exams.value.length > 0) {
+        selectedExam.value = exams.value[0].id
+        fetchLeaderboard()
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load exams', err)
+    loading.value = false
+  }
 })
 </script>
 

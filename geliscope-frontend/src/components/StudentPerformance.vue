@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
@@ -123,16 +124,39 @@ const displayData = computed(() => {
 })
 
 // Chronological Exam Data
-const examHistory = ref([
-  { id: 'E1', name: 'Form 1 Term 1', score: 62 },
-  { id: 'E2', name: 'Form 1 Term 2', score: 68 },
-  { id: 'E3', name: 'Form 1 Term 3', score: 65 },
-  { id: 'E4', name: 'Form 2 Term 1', score: 75 },
-  { id: 'E5', name: 'Form 2 Term 2', score: 72 },
-  { id: 'E6', name: 'Form 2 Mid Term', score: 87 }
-])
+const examHistory = ref([])
+const loadingHistory = ref(true)
+
+onMounted(async () => {
+  try {
+    const studentId = authStore.currentUser?.student?.id
+    if (!studentId) return
+
+    const res = await axios.get(`/api/v1/students/${studentId}/exam-results`)
+    if (res.data && res.data.length > 0) {
+      examHistory.value = res.data.map(result => {
+        // Calculate the percentage based on max_score
+        const percent = Math.round((parseFloat(result.total_score) / parseFloat(result.max_score)) * 100)
+        
+        return {
+          id: result.exam?.exam_code || `EX-${result.exam_id}`, // Fallback if no code
+          name: result.exam?.name || 'Unknown',
+          score: percent
+        }
+      })
+    }
+  } catch (err) {
+    console.error('Failed to fetch real exam history:', err)
+  } finally {
+    loadingHistory.value = false
+  }
+})
 
 const chartMetrics = computed(() => {
+  if (examHistory.value.length === 0) {
+    return { points: [], maxScore: 0, minScore: 0, polylineStr: '', width: 400, height: 150 }
+  }
+
   const scores = examHistory.value.map(e => e.score)
   const maxScore = Math.max(...scores)
   const minScore = Math.min(...scores)
@@ -149,7 +173,9 @@ const chartMetrics = computed(() => {
   const plotHeight = height - padTop - padBottom
   
   const points = examHistory.value.map((e, idx) => {
-    const x = padLeft + (idx / (examHistory.value.length - 1)) * plotWidth
+    // Prevent division by zero if there's only 1 exam
+    const xProgress = examHistory.value.length > 1 ? (idx / (examHistory.value.length - 1)) : 0.5
+    const x = padLeft + (xProgress * plotWidth)
     const y = height - padBottom - (e.score / 100) * plotHeight
     return { ...e, x, y, isMax: e.score === maxScore, isMin: e.score === minScore }
   })
