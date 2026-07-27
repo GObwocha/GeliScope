@@ -74,7 +74,7 @@ onMounted(async () => {
       <v-row>
         <!-- Left: Linked Children Roster & Teacher Contacts -->
         <v-col cols="12" md="4">
-          <v-card class="pa-6 border mb-6 bg-cardBg" elevation="3">
+          <v-card class="pa-6 border mb-6 bg-surface" elevation="3">
             <h3 class="text-h6 font-weight-bold mb-4 d-flex align-center">
               <v-icon color="accent" class="mr-2">mdi-account-child</v-icon> Linked Children Roster
             </h3>
@@ -146,7 +146,7 @@ onMounted(async () => {
 
         <!-- Right: Termly Report & Actionable Home Steps -->
         <v-col cols="12" md="8">
-          <v-card class="pa-6 border mb-6 bg-cardBg" elevation="4">
+          <v-card class="pa-6 border mb-6 bg-surface" elevation="4">
             <div class="d-flex justify-space-between align-start mb-6">
               <div>
                 <v-chip color="warning" size="small" variant="flat" prepend-icon="mdi-file-document-check" class="mb-2 font-weight-bold">

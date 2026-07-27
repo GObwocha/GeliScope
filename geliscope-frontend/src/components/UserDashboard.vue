@@ -118,9 +118,9 @@ onMounted(() => {
 
 
 <template>
-  <v-container class="py-8">
+  <v-container fluid class="py-8 ">
     <!-- Top Welcome Banner & Role Switcher -->
-    <v-card class="pa-6 rounded-3xl border bg-cardBg shadow-glow mb-8" elevation="4">
+    <v-card class="pa-6 rounded-3xl border bg-surface shadow-glow mb-8" elevation="4">
       <v-row align="center">
         <v-col cols="12" md="12" class="d-flex align-center">
           <v-avatar :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="76" class="mr-6 font-weight-black text-h4 shadow-glow">
@@ -153,7 +153,7 @@ onMounted(() => {
       <v-row>
         <!-- Quick Actions & OCR Launch -->
         <v-col cols="12" lg="4">
-          <v-card class="pa-6 rounded-3xl border bg-cardBg h-100 d-flex flex-column justify-space-between shadow-glow" elevation="4">
+          <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column justify-space-between shadow-glow" elevation="4">
             <div>
               <div class="d-flex align-center justify-space-between mb-4">
                 <v-avatar color="primary" size="48" variant="tonal">
@@ -179,7 +179,7 @@ onMounted(() => {
 
         <!-- Bloom's Taxonomy Cognitive Mastery (MongoDB) -->
         <v-col cols="12" lg="8">
-          <v-card class="pa-6 rounded-3xl border bg-cardBg h-100 shadow-glow" elevation="4">
+          <v-card class="pa-6 rounded-3xl border bg-surface h-100 shadow-glow" elevation="4">
             <div class="d-flex justify-space-between align-center mb-6">
               <div>
                 <h2 class="text-h5 font-weight-black d-flex align-center">
@@ -237,7 +237,7 @@ onMounted(() => {
       </v-row>
 
       <!-- REPLACED SECTION: Chronological Trend of Student Average Marks Line Graph -->
-      <v-card class="pa-6 rounded-3xl border bg-cardBg mt-8 shadow-glow" elevation="6">
+      <v-card class="pa-6 rounded-3xl border bg-surface mt-8 shadow-glow" elevation="6">
         <div class="d-flex flex-column flex-md-row justify-space-between align-md-center mb-6">
           <div>
             <div class="d-flex align-center gap-2 mb-1">
@@ -406,7 +406,7 @@ onMounted(() => {
     <div v-else-if="activeRole === 'parent'">
       <v-row>
         <v-col cols="12" lg="8">
-          <v-card class="pa-6 rounded-3xl border bg-cardBg h-100 shadow-glow" elevation="4">
+          <v-card class="pa-6 rounded-3xl border bg-surface h-100 shadow-glow" elevation="4">
             <div class="d-flex justify-space-between align-center mb-6">
               <div>
                 <h2 class="text-h5 font-weight-black d-flex align-center">
@@ -441,7 +441,7 @@ onMounted(() => {
         </v-col>
 
         <v-col cols="12" lg="4">
-          <v-card class="pa-6 rounded-3xl border bg-cardBg h-100 d-flex flex-column justify-space-between shadow-glow" elevation="4">
+          <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column justify-space-between shadow-glow" elevation="4">
             <div>
               <h2 class="text-h5 font-weight-black mb-3 d-flex align-center">
                 <v-icon color="success" class="mr-2">mdi-whatsapp</v-icon>
@@ -467,7 +467,7 @@ onMounted(() => {
     <div v-else>
       <v-row>
         <v-col cols="12" md="6">
-          <v-card class="pa-6 rounded-3xl border bg-cardBg h-100 shadow-glow" elevation="4">
+          <v-card class="pa-6 rounded-3xl border bg-surface h-100 shadow-glow" elevation="4">
             <div class="d-flex justify-space-between align-center mb-4">
               <h2 class="text-h5 font-weight-black d-flex align-center">
                 <v-icon color="secondary" class="mr-2">mdi-chart-bar</v-icon>
@@ -490,7 +490,7 @@ onMounted(() => {
         </v-col>
 
         <v-col cols="12" md="6">
-          <v-card class="pa-6 rounded-3xl border bg-cardBg h-100 d-flex flex-column justify-space-between shadow-glow" elevation="4">
+          <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column justify-space-between shadow-glow" elevation="4">
             <div>
               <div class="d-flex justify-space-between align-center mb-4">
                 <h2 class="text-h5 font-weight-black d-flex align-center">
@@ -517,7 +517,7 @@ onMounted(() => {
     </div>
 
     <!-- MySQL Relational Assessment Table (Shown strictly for Parent and Teacher workspaces) -->
-    <v-card v-if="activeRole !== 'student'" class="pa-4 pa-md-6 rounded-3xl border bg-cardBg mt-8 shadow-glow" elevation="4">
+    <v-card v-if="activeRole !== 'student'" class="pa-4 pa-md-6 rounded-3xl border bg-surface mt-8 shadow-glow" elevation="4">
       <div class="d-flex flex-column flex-md-row justify-space-between align-md-center mb-4">
         <div class="mb-3 mb-md-0">
           <h2 class="text-h5 font-weight-black d-flex align-center" style="word-break: break-word;">
