@@ -47,12 +47,12 @@ const testimonials = [
 
 <template>
   <div class="testimonials-page position-relative w-100 overflow-hidden pb-16">
-    <div class="glow-blur-purple" style="top: 100px; left: -100px; opacity: 0.3;"></div>
-    <div class="glow-blur-green" style="bottom: 100px; right: -100px; opacity: 0.3;"></div>
+    <div class="glow-blur-purple epx; opacity: 0.3;"></div>
+    <div class="glow-blur-green epx; opacity: 0.3;"></div>
 
     <v-container class="pt-16 mt-8 position-relative z-10">
       <div class="text-center max-w-3xl mx-auto mb-16">
-        <v-chip color="primary" variant="outlined" class="mb-6 font-weight-bold border-opacity-50" style="border-radius: 100px; background: rgba(171, 125, 227, 0.05);">
+        <v-chip color="primary" variant="outlined" class="mb-6 font-weight-bold border-opacity-50 e 125, 227, 0.05);">
           Success Stories
         </v-chip>
         <h1 class="text-h2 font-weight-black tracking-tight mb-4 text-white">
@@ -67,9 +67,9 @@ const testimonials = [
         <v-col cols="12" md="6" lg="4" v-for="(testimonial, index) in testimonials" :key="index">
           <div class="bento-card p-8 rounded-xl pa-8 h-100 d-flex flex-column justify-space-between relative group">
             
-            <v-icon size="48" :color="testimonial.color" class="position-absolute opacity-10" style="top: 20px; right: 20px;">mdi-format-quote-open</v-icon>
+            <v-icon size="48" :color="testimonial.color" class="position-absolute opacity-10 e0px; right: 20px;">mdi-format-quote-open</v-icon>
 
-            <p class="text-body-1 text-white font-weight-medium leading-relaxed mb-8 position-relative z-10" style="font-size: 1.1rem !important;">
+            <p class="text-body-1 text-white font-weight-medium leading-relaxed mb-8 position-relative z-10 e.1rem !important;">
               {{ testimonial.quote }}
             </p>
 
@@ -91,6 +91,26 @@ const testimonials = [
 </template>
 
 <style scoped>
+.extracted-style-1 {
+  top: 100px; left: -100px; opacity: 0.3;
+}
+
+.extracted-style-2 {
+  bottom: 100px; right: -100px; opacity: 0.3;
+}
+
+.extracted-style-3 {
+  border-radius: 100px; background: rgba(171, 125, 227, 0.05);
+}
+
+.extracted-style-4 {
+  top: 20px; right: 20px;
+}
+
+.extracted-style-5 {
+  font-size: 1.1rem !important;
+}
+
 .max-w-3xl { max-width: 800px; }
 .z-10 { z-index: 10; }
 .leading-relaxed { line-height: 1.6; }

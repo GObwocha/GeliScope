@@ -116,13 +116,33 @@ class UserController extends Controller
             'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
             'profile_photo_url' => 'nullable|string|url',
+            'personal_motto' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if (str_word_count($value) > 7) {
+                        $fail('The personal motto must not exceed 7 words.');
+                    }
+                },
+            ],
+            'admission_number' => 'sometimes|required|string|unique:students,admission_number,' . optional($user->student)->id,
+            'school_id' => 'sometimes|required|exists:schools,id',
+            'current_class_id' => 'nullable|exists:classes,id',
+            'date_of_birth' => 'nullable|date',
         ]);
 
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         }
 
-        $user->update($validated);
+        $user->update($request->only(['first_name', 'last_name', 'email', 'password', 'profile_photo_url']));
+
+        if ($user->role === 'student' && $user->student) {
+            $studentData = $request->only(['admission_number', 'school_id', 'current_class_id', 'date_of_birth', 'personal_motto']);
+            if (!empty($studentData)) {
+                $user->student->update($studentData);
+            }
+        }
 
         return response()->json($user->fresh(['student', 'teacher', 'parentProfile']));
     }

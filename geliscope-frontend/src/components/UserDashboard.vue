@@ -10,6 +10,16 @@ const authStore = useAuthStore()
 const activeRole = computed(() => authStore.activeRole || 'student')
 const loading = ref(true)
 
+const mottoFontType = ref(localStorage.getItem('motto_font_type') || 'Inter')
+const mottoFontSize = ref(localStorage.getItem('motto_font_size') || '16')
+const mottoFontColor = ref(localStorage.getItem('motto_font_color') || '#000000')
+
+const mottoStyles = computed(() => ({
+  fontFamily: mottoFontType.value,
+  fontSize: Math.min(Number(mottoFontSize.value) || 16, 24) + 'px',
+  color: mottoFontColor.value
+}))
+
 // User Identity State
 const userProfile = computed(() => {
   return authStore.currentUser || {
@@ -121,9 +131,9 @@ onMounted(() => {
   <v-container fluid class="py-8 ">
     <!-- Top Welcome Banner & Role Switcher -->
     <v-card class="pa-6 rounded-3xl border bg-surface shadow-glow mb-8" elevation="4">
-      <v-row align="center">
-        <v-col cols="12" md="12" class="d-flex align-center">
-          <v-avatar :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="76" class="mr-6 font-weight-black text-h4 shadow-glow">
+      <v-row align="center" justify="space-between">
+        <v-col cols="12" md="7" class="d-flex align-center">
+          <v-avatar :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="76" class="mr-6 font-weight-black text-h4 shadow-glow flex-shrink-0">
             <span class="text-white">{{ userProfile.first_name[0] }}{{ userProfile.last_name[0] }}</span>
           </v-avatar>
           <div>
@@ -143,6 +153,12 @@ onMounted(() => {
               <v-icon size="18" color="primary" class="mr-1">mdi-school-outline</v-icon>
               {{ userProfile.student?.school?.name || userProfile.teacher?.school?.name || 'GeliScope Academy' }} &bull; {{ activeRole === 'teacher' ? 'TSC Examiner' : userProfile.class_group }}
             </p>
+          </div>
+        </v-col>
+
+        <v-col cols="12" md="4" class="text-md-right d-flex align-center justify-md-end" v-if="activeRole === 'student' && userProfile.student?.personal_motto">
+          <div class="motto-display font-italic px-4 border-s-md" :style="mottoStyles">
+            "{{ userProfile.student?.personal_motto }}"
           </div>
         </v-col>
       </v-row>

@@ -138,7 +138,7 @@ onMounted(async () => {
            <h1 class="text-h3 font-weight-medium lh-tight mb-2">National Leaderboard</h1>
            <div class="text-caption text-medium-emphasis">Top performing students across standard exams.</div>
          </div>
-         <div style="width: 300px;">
+         <div class="extracted-style-1" >
            <v-select
              v-model="selectedExam"
              :items="exams"
@@ -231,7 +231,7 @@ onMounted(async () => {
           <v-btn icon="mdi-close" variant="text" density="compact" @click="closeModal"></v-btn>
         </div>
 
-        <div class="pa-6" style="max-height: 70vh; overflow-y: auto;">
+        <div class="pa-6 eoverflow-y: auto;">
            <div class="text-caption text-medium-emphasis font-weight-bold text-uppercase mb-4">Academic Year Progress</div>
            
            <!-- Graph -->
@@ -239,8 +239,8 @@ onMounted(async () => {
              <div v-if="modalLoading" class="d-flex justify-center align-center py-8">
                <v-progress-circular indeterminate color="primary" size="32"></v-progress-circular>
              </div>
-             <div v-else class="position-relative w-100 d-flex flex-column justify-end pt-2" style="height: 180px;">
-                <svg :viewBox="`0 0 ${chartMetrics.width} ${chartMetrics.height}`" class="w-100 overflow-visible" style="max-height: 160px;">
+             <div v-else class="position-relative w-100 d-flex flex-column justify-end pt-2 ee="height: 180px;">
+                <svg :viewBox="`0 0 ${chartMetrics.width} ${chartMetrics.height}`" class="w-100 overflow-visible eax-height: 160px;">
                  <polyline 
                     :points="chartMetrics.polylineStr" 
                     fill="none" 
@@ -317,6 +317,22 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.extracted-style-1 {
+  width: 300px;
+}
+
+.extracted-style-2 {
+  max-height: 70vh; overflow-y: auto;
+}
+
+.extracted-style-3 {
+  height: 180px;
+}
+
+.extracted-style-4 {
+  max-height: 160px;
+}
+
 .lh-tight {
   line-height: 1.1 !important;
 }

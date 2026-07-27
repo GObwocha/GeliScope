@@ -70,12 +70,12 @@ const tiers = [
 
 <template>
   <div class="pricing-page position-relative w-100 overflow-hidden pb-16">
-    <div class="glow-blur-purple" style="top: 0px; left: 20%; transform: translateX(-50%); opacity: 0.3;"></div>
-    <div class="glow-blur-green" style="bottom: 100px; right: 10%; opacity: 0.2;"></div>
+    <div class="glow-blur-purple e%); opacity: 0.3;"></div>
+    <div class="glow-blur-green e0%; opacity: 0.2;"></div>
 
     <v-container class="pt-16 mt-8 position-relative z-10">
       <div class="text-center max-w-3xl mx-auto mb-16">
-        <v-chip color="secondary" variant="outlined" class="mb-6 font-weight-bold border-opacity-50" style="border-radius: 100px; background: rgba(81, 250, 170, 0.05);">
+        <v-chip color="secondary" variant="outlined" class="mb-6 font-weight-bold border-opacity-50 e 250, 170, 0.05);">
           Transparent Pricing
         </v-chip>
         <h1 class="text-h2 font-weight-black tracking-tight mb-4 text-white">
@@ -97,13 +97,13 @@ const tiers = [
         <v-col v-for="tier in tiers" :key="tier.name" cols="12" sm="6" lg="3">
           <div class="bento-card h-100 rounded-xl pa-8 d-flex flex-column" :style="tier.popular ? `border-color: ${tier.color}; box-shadow: 0 0 20px ${tier.color}33; transform: scale(1.05); z-index: 2;` : ''">
             
-            <div v-if="tier.popular" class="position-absolute w-100 text-center" style="top: 0; left: 0; background: #AB7DE3; padding: 4px 0;">
+            <div v-if="tier.popular" class="position-absolute w-100 text-center e; padding: 4px 0;">
               <span class="text-caption font-weight-bold text-background uppercase tracking-widest">Most Popular</span>
             </div>
 
             <div :class="tier.popular ? 'mt-4' : ''">
               <h3 class="text-h5 font-weight-bold mb-2" :style="`color: ${tier.color}`">{{ tier.name }}</h3>
-              <p class="text-body-2 text-muted mb-6" style="min-height: 40px;">{{ tier.description }}</p>
+              <p class="text-body-2 text-muted mb-6 emin-height: 40px;">{{ tier.description }}</p>
               
               <div class="mb-8">
                 <template v-if="typeof tier.monthlyPrice === 'number'">
@@ -127,7 +127,7 @@ const tiers = [
                   <template v-slot:prepend>
                     <v-icon :color="tier.color" size="small" class="mr-3">mdi-check-circle</v-icon>
                   </template>
-                  <v-list-item-title class="text-body-2 text-muted" style="white-space: normal;">{{ feature }}</v-list-item-title>
+                  <v-list-item-title class="text-body-2 text-muted ete-space: normal;">{{ feature }}</v-list-item-title>
                 </v-list-item>
               </v-list>
             </div>
@@ -140,6 +140,30 @@ const tiers = [
 </template>
 
 <style scoped>
+.extracted-style-1 {
+  top: 0px; left: 20%; transform: translateX(-50%); opacity: 0.3;
+}
+
+.extracted-style-2 {
+  bottom: 100px; right: 10%; opacity: 0.2;
+}
+
+.extracted-style-3 {
+  border-radius: 100px; background: rgba(81, 250, 170, 0.05);
+}
+
+.extracted-style-4 {
+  top: 0; left: 0; background: #AB7DE3; padding: 4px 0;
+}
+
+.extracted-style-5 {
+  min-height: 40px;
+}
+
+.extracted-style-6 {
+  white-space: normal;
+}
+
 .max-w-3xl { max-width: 800px; }
 .z-10 { z-index: 10; }
 .uppercase { text-transform: uppercase; }

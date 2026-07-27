@@ -228,7 +228,7 @@ const getBarColor = (score) => {
       <!-- Big Metric -->
       <v-col cols="12" md="3" class="d-flex flex-column pl-6">
         <v-card class="rounded-xl pa-5 bg-surface elevation-2 border h-100 d-flex flex-column justify-center">
-          <h1 class="text-h3 font-weight-medium lh-tight mb-6" style="max-width: 300px">
+          <h1 class="text-h3 font-weight-medium lh-tight mb-6 e"max-width: 300px">
             {{ displayData.title }}
           </h1>
           <div class="text-caption text-medium-emphasis mb-1">{{ displayData.subtitle }}</div>
@@ -245,8 +245,8 @@ const getBarColor = (score) => {
       <v-col cols="12" md="5" class="px-6 d-flex flex-column">
         <v-card class="rounded-xl pa-5 bg-surface elevation-2 border flex-grow-1 d-flex flex-column">
           <div class="d-flex align-center position-relative mb-8">
-            <div class="text-h6 font-weight-bold text-center w-100 position-absolute" style="left: 0; pointer-events: none;">Average Marks</div>
-            <div class="d-flex align-center gap-4 ml-auto" style="z-index: 1;">
+            <div class="text-h6 font-weight-bold text-center w-100 position-absolute eter-events: none;">Average Marks</div>
+            <div class="d-flex align-center gap-4 ml-auto etyle="z-index: 1;">
               <v-btn-toggle v-model="graphType" mandatory color="primary" variant="outlined" class="rounded-lg bg-surface" >
                 <v-btn value="bar" icon="mdi-chart-bar" size="small"></v-btn>
                 <v-btn value="line" icon="mdi-chart-line-variant" size="small"></v-btn>
@@ -255,7 +255,7 @@ const getBarColor = (score) => {
           </div>
           
           <!-- Custom Visualization -->
-          <div class="chart-container flex-grow-1 d-flex flex-column justify-end pt-4" style="min-height: 200px; border-bottom: none;">
+          <div class="chart-container flex-grow-1 d-flex flex-column justify-end pt-4 eder-bottom: none;">
             
             <!-- Bar Graph -->
             <div v-if="graphType === 'bar'" class="d-flex justify-space-between align-end h-100 pb-2 px-2 gap-4">
@@ -268,13 +268,13 @@ const getBarColor = (score) => {
                      :class="[getBarColor(exam.score).split(' ')[0]]"
                      :style="`height: ${exam.score}%; max-width: 36px;`"></div>
                 
-                <div class="text-caption text-medium-emphasis font-weight-bold mt-2" style="font-size: 10px !important;">{{ exam.id }}</div>
+                <div class="text-caption text-medium-emphasis font-weight-bold mt-2 e 10px !important;">{{ exam.id }}</div>
               </div>
             </div>
             
             <!-- Line Graph -->
             <div v-else class="h-100 w-100 position-relative pb-0 d-flex flex-column justify-end">
-               <svg :viewBox="`0 0 ${chartMetrics.width} ${chartMetrics.height}`" class="w-100 overflow-visible" style="max-height: 180px">
+               <svg :viewBox="`0 0 ${chartMetrics.width} ${chartMetrics.height}`" class="w-100 overflow-visible emax-height: 180px">
                  <!-- Connecting Line -->
                  <polyline 
                     :points="chartMetrics.polylineStr" 
@@ -358,7 +358,7 @@ const getBarColor = (score) => {
     </v-row>
 
     <!-- Divider Line -->
-    <v-divider class="mb-8" style="opacity: 0.1;"></v-divider>
+    <v-divider class="mb-8 ele="opacity: 0.1;"></v-divider>
 
     <!-- Bottom Section: Calendar, Schedule, Events -->
     <v-row class="px-2">
@@ -453,6 +453,34 @@ const getBarColor = (score) => {
 </template>
 
 <style scoped>
+.extracted-style-1 {
+  max-width: 300px
+}
+
+.extracted-style-2 {
+  left: 0; pointer-events: none;
+}
+
+.extracted-style-3 {
+  z-index: 1;
+}
+
+.extracted-style-4 {
+  min-height: 200px; border-bottom: none;
+}
+
+.extracted-style-5 {
+  font-size: 10px !important;
+}
+
+.extracted-style-6 {
+  max-height: 180px
+}
+
+.extracted-style-7 {
+  opacity: 0.1;
+}
+
 /* Theme-aware aesthetic styling */
 
 .lh-tight {

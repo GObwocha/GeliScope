@@ -38,6 +38,7 @@ class Student extends Model
         'school_id',
         'current_class_id',
         'date_of_birth',
+        'personal_motto',
     ];
 
     /**

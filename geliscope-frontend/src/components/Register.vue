@@ -30,7 +30,7 @@ const roleComponents = {
       </v-col>
 
       <!-- Right Side Form Area -->
-      <v-col cols="12" md="7" class="d-flex flex-column justify-center px-6 px-md-16 py-12" style="max-height: 100vh; overflow-y: auto;">
+      <v-col cols="12" md="7" class="d-flex flex-column justify-center px-6 px-md-16 py-12 eoverflow-y: auto;">
         <div class="max-w-lg mx-auto w-100 my-auto">
           <div class="mb-6 text-center text-md-left">
             <h2 class="text-h4 font-weight-bold mb-2">Create Account</h2>
@@ -100,6 +100,10 @@ const roleComponents = {
 </template>
 
 <style scoped>
+.extracted-style-1 {
+  max-height: 100vh; overflow-y: auto;
+}
+
 .min-vh-100 {
   min-height: 100vh;
 }
