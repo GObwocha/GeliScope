@@ -8,6 +8,8 @@ use App\Models\MongoDB\StudentSkillProfile;
 use App\Models\MongoDB\ClassAnalysis;
 use App\Models\MongoDB\TeacherMarkingConfig;
 use App\Models\Student;
+use App\Models\ExamResult;
+use App\Models\QuestionScore;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -45,9 +47,49 @@ class AnalysisController extends Controller
             'blooms_taxonomy' => 'required|array',
             'suggestions' => 'nullable|array',
             'overall_summary' => 'nullable|string',
+            'question_breakdown' => 'nullable|array',
         ]);
 
         $validated['generated_at'] = Carbon::now();
+
+        $examResultId = $validated['exam_result_id'] ?? null;
+        $examResult = null;
+
+        if (!empty($validated['question_breakdown'])) {
+            $totalScore = 0;
+            $maxScore = 0;
+            foreach ($validated['question_breakdown'] as $q) {
+                $totalScore += (float) ($q['score'] ?? 0);
+                $maxScore += (float) ($q['max'] ?? 0);
+            }
+
+            $examResult = ExamResult::updateOrCreate(
+                [
+                    'student_id' => (int) $validated['student_id'],
+                    'exam_id' => (int) $validated['exam_id'],
+                ],
+                [
+                    'total_score' => $totalScore,
+                    'max_score' => $maxScore,
+                ]
+            );
+            
+            $examResultId = $examResult->id;
+            
+            foreach ($validated['question_breakdown'] as $q) {
+                if (isset($q['q'])) {
+                    $examResult->questionScores()->updateOrCreate(
+                        ['question_number' => (int) $q['q']],
+                        [
+                            'score' => (float) ($q['score'] ?? 0),
+                            'max_score' => (float) ($q['max'] ?? 0),
+                        ]
+                    );
+                }
+            }
+        }
+        
+        $validated['exam_result_id'] = $examResultId;
 
         $analysis = ExamAnalysis::updateOrCreate(
             [
@@ -56,6 +98,10 @@ class AnalysisController extends Controller
             ],
             $validated
         );
+
+        if ($examResult) {
+            $examResult->update(['mongo_analysis_id' => $analysis->_id]);
+        }
 
         return response()->json($analysis, 201);
     }
@@ -297,7 +343,7 @@ class AnalysisController extends Controller
                 ]
             ];
 
-            $response = Http::withHeaders([
+            $response = Http::withoutVerifying()->withHeaders([
                 'Content-Type' => 'application/json',
             ])->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . $apiKey, $payload);
 

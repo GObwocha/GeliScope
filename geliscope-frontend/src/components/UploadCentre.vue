@@ -153,7 +153,8 @@ const saveToMongoDB = async () => {
       exam_id: analysisResult.value.exam_id,
       blooms_taxonomy: analysisResult.value.blooms_taxonomy,
       suggestions: analysisResult.value.suggestions,
-      overall_summary: analysisResult.value.overall_summary
+      overall_summary: analysisResult.value.overall_summary,
+      question_breakdown: analysisResult.value.question_breakdown
     }
     await axios.post('/api/v1/analysis/exam', payload)
     alert('Analysis successfully saved to MongoDB / MySQL backend!')
