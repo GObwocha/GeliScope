@@ -16,6 +16,7 @@ import UploadCentre from '@/components/UploadCentre.vue'
 import Leaderboard from '@/components/Leaderboard.vue'
 import AdminDashboard from '@/components/AdminDashboard.vue'
 import UserDashboard from '@/components/UserDashboard.vue'
+import ExamArchives from '@/components/ExamArchives.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -98,6 +99,11 @@ const router = createRouter({
     {
       path: '/dashboard/upload-centre',
       component: UploadCentre,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/dashboard/exam-archives',
+      component: ExamArchives,
       meta: { requiresAuth: true }
     }
   ],

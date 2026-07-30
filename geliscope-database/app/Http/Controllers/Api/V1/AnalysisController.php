@@ -7,6 +7,7 @@ use App\Models\MongoDB\ExamAnalysis;
 use App\Models\MongoDB\StudentSkillProfile;
 use App\Models\MongoDB\ClassAnalysis;
 use App\Models\MongoDB\TeacherMarkingConfig;
+use App\Models\MongoDB\ExamArchive;
 use App\Models\Student;
 use App\Models\ExamResult;
 use App\Models\QuestionScore;
@@ -237,7 +238,7 @@ class AnalysisController extends Controller
 
         $request->validate([
             'files' => 'required|array',
-            'files.*' => 'file|mimes:jpeg,png,pdf|max:51200',
+            'files.*' => 'file|mimes:jpeg,png,pdf|max:16384',
             'student_id' => 'nullable|integer',
             'exam_id' => 'nullable|integer',
         ]);
@@ -255,6 +256,17 @@ class AnalysisController extends Controller
         foreach ($request->file('files') as $file) {
             $mime = $file->getMimeType();
             $base64 = base64_encode(file_get_contents($file->getRealPath()));
+            
+            if ($request->student_id && $request->exam_id) {
+                ExamArchive::create([
+                    'student_id' => (int) $request->student_id,
+                    'exam_id' => (int) $request->exam_id,
+                    'file_name' => $file->getClientOriginalName(),
+                    'mime_type' => $mime,
+                    'file_data' => $base64,
+                ]);
+            }
+
             $parts[] = [
                 'inline_data' => [
                     'mime_type' => $mime,
@@ -274,7 +286,7 @@ class AnalysisController extends Controller
             ]
         ];
 
-        $response = Http::withHeaders([
+        $response = Http::withoutVerifying()->withHeaders([
             'Content-Type' => 'application/json',
         ])->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . $apiKey, $payload);
 
@@ -368,5 +380,32 @@ class AnalysisController extends Controller
         });
 
         return response()->json(['careers' => $careers]);
+    }
+
+    /**
+     * Get lightweight list of exam archives for a student.
+     */
+    public function getArchives($studentId)
+    {
+        $archives = ExamArchive::where('student_id', (int) $studentId)
+            ->select('_id', 'student_id', 'exam_id', 'file_name', 'mime_type', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        return response()->json($archives);
+    }
+
+    /**
+     * Download or view an exam archive full file payload.
+     */
+    public function downloadArchive($archiveId)
+    {
+        $archive = ExamArchive::find($archiveId);
+        
+        if (!$archive) {
+            return response()->json(['message' => 'Archive not found'], 404);
+        }
+        
+        return response()->json($archive);
     }
 }
