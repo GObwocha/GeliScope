@@ -62,7 +62,7 @@ const goBack = () => {
 <template>
     <v-container class="fill-height d-flex align-center justify-center">
         <v-card 
-        :color="theme.global.current.value.dark ? 'cardBg': 'transparent'" 
+        :color="theme.global.current.value.dark ? 'surface': 'transparent'" 
         width="100%"
         max-width="400"
         class="text-center pa-4"

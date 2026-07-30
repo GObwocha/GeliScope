@@ -164,7 +164,7 @@ const saveToMongoDB = async () => {
 </script>
 
 <template>
-  <v-container class="py-10">
+  <v-container fluid class="py-10">
     <div class="mb-8">
       <v-chip color="accent" size="small" variant="flat" prepend-icon="mdi-camera-iris" class="mb-2 font-weight-bold">
         GELISCOPE VISION & OCR ENGINE
@@ -174,7 +174,7 @@ const saveToMongoDB = async () => {
 
     <v-row>
       <v-col cols="12" lg="5">
-        <v-card class="pa-6 border mb-6 h-100" elevation="3">
+        <v-card class="bg-surface pa-6 border mb-6 h-100" elevation="3">
           <h3 class="text-h6 font-weight-bold mb-4 d-flex align-center">
             <v-icon color="primary" class="mr-2">mdi-cogs</v-icon> Assessment Configuration
           </h3>
@@ -293,7 +293,7 @@ const saveToMongoDB = async () => {
       </v-col>
 
       <v-col cols="12" lg="7">
-        <v-card v-if="analyzing" class="pa-10 text-center border h-100 d-flex flex-column justify-center align-center" elevation="3">
+        <v-card v-if="analyzing" class="bg-surface pa-10 text-center border h-100 d-flex flex-column justify-center align-center" elevation="3">
           <v-progress-circular :model-value="progress" color="primary" size="120" width="10" class="mb-6">
             <span class="text-h6 font-weight-black">{{ progress }}%</span>
           </v-progress-circular>
@@ -312,7 +312,7 @@ const saveToMongoDB = async () => {
           </p>
         </v-card>
 
-        <v-card v-else class="pa-6 border bg-cardBg" elevation="4">
+        <v-card v-else class="pa-6 border bg-surface" elevation="4">
           <div class="d-flex justify-space-between align-start mb-6">
             <div>
               <v-chip color="success" size="small" variant="flat" prepend-icon="mdi-check-decagram" class="mb-2 font-weight-bold">
@@ -350,7 +350,7 @@ const saveToMongoDB = async () => {
           </v-row>
 
           <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
-            <v-icon color="accent" class="mr-2">mdi-format-list-checks</v-icon> Question-Level Diagnostics (`question_scores`)
+            <v-icon color="accent" class="mr-2">mdi-format-list-checks</v-icon> Question-Level Diagnostics
           </h4>
           <v-table class="bg-surface border rounded-xl mb-6">
             <thead>
@@ -387,7 +387,7 @@ const saveToMongoDB = async () => {
                   {{ idx + 1 }}
                 </v-avatar>
               </template>
-              <v-list-item-title class="text-body-2 font-weight-medium">{{ sug }}</v-list-item-title>
+              <v-list-item-title class="text-body-2 font-weight-medium w-auto" >{{ sug }}</v-list-item-title>
             </v-list-item>
           </v-list>
         </v-card>

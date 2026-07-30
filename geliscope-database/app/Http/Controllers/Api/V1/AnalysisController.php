@@ -225,7 +225,7 @@ class AnalysisController extends Controller
 
         $response = \Illuminate\Support\Facades\Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey, $payload);
+        ])->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . $apiKey, $payload);
 
         if ($response->failed()) {
             \Illuminate\Support\Facades\Log::error('Gemini API Error: ' . $response->body());

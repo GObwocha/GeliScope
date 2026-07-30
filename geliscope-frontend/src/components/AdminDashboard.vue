@@ -77,7 +77,7 @@ const selectSchool = async (id) => {
       <!-- Top Overview Stats -->
       <v-row class="mb-6">
         <v-col cols="12" sm="6" md="3">
-          <v-card class="pa-5 border" elevation="2">
+          <v-card class="bg-surface pa-5 border" elevation="2">
             <div class="d-flex justify-space-between align-center">
               <div>
                 <div class="text-caption font-weight-bold text-medium-emphasis uppercase">Partner Schools</div>
@@ -94,7 +94,7 @@ const selectSchool = async (id) => {
         </v-col>
 
         <v-col cols="12" sm="6" md="3">
-          <v-card class="pa-5 border" elevation="2">
+          <v-card class="bg-surface pa-5 border" elevation="2">
             <div class="d-flex justify-space-between align-center">
               <div>
                 <div class="text-caption font-weight-bold text-medium-emphasis uppercase">Total Students</div>
@@ -113,7 +113,7 @@ const selectSchool = async (id) => {
         </v-col>
 
         <v-col cols="12" sm="6" md="3">
-          <v-card class="pa-5 border" elevation="2">
+          <v-card class="bg-surface pa-5 border" elevation="2">
             <div class="d-flex justify-space-between align-center">
               <div>
                 <div class="text-caption font-weight-bold text-medium-emphasis uppercase">Exams Recorded</div>
@@ -130,7 +130,7 @@ const selectSchool = async (id) => {
         </v-col>
 
         <v-col cols="12" sm="6" md="3">
-          <v-card class="pa-5 border" elevation="2">
+          <v-card class="bg-surface pa-5 border" elevation="2">
             <div class="d-flex justify-space-between align-center">
               <div>
                 <div class="text-caption font-weight-bold text-medium-emphasis uppercase">Bloom's Taxonomy Engine</div>
@@ -151,7 +151,7 @@ const selectSchool = async (id) => {
       <v-row>
         <!-- Left Column: School Selector & Details -->
         <v-col cols="12" lg="8">
-          <v-card class="pa-6 border mb-6" elevation="3">
+          <v-card class="bg-surface pa-6 border mb-6" elevation="3">
             <div class="d-flex justify-space-between align-center mb-6">
               <div>
                 <h3 class="text-h5 font-weight-bold">Kenyan Schools & Roster Explorer</h3>
@@ -244,7 +244,7 @@ const selectSchool = async (id) => {
 
         <!-- Right Column: Live Leaderboard & Quick Action -->
         <v-col cols="12" lg="4">
-          <v-card class="pa-6 border mb-6" elevation="3">
+          <v-card class="bg-surface pa-6 border mb-6" elevation="3">
             <div class="d-flex justify-space-between align-center mb-4">
               <h3 class="text-h6 font-weight-bold d-flex align-center">
                 <v-icon color="warning" class="mr-2">mdi-trophy</v-icon> Academic Leaderboard
@@ -282,7 +282,7 @@ const selectSchool = async (id) => {
           </v-card>
 
           <!-- Quick Navigation Panel -->
-          <v-card class="pa-6 border bg-gradient-to-br from-indigo-950/40 to-purple-950/40" elevation="3">
+          <v-card class="bg-surface pa-6 border bg-gradient-to-br from-indigo-950/40 to-purple-950/40" elevation="3">
             <h3 class="text-h6 font-weight-bold mb-2">AI Diagnostic Shortcuts</h3>
             <p class="text-caption text-medium-emphasis mb-6">
               Jump directly into specialized tools built for parents, students, and subject teachers.

@@ -29,6 +29,7 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('exams', ExamController::class);
         Route::post('exams/{examId}/results', [ExamController::class, 'storeResult']);
         Route::post('exam-results/{resultId}/question-scores', [ExamController::class, 'storeQuestionScores']);
+        Route::get('students/{studentId}/exam-results', [ExamController::class, 'studentResults']);
 
         Route::get('analysis/exam/{studentId}/{examId}', [AnalysisController::class, 'examAnalysis']);
         Route::post('analysis/exam', [AnalysisController::class, 'storeExamAnalysis']);

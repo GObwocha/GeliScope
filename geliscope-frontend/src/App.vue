@@ -43,7 +43,7 @@ const isDashboard = computed(() => {
 </script>
 
 <template>
-  <v-app class="app-container">
+  <v-app class="app-container ">
     <!-- Top App Bar -->
     <v-app-bar :elevation="isDashboard ? 1 : 0" :class="isDashboard ? 'bg-surface' : 'navbar-glass bg-transparent'" height="80">
       <v-container class="d-flex align-center px-0 w-100 fill-height" :max-width="isDashboard ? 'fluid' : '1200'">
@@ -129,7 +129,7 @@ const isDashboard = computed(() => {
     </v-navigation-drawer>
 
     <!-- Main Content Area -->
-    <v-main class="bg-background position-relative">
+    <v-main class="bg-background position-relative ">
       <div class="glow-blur-purple" style="top: -100px; left: -100px;"></div>
       <div class="glow-blur-green" style="top: 40%; right: -150px;"></div>
       <router-view v-slot="{ Component }">
