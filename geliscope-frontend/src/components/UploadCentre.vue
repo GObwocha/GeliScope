@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 
@@ -46,6 +46,16 @@ const progressStep = ref('')
 const analysisResult = ref(null)
 
 onMounted(async () => {
+  // Check for unsaved analysis in cache
+  const cachedAnalysis = localStorage.getItem('unsaved_analysis')
+  if (cachedAnalysis) {
+    try {
+      analysisResult.value = JSON.parse(cachedAnalysis)
+    } catch (e) {
+      console.error('Error parsing cached analysis', e)
+    }
+  }
+
   loadingData.value = true
   try {
     const examResponse = await axios.get('/api/v1/exams')
@@ -92,6 +102,22 @@ onMounted(async () => {
   }
 })
 
+watch([selectedStudent, selectedExam], async ([newStudent, newExam]) => {
+  if (newStudent && newExam) {
+    try {
+      loadingData.value = true
+      const response = await axios.get(`/api/v1/analysis/exam/${newStudent}/${newExam}`)
+      if (response.data && response.data._id) {
+        analysisResult.value = response.data
+      }
+    } catch (e) {
+      // Expected if no analysis exists yet
+    } finally {
+      loadingData.value = false
+    }
+  }
+})
+
 const startAnalysis = async () => {
   if (form.value) {
     const { valid } = await form.value.validate()
@@ -134,6 +160,7 @@ const startAnalysis = async () => {
     progressStep.value = 'Finalizing diagnostic report...'
 
     analysisResult.value = response.data
+    localStorage.setItem('unsaved_analysis', JSON.stringify(response.data))
   } catch (err) {
     console.error('Vision API Error:', err)
     let errorMsg = 'Failed to process images via Vision AI.'
@@ -158,6 +185,7 @@ const saveToMongoDB = async () => {
     }
     console.log(payload)
     await axios.post('/api/v1/analysis/exam', payload)
+    localStorage.removeItem('unsaved_analysis')
     alert('Analysis successfully saved to MongoDB / MySQL backend!')
   } catch (err) {
     alert('Analysis saved locally! (Note: Live MongoDB driver will sync upon extension install as per Walkthrough step 1)')

@@ -90,6 +90,10 @@ class AnalysisController extends Controller
             }
         }
         
+        // Strategy 1: Clear the real-time cache for the leaderboard
+        \Illuminate\Support\Facades\Cache::forget('leaderboard_exam_' . $validated['exam_id']);
+        \Illuminate\Support\Facades\Cache::forget('leaderboard_all_student_' . $validated['student_id']);
+
         $validated['exam_result_id'] = $examResultId;
 
         $analysis = ExamAnalysis::updateOrCreate(
