@@ -96,6 +96,14 @@ class Student extends Model
     }
 
     /**
+     * Get the skills associated with this student.
+     */
+    public function skills(): BelongsToMany
+    {
+        return $this->belongsToMany(Skill::class, 'student_skill');
+    }
+
+    /**
      * Get the parents associated with this student.
      */
     public function parents(): BelongsToMany

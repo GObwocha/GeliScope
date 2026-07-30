@@ -239,7 +239,7 @@ onMounted(async () => {
              <div v-if="modalLoading" class="d-flex justify-center align-center py-8">
                <v-progress-circular indeterminate color="primary" size="32"></v-progress-circular>
              </div>
-             <div v-else class="position-relative w-100 d-flex flex-column justify-end pt-2 ee="height: 180px;">
+             <div v-else class="position-relative w-100 d-flex flex-column justify-end pt-2">
                 <svg :viewBox="`0 0 ${chartMetrics.width} ${chartMetrics.height}`" class="w-100 overflow-visible eax-height: 160px;">
                  <polyline 
                     :points="chartMetrics.polylineStr" 

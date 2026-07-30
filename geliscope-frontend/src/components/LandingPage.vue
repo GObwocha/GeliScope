@@ -110,13 +110,13 @@ const activeTab = ref('parents')
                     <span class="text-caption text-muted font-weight-bold text-uppercase">Form 1 Performance</span>
                     <v-chip size="x-small" color="secondary" variant="flat">Live</v-chip>
                   </div>
-                  <div class="d-flex align-end gap-2 mb-2 ee="height: 100px;">
-                    <div class="bg-primary rounded-t-sm w-100 transition-all etyle="height: 40%"></div>
-                    <div class="bg-muted rounded-t-sm w-100 transition-all etyle="height: 60%"></div>
-                    <div class="bg-primary rounded-t-sm w-100 transition-all estyle="height: 30%"></div>
-                    <div class="bg-secondary rounded-t-sm w-100 transition-all shadow-glow estyle="height: 90%"></div>
-                    <div class="bg-primary rounded-t-sm w-100 transition-all estyle="height: 50%"></div>
-                    <div class="bg-muted rounded-t-sm w-100 transition-all estyle="height: 70%"></div>
+                  <div class="d-flex align-end gap-2 mb-2 ">
+                    <div class="bg-primary rounded-t-sm w-100 transition-all "></div>
+                    <div class="bg-muted rounded-t-sm w-100 transition-all "></div>
+                    <div class="bg-primary rounded-t-sm w-100 transition-all "></div>
+                    <div class="bg-secondary rounded-t-sm w-100 transition-all shadow-glow "></div>
+                    <div class="bg-primary rounded-t-sm w-100 transition-all "></div>
+                    <div class="bg-muted rounded-t-sm w-100 transition-all "></div>
                   </div>
                   <div class="text-center text-caption text-muted mt-2">Class Average Trend</div>
                 </div>

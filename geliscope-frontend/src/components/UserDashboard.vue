@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import axios from 'axios'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -28,9 +29,39 @@ const userProfile = computed(() => {
     email: '',
     role: 'student',
     school: { name: 'Unknown School', subcounty: null },
-    class_group: 'Unknown Class'
+    class_group: 'Unknown Class',
+    student: { admission_number: '', personal_motto: 'Strive for greatness', skills: [] },
+    teacher: null,
+    parent: null
   }
 })
+
+const suggestedCareers = ref([])
+const fetchingCareers = ref(false)
+
+const fetchSuggestedCareers = async () => {
+  if (activeRole.value !== 'student' || !userProfile.value.student?.id) return
+  // If the student doesn't have any skills, skip
+  if (!userProfile.value.student.skills || userProfile.value.student.skills.length === 0) {
+    return
+  }
+
+  fetchingCareers.value = true
+  try {
+    const response = await axios.post('/api/v1/analysis/careers/suggest', {
+      student_id: userProfile.value.student.id
+    }, {
+      headers: {
+        Authorization: `Bearer ${authStore.token}`
+      }
+    })
+    suggestedCareers.value = response.data.careers || []
+  } catch (err) {
+    console.error('Failed to fetch career suggestions', err)
+  } finally {
+    fetchingCareers.value = false
+  }
+}
 
 // Chronological Trend of Student Average Marks (`exam_results` table sync across all historical terms)
 const trendExams = ref([
@@ -122,6 +153,7 @@ onMounted(() => {
     router.push('/login')
   } else {
     loading.value = false
+    fetchSuggestedCareers()
   }
 })
 </script>
@@ -167,25 +199,62 @@ onMounted(() => {
     <!-- STUDENT DASHBOARD WORKSPACE -->
     <div v-if="activeRole === 'student'">
       <v-row>
-        <!-- Quick Actions & OCR Launch -->
+        <!-- Career Suggestions -->
         <v-col cols="12" lg="4">
-          <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column justify-space-between shadow-glow" elevation="4">
-            <div>
+          <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column shadow-glow" elevation="4">
+            <div class="mb-4">
               <div class="d-flex align-center justify-space-between mb-4">
                 <v-avatar color="primary" size="48" variant="tonal">
-                  <v-icon size="28">mdi-camera</v-icon>
+                  <v-icon size="28">mdi-briefcase-search-outline</v-icon>
                 </v-avatar>
-                <v-chip color="primary" size="small" variant="flat" class="font-weight-bold">Vision AI</v-chip>
+                <v-chip color="primary" size="small" variant="flat" class="font-weight-bold">AI Career Guide</v-chip>
               </div>
-              <h2 class="text-h5 font-weight-black mb-2">Scan & Evaluate Exam Script</h2>
-              <p class="text-subtitle-2 text-medium-emphasis mb-6">
-                Upload your handwritten paper (.jpg, .png, .pdf) .
+              <h2 class="text-h5 font-weight-black mb-2">Career Suggestions</h2>
+              <p class="text-subtitle-2 text-medium-emphasis">
+                Based on your natural aptitudes and skills.
               </p>
             </div>
-            <div>
-              <v-btn color="primary" size="large" block to="/dashboard/upload-centre" prepend-icon="mdi-cloud-upload" elevation="4" class="py-4 font-weight-bold rounded-xl shadow-glow mb-3">
-                Launch Vision OCR Scanner
-              </v-btn>
+            
+            <div class="flex-grow-1 overflow-y-auto pr-2 extracted-style-2">
+              <!-- Loading State -->
+              <div v-if="fetchingCareers" class="d-flex flex-column justify-center align-center h-100">
+                <v-progress-circular indeterminate color="primary" size="40" class="mb-4"></v-progress-circular>
+                <span class="text-body-2 text-medium-emphasis">Analyzing skills...</span>
+              </div>
+              
+              <!-- Empty State -->
+              <div v-else-if="!userProfile.student?.skills?.length" class="text-center py-6">
+                <v-icon size="40" color="muted" class="mb-3">mdi-alert-circle-outline</v-icon>
+                <p class="text-body-2 text-medium-emphasis">No skills recorded yet. Complete assessments to unlock career paths.</p>
+              </div>
+
+              <!-- Careers List -->
+              <v-list v-else-if="suggestedCareers.length" bg-color="transparent" class="pa-0">
+                <v-list-item
+                  v-for="(career, i) in suggestedCareers"
+                  :key="i"
+                  class="px-0 mb-3 rounded-xl border bg-surface-light"
+                  lines="two"
+                >
+                  <template v-slot:prepend>
+                    <v-avatar color="primary" variant="tonal" size="36" class="ml-2 mr-3 font-weight-bold">
+                      {{ i + 1 }}
+                    </v-avatar>
+                  </template>
+                  <v-list-item-title class="font-weight-bold text-body-1">{{ career }}</v-list-item-title>
+                  <v-list-item-subtitle class="text-caption mt-1">
+                    Matched from your skills
+                  </v-list-item-subtitle>
+                </v-list-item>
+              </v-list>
+              
+              <!-- API Error / No Results -->
+              <div v-else class="text-center py-6">
+                <p class="text-body-2 text-medium-emphasis">Unable to fetch suggestions at this time.</p>
+              </div>
+            </div>
+            
+            <div class="mt-4 pt-4 border-t">
               <v-btn variant="outlined" color="surface" block to="/dashboard/student-performance" prepend-icon="mdi-chart-timeline-variant" class="font-weight-bold rounded-xl">
                 View Cognitive Profile
               </v-btn>

@@ -7,8 +7,13 @@ use App\Models\MongoDB\ExamAnalysis;
 use App\Models\MongoDB\StudentSkillProfile;
 use App\Models\MongoDB\ClassAnalysis;
 use App\Models\MongoDB\TeacherMarkingConfig;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AnalysisController extends Controller
 {
@@ -172,17 +177,17 @@ class AnalysisController extends Controller
         $ip = $request->ip();
 
         // 15 requests per minute
-        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('gemini-vision-min:' . $ip, 15)) {
+        if (RateLimiter::tooManyAttempts('gemini-vision-min:' . $ip, 15)) {
             return response()->json(['message' => 'Minute API quota exceeded. Please try again later.'], 429);
         }
 
         // 1500 requests per day
-        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('gemini-vision-day:' . $ip, 1500)) {
+        if (RateLimiter::tooManyAttempts('gemini-vision-day:' . $ip, 1500)) {
             return response()->json(['message' => 'Daily API quota exceeded. Please try again tomorrow.'], 429);
         }
 
-        \Illuminate\Support\Facades\RateLimiter::hit('gemini-vision-min:' . $ip, 60);
-        \Illuminate\Support\Facades\RateLimiter::hit('gemini-vision-day:' . $ip, 86400);
+        RateLimiter::hit('gemini-vision-min:' . $ip, 60);
+        RateLimiter::hit('gemini-vision-day:' . $ip, 86400);
 
         $request->validate([
             'files' => 'required|array',
@@ -223,12 +228,12 @@ class AnalysisController extends Controller
             ]
         ];
 
-        $response = \Illuminate\Support\Facades\Http::withHeaders([
+        $response = Http::withHeaders([
             'Content-Type' => 'application/json',
         ])->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . $apiKey, $payload);
 
         if ($response->failed()) {
-            \Illuminate\Support\Facades\Log::error('Gemini API Error: ' . $response->body());
+            Log::error('Gemini API Error: ' . $response->body());
             return response()->json(['message' => 'Failed to process image with Vision AI.', 'error' => $response->body()], 500);
         }
 
@@ -248,5 +253,74 @@ class AnalysisController extends Controller
         $data['exam_id'] = $request->input('exam_id', $data['exam_id'] ?? null);
 
         return response()->json($data);
+    }
+
+    /**
+     * Use AI to determine the 5 most probable careers based on skills.
+     */
+    public function suggestCareers(Request $request)
+    {
+        $request->validate([
+            'student_id' => 'required|integer|exists:students,id'
+        ]);
+
+        $studentId = $request->student_id;
+        $student = Student::with('skills')->findOrFail($studentId);
+
+        if ($student->skills->isEmpty()) {
+            return response()->json(['careers' => []]);
+        }
+
+        $skillNames = $student->skills->pluck('name')->implode(', ');
+        $cacheKey = 'career_suggestions_student_' . $studentId;
+
+        // Cache for 24 hours to prevent API spam
+        $careers = Cache::remember($cacheKey, 86400, function () use ($skillNames) {
+            $apiKey = config('services.gemini.key');
+            if (!$apiKey) {
+                return ['Gemini API key is missing.'];
+            }
+
+            $prompt = 'You are a career counselor. A student has the following natural aptitudes and skills: ' . $skillNames . '. ' .
+                      'Determine the 5 most probable careers the student can excel in. Return ONLY a JSON array of strings (e.g. ["Career 1", "Career 2"]). No other text, no markdown.';
+
+            $payload = [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt]
+                        ]
+                    ]
+                ],
+                'generationConfig' => [
+                    'responseMimeType' => 'application/json'
+                ]
+            ];
+
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . $apiKey, $payload);
+
+            if ($response->failed()) {
+                Log::error('Gemini API Error (Careers): ' . $response->body());
+                return ['Error fetching careers from AI'];
+            }
+
+            $result = $response->json();
+            $generatedText = $result['candidates'][0]['content']['parts'][0]['text'] ?? '[]';
+            
+            $generatedText = preg_replace('/```json\s+/', '', $generatedText);
+            $generatedText = preg_replace('/```/', '', $generatedText);
+
+            $data = json_decode(trim($generatedText), true);
+
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+                return ['Failed to parse AI response'];
+            }
+
+            return array_slice($data, 0, 5);
+        });
+
+        return response()->json(['careers' => $careers]);
     }
 }

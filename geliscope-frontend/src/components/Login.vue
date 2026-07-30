@@ -69,7 +69,7 @@ const goBack = () => {
         >
             <!--Header-->
             <div class="d-flex align-center justify-center mb-4">
-              <v-btn v-if="step === 2" icon="mdi-arrow-left" variant="text" size="small" class="position-absolute etyle="left: 16px;" @click="goBack"></v-btn>
+              <v-btn v-if="step === 2" icon="mdi-arrow-left" variant="text" size="small" class="position-absolute " @click="goBack"></v-btn>
               <h1 class="mb-0">{{ step === 1 ? 'Login' : 'Welcome back' }}</h1>
             </div>
 

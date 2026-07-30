@@ -87,7 +87,7 @@ class UserController extends Controller
 
             DB::commit();
 
-            return response()->json($user->load(['student', 'teacher', 'parentProfile']), 201);
+            return response()->json($user->load(['student.school', 'student.skills', 'teacher.school', 'parentProfile']), 201);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json(['message' => 'Failed to create user', 'error' => $e->getMessage()], 500);
@@ -99,7 +99,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::with(['student', 'teacher', 'parentProfile'])->findOrFail($id);
+        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])->findOrFail($id);
         return response()->json($user);
     }
 
@@ -144,7 +144,7 @@ class UserController extends Controller
             }
         }
 
-        return response()->json($user->fresh(['student', 'teacher', 'parentProfile']));
+        return response()->json($user->fresh(['student.school', 'student.skills', 'teacher.school', 'parentProfile']));
     }
 
     /**
