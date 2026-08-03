@@ -33,12 +33,12 @@ const steps = [
 
 <template>
   <div class="how-it-works-page position-relative w-100 overflow-hidden pb-16">
-    <div class="glow-blur-purple" style="top: 20%; left: 10%; transform: translateX(-50%); opacity: 0.3;"></div>
-    <div class="glow-blur-green" style="top: 60%; right: 0%; transform: translateX(50%); opacity: 0.3;"></div>
+    <div class="glow-blur-purple e%); opacity: 0.3;"></div>
+    <div class="glow-blur-green e%); opacity: 0.3;"></div>
 
     <v-container class="pt-16 mt-8 position-relative z-10">
       <div class="text-center max-w-3xl mx-auto mb-16">
-        <v-chip color="primary" variant="outlined" class="mb-6 font-weight-bold border-opacity-50" style="border-radius: 100px; background: rgba(171, 125, 227, 0.05);">
+        <v-chip color="primary" variant="outlined" class="mb-6 font-weight-bold border-opacity-50 e 125, 227, 0.05);">
           End-to-End Workflow
         </v-chip>
         <h1 class="text-h2 font-weight-black tracking-tight mb-4 text-white">
@@ -77,8 +77,8 @@ const steps = [
       </v-row>
 
       <div class="mt-16 text-center">
-        <div class="bento-card pa-12 rounded-xl position-relative overflow-hidden" style="border-color: rgba(171, 125, 227, 0.4);">
-          <div class="glow-blur-purple" style="top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.5;"></div>
+        <div class="bento-card pa-12 rounded-xl position-relative overflow-hidden e, 125, 227, 0.4);">
+          <div class="glow-blur-purple e%); opacity: 0.5;"></div>
           
           <h2 class="text-h3 font-weight-black mb-4 text-white position-relative z-10">Ready to test the Vision OCR Pipeline?</h2>
           <p class="text-h6 text-muted font-weight-light mb-8 max-w-2xl mx-auto position-relative z-10">
@@ -94,6 +94,26 @@ const steps = [
 </template>
 
 <style scoped>
+.extracted-style-1 {
+  top: 20%; left: 10%; transform: translateX(-50%); opacity: 0.3;
+}
+
+.extracted-style-2 {
+  top: 60%; right: 0%; transform: translateX(50%); opacity: 0.3;
+}
+
+.extracted-style-3 {
+  border-radius: 100px; background: rgba(171, 125, 227, 0.05);
+}
+
+.extracted-style-4 {
+  border-color: rgba(171, 125, 227, 0.4);
+}
+
+.extracted-style-5 {
+  top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.5;
+}
+
 .max-w-3xl { max-width: 800px; }
 .max-w-2xl { max-width: 600px; }
 .z-10 { z-index: 10; }

@@ -7,8 +7,16 @@ use App\Models\MongoDB\ExamAnalysis;
 use App\Models\MongoDB\StudentSkillProfile;
 use App\Models\MongoDB\ClassAnalysis;
 use App\Models\MongoDB\TeacherMarkingConfig;
+use App\Models\MongoDB\ExamArchive;
+use App\Models\Student;
+use App\Models\ExamResult;
+use App\Models\QuestionScore;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AnalysisController extends Controller
 {
@@ -40,9 +48,53 @@ class AnalysisController extends Controller
             'blooms_taxonomy' => 'required|array',
             'suggestions' => 'nullable|array',
             'overall_summary' => 'nullable|string',
+            'question_breakdown' => 'nullable|array',
         ]);
 
         $validated['generated_at'] = Carbon::now();
+
+        $examResultId = $validated['exam_result_id'] ?? null;
+        $examResult = null;
+
+        if (!empty($validated['question_breakdown'])) {
+            $totalScore = 0;
+            $maxScore = 0;
+            foreach ($validated['question_breakdown'] as $q) {
+                $totalScore += (float) ($q['score'] ?? 0);
+                $maxScore += (float) ($q['max'] ?? 0);
+            }
+
+            $examResult = ExamResult::updateOrCreate(
+                [
+                    'student_id' => (int) $validated['student_id'],
+                    'exam_id' => (int) $validated['exam_id'],
+                ],
+                [
+                    'total_score' => $totalScore,
+                    'max_score' => $maxScore,
+                ]
+            );
+            
+            $examResultId = $examResult->id;
+            
+            foreach ($validated['question_breakdown'] as $q) {
+                if (isset($q['q'])) {
+                    $examResult->questionScores()->updateOrCreate(
+                        ['question_number' => (int) $q['q']],
+                        [
+                            'score' => (float) ($q['score'] ?? 0),
+                            'max_score' => (float) ($q['max'] ?? 0),
+                        ]
+                    );
+                }
+            }
+        }
+        
+        // Strategy 1: Clear the real-time cache for the leaderboard
+        \Illuminate\Support\Facades\Cache::forget('leaderboard_exam_' . $validated['exam_id']);
+        \Illuminate\Support\Facades\Cache::forget('leaderboard_all_student_' . $validated['student_id']);
+
+        $validated['exam_result_id'] = $examResultId;
 
         $analysis = ExamAnalysis::updateOrCreate(
             [
@@ -51,6 +103,10 @@ class AnalysisController extends Controller
             ],
             $validated
         );
+
+        if ($examResult) {
+            $examResult->update(['mongo_analysis_id' => $analysis->_id]);
+        }
 
         return response()->json($analysis, 201);
     }
@@ -172,21 +228,21 @@ class AnalysisController extends Controller
         $ip = $request->ip();
 
         // 15 requests per minute
-        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('gemini-vision-min:' . $ip, 15)) {
+        if (RateLimiter::tooManyAttempts('gemini-vision-min:' . $ip, 15)) {
             return response()->json(['message' => 'Minute API quota exceeded. Please try again later.'], 429);
         }
 
         // 1500 requests per day
-        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('gemini-vision-day:' . $ip, 1500)) {
+        if (RateLimiter::tooManyAttempts('gemini-vision-day:' . $ip, 1500)) {
             return response()->json(['message' => 'Daily API quota exceeded. Please try again tomorrow.'], 429);
         }
 
-        \Illuminate\Support\Facades\RateLimiter::hit('gemini-vision-min:' . $ip, 60);
-        \Illuminate\Support\Facades\RateLimiter::hit('gemini-vision-day:' . $ip, 86400);
+        RateLimiter::hit('gemini-vision-min:' . $ip, 60);
+        RateLimiter::hit('gemini-vision-day:' . $ip, 86400);
 
         $request->validate([
             'files' => 'required|array',
-            'files.*' => 'file|mimes:jpeg,png,pdf|max:51200',
+            'files.*' => 'file|mimes:jpeg,png,pdf|max:16384',
             'student_id' => 'nullable|integer',
             'exam_id' => 'nullable|integer',
         ]);
@@ -204,6 +260,17 @@ class AnalysisController extends Controller
         foreach ($request->file('files') as $file) {
             $mime = $file->getMimeType();
             $base64 = base64_encode(file_get_contents($file->getRealPath()));
+            
+            if ($request->student_id && $request->exam_id) {
+                ExamArchive::create([
+                    'student_id' => (int) $request->student_id,
+                    'exam_id' => (int) $request->exam_id,
+                    'file_name' => $file->getClientOriginalName(),
+                    'mime_type' => $mime,
+                    'file_data' => $base64,
+                ]);
+            }
+
             $parts[] = [
                 'inline_data' => [
                     'mime_type' => $mime,
@@ -223,12 +290,12 @@ class AnalysisController extends Controller
             ]
         ];
 
-        $response = \Illuminate\Support\Facades\Http::withHeaders([
+        $response = Http::withoutVerifying()->withHeaders([
             'Content-Type' => 'application/json',
         ])->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . $apiKey, $payload);
 
         if ($response->failed()) {
-            \Illuminate\Support\Facades\Log::error('Gemini API Error: ' . $response->body());
+            Log::error('Gemini API Error: ' . $response->body());
             return response()->json(['message' => 'Failed to process image with Vision AI.', 'error' => $response->body()], 500);
         }
 
@@ -248,5 +315,101 @@ class AnalysisController extends Controller
         $data['exam_id'] = $request->input('exam_id', $data['exam_id'] ?? null);
 
         return response()->json($data);
+    }
+
+    /**
+     * Use AI to determine the 5 most probable careers based on skills.
+     */
+    public function suggestCareers(Request $request)
+    {
+        $request->validate([
+            'student_id' => 'required|integer|exists:students,id'
+        ]);
+
+        $studentId = $request->student_id;
+        $student = Student::with('skills')->findOrFail($studentId);
+
+        if ($student->skills->isEmpty()) {
+            return response()->json(['careers' => []]);
+        }
+
+        $skillNames = $student->skills->pluck('name')->implode(', ');
+        $cacheKey = 'career_suggestions_student_' . $studentId;
+
+        // Cache for 24 hours to prevent API spam
+        $careers = Cache::remember($cacheKey, 86400, function () use ($skillNames) {
+            $apiKey = config('services.gemini.key');
+            if (!$apiKey) {
+                return ['Gemini API key is missing.'];
+            }
+
+            $prompt = 'You are a career counselor. A student has the following natural aptitudes and skills: ' . $skillNames . '. ' .
+                      'Determine the 5 most probable careers the student can excel in. Return ONLY a JSON array of strings (e.g. ["Career 1", "Career 2"]). No other text, no markdown.';
+
+            $payload = [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt]
+                        ]
+                    ]
+                ],
+                'generationConfig' => [
+                    'responseMimeType' => 'application/json'
+                ]
+            ];
+
+            $response = Http::withoutVerifying()->withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . $apiKey, $payload);
+
+            if ($response->failed()) {
+                Log::error('Gemini API Error (Careers): ' . $response->body());
+                return ['Error fetching careers from AI'];
+            }
+
+            $result = $response->json();
+            $generatedText = $result['candidates'][0]['content']['parts'][0]['text'] ?? '[]';
+            
+            $generatedText = preg_replace('/```json\s+/', '', $generatedText);
+            $generatedText = preg_replace('/```/', '', $generatedText);
+
+            $data = json_decode(trim($generatedText), true);
+
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+                return ['Failed to parse AI response'];
+            }
+
+            return array_slice($data, 0, 5);
+        });
+
+        return response()->json(['careers' => $careers]);
+    }
+
+    /**
+     * Get lightweight list of exam archives for a student.
+     */
+    public function getArchives($studentId)
+    {
+        $archives = ExamArchive::where('student_id', (int) $studentId)
+            ->select('_id', 'student_id', 'exam_id', 'file_name', 'mime_type', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        return response()->json($archives);
+    }
+
+    /**
+     * Download or view an exam archive full file payload.
+     */
+    public function downloadArchive($archiveId)
+    {
+        $archive = ExamArchive::find($archiveId);
+        
+        if (!$archive) {
+            return response()->json(['message' => 'Archive not found'], 404);
+        }
+        
+        return response()->json($archive);
     }
 }

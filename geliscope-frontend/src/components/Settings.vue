@@ -21,6 +21,7 @@ const currentUser = computed(() => {
     school_id: 1,
     current_class_id: 2,
     date_of_birth: '',
+    personal_motto: '',
 
     // Parent specific
     phone_number: '',
@@ -48,8 +49,32 @@ const classes = ref([
 const activeTab = ref(0)
 const snackbar = ref(false)
 
+const mottoFontType = ref(localStorage.getItem('motto_font_type') || 'Inter')
+const mottoFontSize = ref(localStorage.getItem('motto_font_size') || '16')
+const mottoFontColor = ref(localStorage.getItem('motto_font_color') || '#000000')
+
+const commonFonts = [
+  'Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 
+  'Poppins', 'Oswald', 'Arial', 'Times New Roman', 
+  'Courier New', 'Comic Sans MS'
+]
+
+const mottoError = computed(() => {
+  if (!currentUser.value.personal_motto) return ''
+  const words = currentUser.value.personal_motto.trim().split(/\s+/)
+  return words.length > 7 ? 'Motto cannot exceed 7 words.' : ''
+})
+
 const saveChanges = () => {
+  if (mottoError.value) return
   loading.value = true
+  
+  if (currentUser.value.role === 'student') {
+    localStorage.setItem('motto_font_type', mottoFontType.value)
+    localStorage.setItem('motto_font_size', mottoFontSize.value)
+    localStorage.setItem('motto_font_color', mottoFontColor.value)
+  }
+
   setTimeout(() => {
     loading.value = false
     snackbar.value = true
@@ -72,7 +97,7 @@ const saveChanges = () => {
         <div class="d-flex flex-column flex-md-row">
           
           <!-- Sidebar Navigation -->
-          <div class="bg-surface-light border-e" style="min-width: 250px;">
+          <div class="bg-surface-light border-e sidebar-nav">
             <v-tabs v-model="activeTab" direction="vertical" color="primary">
               <v-tab value="0" class="justify-start px-6 font-weight-bold text-none">
                 <v-icon start class="mr-3">mdi-account-outline</v-icon> Personal Info
@@ -138,6 +163,56 @@ const saveChanges = () => {
                     bg-color="background"
                     density="comfortable"
                   ></v-text-field>
+
+                  <template v-if="currentUser.role === 'student'">
+                    <v-divider class="my-6"></v-divider>
+                    <h3 class="text-h6 font-weight-bold mb-4">Personal Motto</h3>
+                    
+                    <v-text-field
+                      v-model="currentUser.personal_motto"
+                      label="Your Motto (Max 7 words)"
+                      variant="outlined"
+                      bg-color="background"
+                      density="comfortable"
+                      :error-messages="mottoError"
+                      class="mb-4"
+                    ></v-text-field>
+
+                    <v-row dense>
+                      <v-col cols="12" sm="4">
+                        <v-autocomplete
+                          v-model="mottoFontType"
+                          :items="commonFonts"
+                          label="Font Type"
+                          variant="outlined"
+                          bg-color="background"
+                          density="comfortable"
+                        ></v-autocomplete>
+                      </v-col>
+                      <v-col cols="12" sm="4">
+                        <v-text-field
+                          v-model="mottoFontSize"
+                          label="Font Size (px, max 24)"
+                          type="number"
+                          max="24"
+                          variant="outlined"
+                          bg-color="background"
+                          density="comfortable"
+                        ></v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="4">
+                        <v-text-field
+                          v-model="mottoFontColor"
+                          label="Font Color"
+                          type="color"
+                          variant="outlined"
+                          bg-color="background"
+                          density="comfortable"
+                          class="motto-color-picker"
+                        ></v-text-field>
+                      </v-col>
+                    </v-row>
+                  </template>
 
                 </v-window-item>
 
@@ -338,5 +413,13 @@ const saveChanges = () => {
 
 .font-family-sans {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.sidebar-nav {
+  min-width: 250px;
+}
+
+.motto-color-picker {
+  height: 56px;
 }
 </style>

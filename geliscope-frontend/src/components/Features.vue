@@ -59,11 +59,11 @@ const features = [
 
 <template>
   <div class="features-page position-relative w-100 overflow-hidden pb-16">
-    <div class="glow-blur-purple" style="top: -100px; left: 50%; transform: translateX(-50%); opacity: 0.4;"></div>
+    <div class="glow-blur-purple e%); opacity: 0.4;"></div>
     
     <v-container class="pt-16 mt-8 position-relative z-10">
       <div class="text-center max-w-3xl mx-auto mb-16">
-        <v-chip color="primary" variant="outlined" class="mb-6 font-weight-bold border-opacity-50" style="border-radius: 100px; background: rgba(171, 125, 227, 0.05);">
+        <v-chip color="primary" variant="outlined" class="mb-6 font-weight-bold border-opacity-50 e 125, 227, 0.05);">
           Core Technologies & Solutions
         </v-chip>
         <h1 class="text-h2 font-weight-black tracking-tight mb-4 text-white">
@@ -102,6 +102,14 @@ const features = [
 </template>
 
 <style scoped>
+.extracted-style-1 {
+  top: -100px; left: 50%; transform: translateX(-50%); opacity: 0.4;
+}
+
+.extracted-style-2 {
+  border-radius: 100px; background: rgba(171, 125, 227, 0.05);
+}
+
 .max-w-3xl { max-width: 800px; }
 .z-10 { z-index: 10; }
 .h-2 { height: 8px; }

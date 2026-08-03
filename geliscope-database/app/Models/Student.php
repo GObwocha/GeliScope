@@ -38,6 +38,7 @@ class Student extends Model
         'school_id',
         'current_class_id',
         'date_of_birth',
+        'personal_motto',
     ];
 
     /**
@@ -92,6 +93,14 @@ class Student extends Model
     public function examResults(): HasMany
     {
         return $this->hasMany(ExamResult::class);
+    }
+
+    /**
+     * Get the skills associated with this student.
+     */
+    public function skills(): BelongsToMany
+    {
+        return $this->belongsToMany(Skill::class, 'student_skill');
     }
 
     /**

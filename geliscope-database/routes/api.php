@@ -20,17 +20,17 @@ Route::prefix('v1')->group(function () {
     // Protected Routes
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
-
+        //Users
         Route::apiResource('users', UserController::class)->except(['store']);
-
+        //Schools
         Route::apiResource('schools', SchoolController::class)->except(['index']);
         Route::post('schools/{id}/classes', [SchoolController::class, 'storeClass']);
-
+        //Exams
         Route::apiResource('exams', ExamController::class);
         Route::post('exams/{examId}/results', [ExamController::class, 'storeResult']);
         Route::post('exam-results/{resultId}/question-scores', [ExamController::class, 'storeQuestionScores']);
         Route::get('students/{studentId}/exam-results', [ExamController::class, 'studentResults']);
-
+        //Analysis
         Route::get('analysis/exam/{studentId}/{examId}', [AnalysisController::class, 'examAnalysis']);
         Route::post('analysis/exam', [AnalysisController::class, 'storeExamAnalysis']);
         Route::post('analysis/process-vision', [AnalysisController::class, 'processVision']);
@@ -40,9 +40,13 @@ Route::prefix('v1')->group(function () {
         Route::post('analysis/class', [AnalysisController::class, 'storeClassAnalysis']);
         Route::get('analysis/marking-config/{examId}', [AnalysisController::class, 'markingConfig']);
         Route::post('analysis/marking-config', [AnalysisController::class, 'storeMarkingConfig']);
-
+        Route::post('analysis/careers/suggest', [AnalysisController::class, 'suggestCareers']);
+        //Archives
+        Route::get('archives/student/{studentId}', [AnalysisController::class, 'getArchives']);
+        Route::get('archives/{archiveId}/download', [AnalysisController::class, 'downloadArchive']);
+        //Leaderboard
         Route::get('leaderboard', [LeaderboardController::class, 'index']);
-
+        //Parents
         Route::get('parents/{parentId}', [ParentController::class, 'show']);
         Route::post('parents/{parentId}/students', [ParentController::class, 'linkStudent']);
         Route::delete('parents/{parentId}/students/{studentId}', [ParentController::class, 'unlinkStudent']);

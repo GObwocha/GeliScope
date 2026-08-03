@@ -87,7 +87,7 @@ class UserController extends Controller
 
             DB::commit();
 
-            return response()->json($user->load(['student', 'teacher', 'parentProfile']), 201);
+            return response()->json($user->load(['student.school', 'student.skills', 'teacher.school', 'parentProfile']), 201);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json(['message' => 'Failed to create user', 'error' => $e->getMessage()], 500);
@@ -99,7 +99,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::with(['student', 'teacher', 'parentProfile'])->findOrFail($id);
+        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])->findOrFail($id);
         return response()->json($user);
     }
 
@@ -116,15 +116,35 @@ class UserController extends Controller
             'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
             'profile_photo_url' => 'nullable|string|url',
+            'personal_motto' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if (str_word_count($value) > 7) {
+                        $fail('The personal motto must not exceed 7 words.');
+                    }
+                },
+            ],
+            'admission_number' => 'sometimes|required|string|unique:students,admission_number,' . optional($user->student)->id,
+            'school_id' => 'sometimes|required|exists:schools,id',
+            'current_class_id' => 'nullable|exists:classes,id',
+            'date_of_birth' => 'nullable|date',
         ]);
 
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         }
 
-        $user->update($validated);
+        $user->update($request->only(['first_name', 'last_name', 'email', 'password', 'profile_photo_url']));
 
-        return response()->json($user->fresh(['student', 'teacher', 'parentProfile']));
+        if ($user->role === 'student' && $user->student) {
+            $studentData = $request->only(['admission_number', 'school_id', 'current_class_id', 'date_of_birth', 'personal_motto']);
+            if (!empty($studentData)) {
+                $user->student->update($studentData);
+            }
+        }
+
+        return response()->json($user->fresh(['student.school', 'student.skills', 'teacher.school', 'parentProfile']));
     }
 
     /**

@@ -8,16 +8,16 @@ const activeTab = ref('parents')
   <div class="landing-page position-relative w-100 overflow-hidden pb-16">
     
     <!-- Hero Section -->
-    <v-container class="pt-16 mt-16 text-center position-relative z-10" style="max-width: 1000px;">
+    <v-container class="pt-16 mt-16 text-center position-relative z-10 eax-width: 1000px;">
       <v-row justify="center">
         <v-col cols="12" class="d-flex flex-column align-center">
           <!-- Small badge -->
-          <v-chip color="secondary" variant="outlined" class="mb-8 font-weight-bold px-4 py-4 text-subtitle-2 border-opacity-50" style="border-radius: 100px; background: rgba(81, 250, 170, 0.05);">
+          <v-chip color="secondary" variant="outlined" class="mb-8 font-weight-bold px-4 py-4 text-subtitle-2 border-opacity-50 e 250, 170, 0.05);">
             <v-icon start color="secondary" size="small">mdi-star-four-points</v-icon>
             AI Vision Assessment Engine
           </v-chip>
           
-          <h1 class="text-h2 font-weight-black tracking-tight mb-4 leading-tight" style="font-size: 4rem !important; line-height: 1.1 !important;">
+          <h1 class="text-h2 font-weight-black tracking-tight mb-4 leading-tight e: 1.1 !important;">
             Educational Analytics That <br />
             <span class="text-gradient">Exceeds Expectations</span>
           </h1>
@@ -76,7 +76,7 @@ const activeTab = ref('parents')
         <!-- Top Right: Dual Database -->
         <v-col cols="12" md="8">
           <div class="bento-card h-100 p-8 rounded-xl pa-8 d-flex flex-column position-relative overflow-hidden">
-            <div class="glow-blur-purple" style="top: -50px; right: -50px; opacity: 0.5;"></div>
+            <div class="glow-blur-purple epx; opacity: 0.5;"></div>
             
             <h3 class="text-h4 font-weight-bold text-white mb-2 position-relative z-10">Get accurate insights, <span class="text-gradient">faster</span></h3>
             <p class="text-muted text-body-1 mb-8 position-relative z-10">Dual-Database Sync matches structured scores with unstructured Bloom's taxonomy mapping.</p>
@@ -84,7 +84,7 @@ const activeTab = ref('parents')
             <v-row class="position-relative z-10 flex-grow-1">
               <v-col cols="12" sm="6" class="d-flex flex-column justify-center">
                 <div class="d-flex align-center mb-6">
-                  <div class="rounded-circle d-flex align-center justify-center mr-4" style="width: 60px; height: 60px; border: 4px solid #51FAAA; border-left-color: rgba(81,250,170,0.2);">
+                  <div class="rounded-circle d-flex align-center justify-center mr-4 e(81,250,170,0.2);">
                     <span class="text-h6 font-weight-bold text-secondary">98%</span>
                   </div>
                   <div>
@@ -94,7 +94,7 @@ const activeTab = ref('parents')
                 </div>
                 
                 <div class="d-flex align-center">
-                  <div class="rounded-circle d-flex align-center justify-center mr-4" style="width: 60px; height: 60px; border: 4px solid #AB7DE3; border-top-color: rgba(171,125,227,0.2);">
+                  <div class="rounded-circle d-flex align-center justify-center mr-4 e171,125,227,0.2);">
                     <span class="text-h6 font-weight-bold text-primary">100%</span>
                   </div>
                   <div>
@@ -110,13 +110,13 @@ const activeTab = ref('parents')
                     <span class="text-caption text-muted font-weight-bold text-uppercase">Form 1 Performance</span>
                     <v-chip size="x-small" color="secondary" variant="flat">Live</v-chip>
                   </div>
-                  <div class="d-flex align-end gap-2 mb-2" style="height: 100px;">
-                    <div class="bg-primary rounded-t-sm w-100 transition-all" style="height: 40%"></div>
-                    <div class="bg-muted rounded-t-sm w-100 transition-all" style="height: 60%"></div>
-                    <div class="bg-primary rounded-t-sm w-100 transition-all" style="height: 30%"></div>
-                    <div class="bg-secondary rounded-t-sm w-100 transition-all shadow-glow" style="height: 90%"></div>
-                    <div class="bg-primary rounded-t-sm w-100 transition-all" style="height: 50%"></div>
-                    <div class="bg-muted rounded-t-sm w-100 transition-all" style="height: 70%"></div>
+                  <div class="d-flex align-end gap-2 mb-2 ">
+                    <div class="bg-primary rounded-t-sm w-100 transition-all "></div>
+                    <div class="bg-muted rounded-t-sm w-100 transition-all "></div>
+                    <div class="bg-primary rounded-t-sm w-100 transition-all "></div>
+                    <div class="bg-secondary rounded-t-sm w-100 transition-all shadow-glow "></div>
+                    <div class="bg-primary rounded-t-sm w-100 transition-all "></div>
+                    <div class="bg-muted rounded-t-sm w-100 transition-all "></div>
                   </div>
                   <div class="text-center text-caption text-muted mt-2">Class Average Trend</div>
                 </div>
@@ -130,9 +130,9 @@ const activeTab = ref('parents')
         <!-- Bottom Full Width: Feature showcase -->
         <v-col cols="12">
           <div class="bento-card rounded-xl pa-8 text-center position-relative overflow-hidden mt-4">
-             <div class="glow-blur-green" style="bottom: -150px; left: 50%; transform: translateX(-50%); opacity: 0.3;"></div>
+             <div class="glow-blur-green e0%); opacity: 0.3;"></div>
              
-             <v-chip color="primary" variant="outlined" class="mb-6 font-weight-bold border-opacity-50" style="border-radius: 100px; background: rgba(171, 125, 227, 0.05);">
+             <v-chip color="primary" variant="outlined" class="mb-6 font-weight-bold border-opacity-50 e, 125, 227, 0.05);">
                 Targeted Solutions
              </v-chip>
              
@@ -171,6 +171,66 @@ const activeTab = ref('parents')
 </template>
 
 <style scoped>
+.extracted-style-1 {
+  max-width: 1000px;
+}
+
+.extracted-style-2 {
+  border-radius: 100px; background: rgba(81, 250, 170, 0.05);
+}
+
+.extracted-style-3 {
+  font-size: 4rem !important; line-height: 1.1 !important;
+}
+
+.extracted-style-4 {
+  top: -50px; right: -50px; opacity: 0.5;
+}
+
+.extracted-style-5 {
+  width: 60px; height: 60px; border: 4px solid #51FAAA; border-left-color: rgba(81,250,170,0.2);
+}
+
+.extracted-style-6 {
+  width: 60px; height: 60px; border: 4px solid #AB7DE3; border-top-color: rgba(171,125,227,0.2);
+}
+
+.extracted-style-7 {
+  height: 100px;
+}
+
+.extracted-style-8 {
+  height: 40%
+}
+
+.extracted-style-9 {
+  height: 60%
+}
+
+.extracted-style-10 {
+  height: 30%
+}
+
+.extracted-style-11 {
+  height: 90%
+}
+
+.extracted-style-12 {
+  height: 50%
+}
+
+.extracted-style-13 {
+  height: 70%
+}
+
+.extracted-style-14 {
+  bottom: -150px; left: 50%; transform: translateX(-50%); opacity: 0.3;
+}
+
+.extracted-style-15 {
+  border-radius: 100px; background: rgba(171, 125, 227, 0.05);
+}
+
 .max-w-xl { max-width: 600px; margin-left: auto; margin-right: auto; }
 .max-w-4xl { max-width: 900px; }
 .min-h-\[200px\] { min-height: 200px; }
