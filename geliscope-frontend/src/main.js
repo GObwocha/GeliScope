@@ -4,7 +4,7 @@ import vue3GoogleLogin from 'vue3-google-login'
 import axios from 'axios'
 
 // Configure Axios
-axios.defaults.baseURL = '' // Handled by proxy
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || '' // Uses env variable in production, falls back to proxy locally
 axios.interceptors.request.use(config => {
   const token = localStorage.getItem('geliscope_token')
   if (token) {
