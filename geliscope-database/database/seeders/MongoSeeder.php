@@ -12,7 +12,7 @@ use App\Models\ClassGroup;
 use App\Models\Subject;
 use App\Models\ParentProfile;
 use App\Models\MongoDB\ExamAnalysis;
-use App\Models\MongoDB\StudentSkillProfile;
+use App\Models\MongoDB\StudentCognitiveProfile;
 use App\Models\MongoDB\ClassAnalysis;
 use App\Models\MongoDB\ParentReport;
 use App\Models\MongoDB\TeacherMarkingConfig;

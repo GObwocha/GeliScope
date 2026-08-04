@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useExamStore } from '@/stores/exams'
 import axios from 'axios'
@@ -71,8 +71,6 @@ const recentExams = computed(() => examStore.recentExams)
 
 const activeExamPoint = ref(null)
 
-import { watch } from 'vue'
-
 watch(trendExams, (newVal) => {
   if (newVal && newVal.length > 0 && !activeExamPoint.value) {
     activeExamPoint.value = newVal[newVal.length - 1]
@@ -142,14 +140,14 @@ const fetchCognitiveProfile = async () => {
    const response = await axios.get(`/api/v1/analysis/cognitive-profile/${userProfile.value.student.id}`, {
      headers: { Authorization: `Bearer ${authStore.token}` }
    })
-   if (response.data && response.data.average_blooms_taxonomy) {
-     const avgs = response.data.average_blooms_taxonomy
+   if (response.data && response.data.blooms_taxonomy) {
+     const avgs = response.data.blooms_taxonomy
      bloomsMastery.value = {
-       remembering: avgs.remembering || 0,
-       understanding: avgs.understanding || 0,
-       applying: avgs.applying || 0,
-       analyzing: avgs.analyzing || 0,
-       evaluating: avgs.evaluating || 0,
+       remembering: avgs.remembering.score || 0,
+       understanding: avgs.understanding.score || 0,
+       applying: avgs.applying.score || 0,
+       analyzing: avgs.analyzing.score || 0,
+       evaluating: avgs.evaluating.score || 0,
        last_analyzed: new Date(response.data.last_updated).toLocaleDateString()
      }
    }
@@ -158,6 +156,13 @@ const fetchCognitiveProfile = async () => {
  } finally {
    fetchingCognitiveProfile.value = false
  }
+}
+
+const getProgressColor = (score) => {
+  if (score > 80) return 'success'
+  if (score > 60) return 'primary'
+  if (score > 40) return 'warning'
+  return 'error'
 }
 
 const parentActionSteps = ref([
@@ -311,41 +316,41 @@ onMounted(() => {
  <v-col cols="12" sm="6" class="mb-2">
  <div class="d-flex justify-space-between text-body-2 font-weight-bold mb-1">
  <span>Remembering (Foundational Recall)</span>
- <span class="text-success">{{ bloomsMastery.remembering }}%</span>
+ <span :class="`text-${getProgressColor(bloomsMastery.remembering)}`">{{ bloomsMastery.remembering }}%</span>
  </div>
- <v-progress-linear :model-value="bloomsMastery.remembering" color="success" height="10" rounded class="bg-surface"></v-progress-linear>
+ <v-progress-linear :model-value="bloomsMastery.remembering" :color="getProgressColor(bloomsMastery.remembering)" height="10" rounded class="bg-surface"></v-progress-linear>
  </v-col>
 
  <v-col cols="12" sm="6" class="mb-2">
  <div class="d-flex justify-space-between text-body-2 font-weight-bold mb-1">
  <span>Understanding (Concept Comprehension)</span>
- <span class="text-success">{{ bloomsMastery.understanding }}%</span>
+ <span :class="`text-${getProgressColor(bloomsMastery.understanding)}`">{{ bloomsMastery.understanding }}%</span>
  </div>
- <v-progress-linear :model-value="bloomsMastery.understanding" color="success" height="10" rounded class="bg-surface"></v-progress-linear>
+ <v-progress-linear :model-value="bloomsMastery.understanding" :color="getProgressColor(bloomsMastery.understanding)" height="10" rounded class="bg-surface"></v-progress-linear>
  </v-col>
 
  <v-col cols="12" sm="6" class="mb-2">
  <div class="d-flex justify-space-between text-body-2 font-weight-bold mb-1">
  <span>Applying (Formula & Problem Execution)</span>
- <span class="text-primary">{{ bloomsMastery.applying }}%</span>
+ <span :class="`text-${getProgressColor(bloomsMastery.applying)}`">{{ bloomsMastery.applying }}%</span>
  </div>
- <v-progress-linear :model-value="bloomsMastery.applying" color="primary" height="10" rounded class="bg-surface"></v-progress-linear>
+ <v-progress-linear :model-value="bloomsMastery.applying" :color="getProgressColor(bloomsMastery.applying)" height="10" rounded class="bg-surface"></v-progress-linear>
  </v-col>
 
  <v-col cols="12" sm="6" class="mb-2">
  <div class="d-flex justify-space-between text-body-2 font-weight-bold mb-1">
  <span>Analyzing (Diagram & Error Deduction)</span>
- <span class="text-warning">{{ bloomsMastery.analyzing }}%</span>
+ <span :class="`text-${getProgressColor(bloomsMastery.analyzing)}`">{{ bloomsMastery.analyzing }}%</span>
  </div>
- <v-progress-linear :model-value="bloomsMastery.analyzing" color="warning" height="10" rounded class="bg-surface"></v-progress-linear>
+ <v-progress-linear :model-value="bloomsMastery.analyzing" :color="getProgressColor(bloomsMastery.analyzing)" height="10" rounded class="bg-surface"></v-progress-linear>
  </v-col>
 
  <v-col cols="12" class="mt-2">
  <div class="d-flex justify-space-between text-body-2 font-weight-bold mb-1">
  <span>Evaluating (Critical Synthesis & Proofs)</span>
- <span class="text-error">{{ bloomsMastery.evaluating }}% (Target Focus Area)</span>
+ <span :class="`text-${getProgressColor(bloomsMastery.evaluating)}`">{{ bloomsMastery.evaluating }}% (Target Focus Area)</span>
  </div>
- <v-progress-linear :model-value="bloomsMastery.evaluating" color="error" height="12" rounded class="bg-surface"></v-progress-linear>
+ <v-progress-linear :model-value="bloomsMastery.evaluating" :color="getProgressColor(bloomsMastery.evaluating)" height="12" rounded class="bg-surface"></v-progress-linear>
  </v-col>
  </v-row>
  </v-card>

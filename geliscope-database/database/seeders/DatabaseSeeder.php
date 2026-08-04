@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             CountySeeder::class,
+            SkillSeeder::class,
         ]);
 
         // Seed 10 schools
