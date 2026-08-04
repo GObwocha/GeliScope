@@ -2,8 +2,6 @@
 
 body {
   font-family: 'Outfit', sans-serif;
-  background-color: #0C0E1D;
-  color: #FFFFFF;
 }
 
 .v-application {
@@ -47,8 +45,8 @@ body {
 }
 
 .bento-card {
-  background: #211F36 !important;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgb(var(--v-theme-cardBg)) !important;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.05);
   transition: all 0.3s ease;
   overflow: hidden;
   position: relative;
@@ -90,9 +88,9 @@ body {
 }
 
 .navbar-glass {
-  background: rgba(12, 14, 29, 0.8) !important;
+  background: rgba(var(--v-theme-background), 0.8) !important;
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.05) !important;
 }
 
 .text-muted {
