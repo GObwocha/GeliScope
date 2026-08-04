@@ -14,29 +14,19 @@ const selectedArchiveId = ref(null)
 const documentUrl = ref(null)
 const documentMime = ref(null)
 
-const userProfile = computed(() => authStore.userProfile || {})
-const studentId = computed(() => userProfile.value?.student?.id)
-
-onMounted(async () => {
- if (!authStore.isAuthenticated) {
- router.push('/login')
- return
- }
-
- if (studentId.value) {
- fetchArchives()
- }
-})
+const userProfile = computed(() => authStore.currentUser || {})
+const studentId = computed(() => userProfile.value?.student?.id || userProfile.value?.id)
 
 const fetchArchives = async () => {
  try {
  loadingArchives.value = true
+ 
  const response = await axios.get(`/api/v1/archives/student/${studentId.value}`, {
  headers: { Authorization: `Bearer ${authStore.token}` }
  })
  archives.value = response.data.map(archive => ({
  title: `${archive.file_name} - ${new Date(archive.created_at).toLocaleDateString()}`,
- value: archive._id
+ value: archive.id
  }))
  } catch (error) {
  console.error('Error fetching archives:', error)
@@ -44,6 +34,7 @@ const fetchArchives = async () => {
  loadingArchives.value = false
  }
 }
+
 
 const loadDocument = async (archiveId) => {
  if (!archiveId) {
@@ -67,6 +58,21 @@ const loadDocument = async (archiveId) => {
  loadingDocument.value = false
  }
 }
+
+onMounted(async () => {
+ if (!authStore.isAuthenticated) {
+ router.push('/login')
+ return
+ }
+
+ if (studentId.value) {
+ fetchArchives()
+ }
+})
+
+
+
+
 </script>
 
 <template>
@@ -126,7 +132,7 @@ const loadDocument = async (archiveId) => {
  </div>
  
  <!-- Center Document Viewer -->
- <div class="flex-grow-1 w-100  d-flex align-center justify-center overflow-auto" style="min-height: 600px;">
+ <div class="flex-grow-1 w-100  d-flex align-center justify-center overflow-auto" style="min-height: 1200px;">
  <!-- PDF Viewer -->
  <iframe 
  v-if="documentMime === 'application/pdf'"

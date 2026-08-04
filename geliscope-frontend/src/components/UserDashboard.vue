@@ -313,7 +313,7 @@ onMounted(() => {
  </div>
 
  <v-row>
- <v-col cols="12" sm="6" class="mb-2">
+ <v-col cols="12" class="mb-2">
  <div class="d-flex justify-space-between text-body-2 font-weight-bold mb-1">
  <span>Remembering (Foundational Recall)</span>
  <span :class="`text-${getProgressColor(bloomsMastery.remembering)}`">{{ bloomsMastery.remembering }}%</span>
@@ -321,7 +321,7 @@ onMounted(() => {
  <v-progress-linear :model-value="bloomsMastery.remembering" :color="getProgressColor(bloomsMastery.remembering)" height="10" rounded class="bg-surface"></v-progress-linear>
  </v-col>
 
- <v-col cols="12" sm="6" class="mb-2">
+ <v-col cols="12" class="mb-2">
  <div class="d-flex justify-space-between text-body-2 font-weight-bold mb-1">
  <span>Understanding (Concept Comprehension)</span>
  <span :class="`text-${getProgressColor(bloomsMastery.understanding)}`">{{ bloomsMastery.understanding }}%</span>
@@ -329,7 +329,7 @@ onMounted(() => {
  <v-progress-linear :model-value="bloomsMastery.understanding" :color="getProgressColor(bloomsMastery.understanding)" height="10" rounded class="bg-surface"></v-progress-linear>
  </v-col>
 
- <v-col cols="12" sm="6" class="mb-2">
+ <v-col cols="12" class="mb-2">
  <div class="d-flex justify-space-between text-body-2 font-weight-bold mb-1">
  <span>Applying (Formula & Problem Execution)</span>
  <span :class="`text-${getProgressColor(bloomsMastery.applying)}`">{{ bloomsMastery.applying }}%</span>
@@ -337,7 +337,7 @@ onMounted(() => {
  <v-progress-linear :model-value="bloomsMastery.applying" :color="getProgressColor(bloomsMastery.applying)" height="10" rounded class="bg-surface"></v-progress-linear>
  </v-col>
 
- <v-col cols="12" sm="6" class="mb-2">
+ <v-col cols="12" class="mb-2">
  <div class="d-flex justify-space-between text-body-2 font-weight-bold mb-1">
  <span>Analyzing (Diagram & Error Deduction)</span>
  <span :class="`text-${getProgressColor(bloomsMastery.analyzing)}`">{{ bloomsMastery.analyzing }}%</span>
@@ -348,7 +348,7 @@ onMounted(() => {
  <v-col cols="12" class="mt-2">
  <div class="d-flex justify-space-between text-body-2 font-weight-bold mb-1">
  <span>Evaluating (Critical Synthesis & Proofs)</span>
- <span :class="`text-${getProgressColor(bloomsMastery.evaluating)}`">{{ bloomsMastery.evaluating }}% (Target Focus Area)</span>
+ <span :class="`text-${getProgressColor(bloomsMastery.evaluating)}`">{{ bloomsMastery.evaluating }}%</span>
  </div>
  <v-progress-linear :model-value="bloomsMastery.evaluating" :color="getProgressColor(bloomsMastery.evaluating)" height="12" rounded class="bg-surface"></v-progress-linear>
  </v-col>
