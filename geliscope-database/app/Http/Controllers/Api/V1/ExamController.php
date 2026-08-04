@@ -166,6 +166,20 @@ class ExamController extends Controller
             ->select('exam_results.*') // prevent id conflict
             ->get();
 
-        return response()->json($results);
+        $formattedResults = $results->map(function ($result) {
+            $aggregates = ExamResult::where('exam_id', $result->exam_id)
+                ->selectRaw('SUM(total_score) as sum_total, SUM(max_score) as sum_max')
+                ->first();
+
+            $streamAvg = 0;
+            if ($aggregates && $aggregates->sum_max > 0) {
+                $streamAvg = ($aggregates->sum_total / $aggregates->sum_max) * 100;
+            }
+
+            $result->setAttribute('stream_avg', round($streamAvg, 1));
+            return $result;
+        });
+
+        return response()->json($formattedResults);
     }
 }

@@ -1,11 +1,13 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useExamStore } from '@/stores/exams'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const examStore = useExamStore()
 
 // Default / active role view switcher ('student' | 'parent' | 'teacher')
 const activeRole = computed(() => authStore.activeRole || 'student')
@@ -64,22 +66,18 @@ const fetchSuggestedCareers = async () => {
 }
 
 // Chronological Trend of Student Average Marks (`exam_results` table sync across all historical terms)
-const trendExams = ref([
- { id: 1, exam_code: 'EX-25-T1-OP', name: 'Form 1 - Term 1 Opener', period: 'Jan 2025', avg: 58.0, grade: 'C+', stream_avg: 54.2, status: 'Verified' },
- { id: 2, exam_code: 'EX-25-T1-MT', name: 'Form 1 - Mid-Term 1', period: 'Feb 2025', avg: 64.5, grade: 'B-', stream_avg: 59.0, status: 'Verified' },
- { id: 3, exam_code: 'EX-25-T1-END', name: 'Form 1 - End Term 1', period: 'Apr 2025', avg: 67.2, grade: 'B', stream_avg: 61.5, status: 'Verified' },
- { id: 4, exam_code: 'EX-25-T2-OP', name: 'Form 1 - Term 2 Opener', period: 'May 2025', avg: 62.0, grade: 'B-', stream_avg: 58.8, status: 'Verified' },
- { id: 5, exam_code: 'EX-25-T2-MT', name: 'Form 1 - Mid-Term 2', period: 'Jun 2025', avg: 71.4, grade: 'B+', stream_avg: 64.0, status: 'Verified' },
- { id: 6, exam_code: 'EX-25-T2-END', name: 'Form 1 - End Term 2', period: 'Aug 2025', avg: 74.0, grade: 'B+', stream_avg: 66.2, status: 'Verified' },
- { id: 7, exam_code: 'EX-25-T3-FIN', name: 'Form 1 - Term 3 Final', period: 'Nov 2025', avg: 76.8, grade: 'A-', stream_avg: 67.5, status: 'Verified' },
- { id: 8, exam_code: 'EX-26-T1-OP', name: 'Form 2 - Term 1 Opener', period: 'Jan 2026', avg: 73.5, grade: 'B+', stream_avg: 65.0, status: 'Verified' },
- { id: 9, exam_code: 'EX-26-T1-MT', name: 'Form 2 - Mid-Term 1', period: 'Feb 2026', avg: 79.2, grade: 'A-', stream_avg: 68.4, status: 'Verified' },
- { id: 10, exam_code: 'EX-26-T1-END', name: 'Form 2 - End Term 1', period: 'Apr 2026', avg: 82.0, grade: 'A', stream_avg: 70.1, status: 'Verified' },
- { id: 11, exam_code: 'EX-26-T2-OP', name: 'Form 2 - Term 2 Opener', period: 'May 2026', avg: 80.5, grade: 'A-', stream_avg: 69.8, status: 'Verified' },
- { id: 12, exam_code: 'EX-26-T2-MT2', name: 'Form 2 - Mid-Term 2 (Present)', period: 'Jul 2026', avg: 85.4, grade: 'A', stream_avg: 71.2, status: 'Verified' }
-])
+const trendExams = computed(() => examStore.trendExams)
+const recentExams = computed(() => examStore.recentExams)
 
-const activeExamPoint = ref(trendExams.value[trendExams.value.length - 1])
+const activeExamPoint = ref(null)
+
+import { watch } from 'vue'
+
+watch(trendExams, (newVal) => {
+  if (newVal && newVal.length > 0 && !activeExamPoint.value) {
+    activeExamPoint.value = newVal[newVal.length - 1]
+  }
+}, { immediate: true })
 
 // SVG Chart Metrics (Computed for high-precision vector rendering without external bundle overhead)
 const chartMetrics = computed(() => {
@@ -95,12 +93,19 @@ const chartMetrics = computed(() => {
  const minVal = 45
  const maxVal = 100
  
- const points = trendExams.value.map((item, idx) => {
- const x = padLeft + (idx / (trendExams.value.length - 1)) * plotWidth
- const normalized = Math.max(0, Math.min(1, (item.avg - minVal) / (maxVal - minVal)))
- const y = (padTop + plotHeight) - (normalized * plotHeight)
- return { ...item, x, y, idx }
- })
+  if (!trendExams.value || trendExams.value.length === 0) {
+    return { width, height, padTop, padBottom, padLeft, padRight, plotWidth, plotHeight, bottomY: padTop + plotHeight, points: [], linePath: '', areaPath: '', gridLines: [] }
+  }
+
+  const points = trendExams.value.map((item, idx) => {
+    let x = padLeft;
+    if (trendExams.value.length > 1) {
+      x = padLeft + (idx / (trendExams.value.length - 1)) * plotWidth
+    }
+    const normalized = Math.max(0, Math.min(1, (item.avg - minVal) / (maxVal - minVal)))
+    const y = (padTop + plotHeight) - (normalized * plotHeight)
+    return { ...item, x, y, idx }
+  })
 
  const linePath = points.map(p => `${p.x},${p.y}`).join(' ')
  const bottomY = padTop + plotHeight
@@ -116,12 +121,7 @@ const chartMetrics = computed(() => {
  return { width, height, padTop, padBottom, padLeft, padRight, plotWidth, plotHeight, bottomY, points, linePath, areaPath, gridLines }
 })
 
-// MySQL Relational Assessment Data (`exam_results`) for Parent and Teacher views
-const recentExams = ref([
- { id: 101, exam_code: 'EXAM-2026-MATH-01', title: 'Term 2 Mid-Term Mathematics', score: 88, max_score: 100, grade: 'A', date: '2026-07-10', status: 'Verified' },
- { id: 102, exam_code: 'EXAM-2026-PHYS-01', title: 'Term 2 Mid-Term Physics', score: 76, max_score: 100, grade: 'A-', date: '2026-07-08', status: 'Verified' },
- { id: 103, exam_code: 'EXAM-2026-CHEM-01', title: 'Term 2 Mid-Term Chemistry', score: 62, max_score: 100, grade: 'B', date: '2026-07-05', status: 'Needs Revision' }
-])
+// (Removed old recentExams ref, now using computed from examStore)
 
 // MongoDB Unstructured AI Diagnostics (`exam_analyses` & `student_cognitive_profiles`)
 const fetchingCognitiveProfile = ref(false)
@@ -182,6 +182,9 @@ onMounted(() => {
  loading.value = false
  fetchSuggestedCareers()
  fetchCognitiveProfile()
+ if (userProfile.value.student?.id) {
+   examStore.fetchStudentExams(userProfile.value.student.id)
+ }
  }
 })
 </script>
@@ -482,7 +485,7 @@ onMounted(() => {
  </div>
 
  <!-- Selected Assessment Checkpoint Detail Card -->
- <div class="pa-4 pa-sm-5 rounded-2xl border bg-surface d-flex flex-column justify-space-between">
+ <div v-if="activeExamPoint" class="pa-4 pa-sm-5 rounded-2xl border bg-surface d-flex flex-column justify-space-between">
  <div class="d-flex flex-column flex-sm-row align-sm-center mb-4">
  <v-avatar color="primary" size="52" variant="tonal" class="mr-sm-4 mb-3 mb-sm-0 font-weight-black text-h6 align-self-start align-self-sm-center">
  E{{ activeExamPoint.id }}
@@ -657,13 +660,13 @@ onMounted(() => {
  <tbody>
  <tr v-for="exam in recentExams" :key="exam.id">
  <td class="font-weight-bold py-4">
- <div>{{ exam.title }}</div>
+ <div>{{ exam.name || exam.title }}</div>
  <v-chip v-if="exam.exam_code" size="x-small" color="primary" variant="tonal" class="font-mono mt-1">{{ exam.exam_code }}</v-chip>
  </td>
- <td class="text-medium-emphasis py-4 text-no-wrap">{{ exam.date }}</td>
+ <td class="text-medium-emphasis py-4 text-no-wrap">{{ exam.date || exam.period }}</td>
  <td class="font-weight-black text-primary py-4 text-no-wrap">{{ exam.score }} / {{ exam.max_score }}</td>
  <td class="py-4">
- <v-chip :color="exam.grade.startsWith('A') ? 'success' : (exam.grade.startsWith('B') ? 'primary' : 'warning')" size="small" variant="flat" class="font-weight-bold">
+ <v-chip :color="exam.grade && exam.grade.startsWith('A') ? 'success' : (exam.grade && exam.grade.startsWith('B') ? 'primary' : 'warning')" size="small" variant="flat" class="font-weight-bold">
  {{ exam.grade }}
  </v-chip>
  </td>
