@@ -126,30 +126,51 @@ const displayData = computed(() => {
 // Chronological Exam Data
 const examHistory = ref([])
 const loadingHistory = ref(true)
+const subjects = ref([{ id: '', name: 'Overall (All Subjects)' }])
+const selectedSubject = ref('')
+
+const fetchExamHistory = async () => {
+  try {
+    loadingHistory.value = true
+    const studentId = authStore.currentUser?.student?.id
+    if (!studentId) return
+
+    let url = `/api/v1/students/${studentId}/exam-results`
+    if (selectedSubject.value) {
+      url += `?subject_id=${selectedSubject.value}`
+    }
+
+    const res = await axios.get(url)
+    if (res.data) {
+      examHistory.value = res.data.map(result => {
+        return {
+          id: `RND-${result.id}`, // using round ID
+          name: result.exam?.name || 'Unknown',
+          score: result.total_score ? Math.round((parseFloat(result.total_score) / parseFloat(result.max_score)) * 100) : result.avg || 0
+        }
+      })
+    }
+  } catch (err) {
+    console.error('Failed to fetch real exam history:', err)
+  } finally {
+    loadingHistory.value = false
+  }
+}
 
 onMounted(async () => {
- try {
- const studentId = authStore.currentUser?.student?.id
- if (!studentId) return
+  try {
+    const subjRes = await axios.get('/api/v1/subjects')
+    if (subjRes.data) {
+      subjects.value = [
+        { id: '', name: 'Overall (All Subjects)' },
+        ...subjRes.data
+      ]
+    }
+  } catch(e) {
+    console.error('Failed to load subjects', e)
+  }
 
- const res = await axios.get(`/api/v1/students/${studentId}/exam-results`)
- if (res.data && res.data.length > 0) {
- examHistory.value = res.data.map(result => {
- // Calculate the percentage based on max_score
- const percent = Math.round((parseFloat(result.total_score) / parseFloat(result.max_score)) * 100)
- 
- return {
- id: result.exam?.exam_code || `EX-${result.exam_id}`, // Fallback if no code
- name: result.exam?.name || 'Unknown',
- score: percent
- }
- })
- }
- } catch (err) {
- console.error('Failed to fetch real exam history:', err)
- } finally {
- loadingHistory.value = false
- }
+  fetchExamHistory()
 })
 
 const chartMetrics = computed(() => {
@@ -244,9 +265,20 @@ const getBarColor = (score) => {
  <!-- Bar / Line Chart -->
  <v-col cols="12" md="5" class="px-6 d-flex flex-column">
  <v-card class="rounded-xl pa-5 bg-surface elevation-2 border flex-grow-1 d-flex flex-column">
- <div class="d-flex align-center position-relative mb-8">
- <div class="text-h6 font-weight-bold text-center w-100 position-absolute" style="pointer-events: none;">Average Marks</div>
- <div class="d-flex align-center gap-4 ml-auto" style="z-index: 1;">
+ <div class="d-flex flex-wrap align-center justify-space-between mb-4 gap-4">
+ <div class="text-h6 font-weight-bold">Average Marks</div>
+ <div class="d-flex align-center gap-4">
+ <v-select
+ v-model="selectedSubject"
+ :items="subjects"
+ item-title="name"
+ item-value="id"
+ density="compact"
+ variant="outlined"
+ hide-details
+ @update:modelValue="fetchExamHistory"
+ style="max-width: 200px"
+ ></v-select>
  <v-btn-toggle v-model="graphType" mandatory color="primary" variant="outlined" class="rounded-lg bg-surface" >
  <v-btn value="bar" icon="mdi-chart-bar" size="small"></v-btn>
  <v-btn value="line" icon="mdi-chart-line-variant" size="small"></v-btn>

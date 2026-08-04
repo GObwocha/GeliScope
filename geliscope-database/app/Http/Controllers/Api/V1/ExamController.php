@@ -157,28 +157,59 @@ class ExamController extends Controller
     /**
      * Fetch exam results for a specific student, sorted chronologically.
      */
-    public function studentResults($studentId)
+    public function studentResults(Request $request, $studentId)
     {
-        $results = ExamResult::with('exam')
-            ->where('student_id', $studentId)
+        $subjectId = $request->query('subject_id');
+
+        $query = ExamResult::with('exam.examRound')
+            ->where('exam_results.student_id', $studentId)
             ->join('exams', 'exam_results.exam_id', '=', 'exams.id')
-            ->orderBy('exams.exam_date', 'asc')
-            ->select('exam_results.*') // prevent id conflict
-            ->get();
+            ->join('exam_rounds', 'exams.exam_round_id', '=', 'exam_rounds.id')
+            ->select('exam_results.*', 'exam_rounds.name as round_name', 'exam_rounds.id as round_id')
+            ->orderBy('exam_rounds.id', 'asc');
 
-        $formattedResults = $results->map(function ($result) {
-            $aggregates = ExamResult::where('exam_id', $result->exam_id)
-                ->selectRaw('SUM(total_score) as sum_total, SUM(max_score) as sum_max')
-                ->first();
+        if ($subjectId) {
+            $query->where('exams.subject_id', $subjectId);
+        }
 
+        $results = $query->get();
+
+        $grouped = $results->groupBy('round_id');
+
+        $formattedResults = $grouped->map(function ($roundResults) use ($subjectId) {
+            $first = $roundResults->first();
+            $roundId = $first->round_id;
+            
+            $studentTotal = $roundResults->sum('total_score');
+            $studentMax = $roundResults->sum('max_score');
+
+            $streamQuery = ExamResult::join('exams', 'exam_results.exam_id', '=', 'exams.id')
+                ->where('exams.exam_round_id', $roundId);
+                
+            if ($subjectId) {
+                $streamQuery->where('exams.subject_id', $subjectId);
+            }
+
+            $aggregates = $streamQuery->selectRaw('SUM(total_score) as sum_total, SUM(max_score) as sum_max')->first();
+            
             $streamAvg = 0;
             if ($aggregates && $aggregates->sum_max > 0) {
                 $streamAvg = ($aggregates->sum_total / $aggregates->sum_max) * 100;
             }
 
-            $result->setAttribute('stream_avg', round($streamAvg, 1));
-            return $result;
-        });
+            return [
+                'id' => $roundId,
+                'exam_id' => $first->exam_id,
+                'student_id' => $first->student_id,
+                'total_score' => $studentTotal,
+                'max_score' => $studentMax,
+                'exam' => [
+                    'id' => $roundId,
+                    'name' => $first->round_name,
+                ],
+                'stream_avg' => round($streamAvg, 1),
+            ];
+        })->values();
 
         return response()->json($formattedResults);
     }

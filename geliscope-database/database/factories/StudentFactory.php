@@ -21,7 +21,7 @@ class StudentFactory extends Factory
     {
         return [
             'user_id' => User::factory()->state(['role' => 'student']),
-            'admission_number' => 'ADM/' . fake()->unique()->numberBetween(2020, 2026) . '/' . fake()->unique()->numberBetween(100, 9999),
+            'admission_number' => fake()->unique()->bothify('ADM/202#/####'),
             'school_id' => School::factory(),
             'current_class_id' => null,
             'date_of_birth' => fake()->date('Y-m-d', '-13 years'),

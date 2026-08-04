@@ -35,6 +35,7 @@ class Exam extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'exam_round_id',
         'exam_code',
         'name',
         'subject_id',
@@ -79,6 +80,14 @@ class Exam extends Model
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(Teacher::class, 'created_by');
+    }
+
+    /**
+     * Get the exam round this exam belongs to.
+     */
+    public function examRound(): BelongsTo
+    {
+        return $this->belongsTo(ExamRound::class);
     }
 
     /**

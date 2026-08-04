@@ -22,9 +22,13 @@ Route::prefix('v1')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         //Users
         Route::apiResource('users', UserController::class)->except(['store']);
+        //Subjects
+        Route::get('subjects', [\App\Http\Controllers\Api\V1\SubjectController::class, 'index']);
         //Schools
         Route::apiResource('schools', SchoolController::class)->except(['index']);
         Route::post('schools/{id}/classes', [SchoolController::class, 'storeClass']);
+        //Exam Rounds
+        Route::get('exam-rounds', [\App\Http\Controllers\Api\V1\ExamRoundController::class, 'index']);
         //Exams
         Route::apiResource('exams', ExamController::class);
         Route::post('exams/{examId}/results', [ExamController::class, 'storeResult']);

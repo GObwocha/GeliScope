@@ -25,7 +25,7 @@ const fetchLeaderboard = async () => {
  const studentId = authStore.currentUser?.student?.id || ''
  const response = await axios.get(`/api/v1/leaderboard`, {
  params: {
- exam_id: selectedExam.value,
+ exam_round_id: selectedExam.value,
  student_id: studentId
  }
  })
@@ -111,10 +111,10 @@ const getBarColor = (score) => {
 
 onMounted(async () => {
  try {
- const response = await axios.get('/api/v1/exams')
+ const response = await axios.get('/api/v1/exam-rounds')
  if (response.data && response.data.data) {
  exams.value = [
- { id: 'all', name: 'All Exams (Overall Average)' },
+ { id: 'all', name: 'All Exam Rounds (Overall Average)' },
  ...response.data.data
  ]
  if (exams.value.length > 0) {
@@ -136,7 +136,7 @@ onMounted(async () => {
  <v-col cols="12" class="d-flex justify-space-between align-center">
  <div>
  <h1 class="text-h3 font-weight-medium lh-tight mb-2">National Leaderboard</h1>
- <div class="text-caption text-medium-emphasis">Top performing students across standard exams.</div>
+ <div class="text-caption text-medium-emphasis">Top performing students across standard exam rounds.</div>
  </div>
  <div class="extracted-style-1" >
  <v-select
