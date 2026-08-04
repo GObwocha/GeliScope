@@ -5,20 +5,19 @@ namespace App\Models\MongoDB;
 use MongoDB\Laravel\Eloquent\Model;
 
 /**
- * StudentSkillProfile MongoDB model for the GeliScope application.
+ * StudentCognitiveProfile MongoDB model for the GeliScope application.
  *
- * Stores a student's aggregated skill profile derived from exam analyses,
- * including skill sets and suggested career paths.
+ * Stores a student's aggregated Bloom's Taxonomy cognitive breakdown
+ * derived from all their exam analyses.
  *
  * @property string       $_id
  * @property int          $student_id
- * @property array        $skill_sets
- * @property array        $suggested_careers
+ * @property array        $average_blooms_taxonomy
  * @property \Illuminate\Support\Carbon|null $last_updated
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  */
-class StudentSkillProfile extends Model
+class StudentCognitiveProfile extends Model
 {
     /**
      * The database connection that should be used by the model.
@@ -32,7 +31,7 @@ class StudentSkillProfile extends Model
      *
      * @var string
      */
-    protected $collection = 'student_skill_profiles';
+    protected $collection = 'student_cognitive_profiles';
 
     /**
      * The attributes that are mass assignable.
@@ -41,8 +40,7 @@ class StudentSkillProfile extends Model
      */
     protected $fillable = [
         'student_id',
-        'skill_sets',
-        'suggested_careers',
+        'average_blooms_taxonomy',
         'last_updated',
     ];
 
@@ -54,8 +52,7 @@ class StudentSkillProfile extends Model
     protected function casts(): array
     {
         return [
-            'skill_sets' => 'array',
-            'suggested_careers' => 'array',
+            'average_blooms_taxonomy' => 'array',
             'last_updated' => 'datetime',
         ];
     }
