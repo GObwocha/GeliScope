@@ -194,7 +194,7 @@ const saveToMongoDB = async () => {
 </script>
 
 <template>
- <v-container fluid class="py-10">
+ <v-container >
  <div class="mb-8">
  <v-chip color="accent" size="small" variant="flat" prepend-icon="mdi-camera-iris" class="mb-2 font-weight-bold">
  GELISCOPE VISION & OCR ENGINE

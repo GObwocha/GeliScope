@@ -84,7 +84,7 @@ const saveChanges = () => {
 </script>
 
 <template>
- <v-container fluid class="pa-6 bg-background min-vh-100 font-family-sans">
+ <v-container  class="pa-6 bg-background min-vh-100 font-family-sans">
  <div class="max-w-4xl mx-auto">
  
  <!-- Header -->
@@ -222,7 +222,7 @@ const saveChanges = () => {
  
  <div class="mb-4">
  <v-chip color="primary" variant="tonal" class="font-weight-bold text-uppercase mb-6" size="small">
- Role: {{ currentUser.role }}
+ Role > {{ currentUser.role }}
  </v-chip>
  </div>
 

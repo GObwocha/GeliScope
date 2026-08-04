@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\MongoDB\ExamAnalysis;
 use App\Models\MongoDB\StudentSkillProfile;
+use App\Models\MongoDB\StudentCognitiveProfile;
 use App\Models\MongoDB\ClassAnalysis;
 use App\Models\MongoDB\TeacherMarkingConfig;
 use App\Models\MongoDB\ExamArchive;
@@ -107,6 +108,46 @@ class AnalysisController extends Controller
         if ($examResult) {
             $examResult->update(['mongo_analysis_id' => $analysis->_id]);
         }
+        
+        // Recalculate Bloom's Taxonomy Cognitive Profile Averages
+        $allAnalyses = ExamAnalysis::where('student_id', (int) $validated['student_id'])->get();
+        $bloomSums = [
+            'remembering' => 0,
+            'understanding' => 0,
+            'applying' => 0,
+            'analyzing' => 0,
+            'evaluating' => 0,
+        ];
+        $count = 0;
+        
+        foreach ($allAnalyses as $ana) {
+            if (!empty($ana->blooms_taxonomy)) {
+                $bloomSums['remembering'] += (float)($ana->blooms_taxonomy['remembering'] ?? 0);
+                $bloomSums['understanding'] += (float)($ana->blooms_taxonomy['understanding'] ?? 0);
+                $bloomSums['applying'] += (float)($ana->blooms_taxonomy['applying'] ?? 0);
+                $bloomSums['analyzing'] += (float)($ana->blooms_taxonomy['analyzing'] ?? 0);
+                $bloomSums['evaluating'] += (float)($ana->blooms_taxonomy['evaluating'] ?? 0);
+                $count++;
+            }
+        }
+        
+        if ($count > 0) {
+            $averages = [
+                'remembering' => round($bloomSums['remembering'] / $count, 2),
+                'understanding' => round($bloomSums['understanding'] / $count, 2),
+                'applying' => round($bloomSums['applying'] / $count, 2),
+                'analyzing' => round($bloomSums['analyzing'] / $count, 2),
+                'evaluating' => round($bloomSums['evaluating'] / $count, 2),
+            ];
+            
+            StudentCognitiveProfile::updateOrCreate(
+                ['student_id' => (int) $validated['student_id']],
+                [
+                    'average_blooms_taxonomy' => $averages,
+                    'last_updated' => Carbon::now(),
+                ]
+            );
+        }
 
         return response()->json($analysis, 201);
     }
@@ -144,6 +185,20 @@ class AnalysisController extends Controller
         );
 
         return response()->json($profile, 201);
+    }
+
+    /**
+     * Get student cognitive profile (Bloom's Taxonomy averages).
+     */
+    public function cognitiveProfile($studentId)
+    {
+        $profile = StudentCognitiveProfile::where('student_id', (int) $studentId)->first();
+
+        if (!$profile) {
+            return response()->json(['message' => 'Cognitive profile not found'], 404);
+        }
+
+        return response()->json($profile);
     }
 
     /**

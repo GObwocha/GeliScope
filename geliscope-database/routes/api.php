@@ -36,11 +36,15 @@ Route::prefix('v1')->group(function () {
         Route::post('analysis/process-vision', [AnalysisController::class, 'processVision']);
         Route::get('analysis/skills/{studentId}', [AnalysisController::class, 'skillProfile']);
         Route::post('analysis/skills', [AnalysisController::class, 'storeSkillProfile']);
+        Route::get('analysis/cognitive-profile/{studentId}', [AnalysisController::class, 'cognitiveProfile']);
         Route::get('analysis/class/{classId}/{examId}', [AnalysisController::class, 'classAnalysis']);
         Route::post('analysis/class', [AnalysisController::class, 'storeClassAnalysis']);
         Route::get('analysis/marking-config/{examId}', [AnalysisController::class, 'markingConfig']);
         Route::post('analysis/marking-config', [AnalysisController::class, 'storeMarkingConfig']);
         Route::post('analysis/careers/suggest', [AnalysisController::class, 'suggestCareers']);
+        //Archives
+        Route::get('archives/student/{studentId}', [AnalysisController::class, 'getArchives']);
+        Route::get('archives/{archiveId}/download', [AnalysisController::class, 'downloadArchive']);
         //Leaderboard
         Route::get('leaderboard', [LeaderboardController::class, 'index']);
         //Parents

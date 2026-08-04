@@ -130,7 +130,7 @@ onMounted(async () => {
 </script>
 
 <template>
- <v-container fluid class="bg-background min-vh-100 pa-6 font-family-sans">
+ <v-container class="bg-background min-vh-100 pa-6 font-family-sans">
  <!-- Header Section -->
  <v-row class="mb-4">
  <v-col cols="12" class="d-flex justify-space-between align-center">

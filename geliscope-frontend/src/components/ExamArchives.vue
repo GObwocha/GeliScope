@@ -70,9 +70,9 @@ const loadDocument = async (archiveId) => {
 </script>
 
 <template>
- <v-container fluid class="py-8 h-100 d-flex flex-column" style="min-height: 90vh;">
+ <v-container  class="py-8 h-100 d-flex flex-column" style="min-height: 90vh;">
  <!-- Top Header -->
- <v-card class="pa-6 rounded-3xl border bg-surface shadow-glow mb-6" elevation="4">
+ <v-card class="pa-6 rounded-3xl border   mb-6" elevation="4">
  <div class="d-flex align-center justify-space-between mb-4">
  <div>
  <h1 class="text-h4 font-weight-black d-flex align-center gap-3">
@@ -104,14 +104,14 @@ const loadDocument = async (archiveId) => {
  </v-card>
 
  <!-- Document Viewer Area -->
- <v-card class="flex-grow-1 rounded-3xl border bg-surface shadow-glow overflow-hidden d-flex flex-column" elevation="4">
+ <v-card class="flex-grow-1 rounded-3xl border   overflow-hidden d-flex flex-column" elevation="4">
  <div v-if="loadingDocument" class="d-flex flex-column align-center justify-center flex-grow-1 pa-8">
  <v-progress-circular indeterminate color="primary" size="64" class="mb-4"></v-progress-circular>
  <h3 class="text-h6 text-medium-emphasis">Decrypting and loading document...</h3>
  </div>
  
  <div v-else-if="documentUrl" class="d-flex flex-column flex-grow-1 w-100 h-100 relative">
- <div class="bg-surface-light border-b px-4 py-2 d-flex justify-space-between align-center">
+ <div class=" border-b px-4 py-2 d-flex justify-space-between align-center">
  <span class="font-weight-bold text-caption text-uppercase text-medium-emphasis">Document Viewer</span>
  <v-btn 
  size="small" 
@@ -126,7 +126,7 @@ const loadDocument = async (archiveId) => {
  </div>
  
  <!-- Center Document Viewer -->
- <div class="flex-grow-1 w-100 bg-black d-flex align-center justify-center overflow-auto" style="min-height: 600px;">
+ <div class="flex-grow-1 w-100  d-flex align-center justify-center overflow-auto" style="min-height: 600px;">
  <!-- PDF Viewer -->
  <iframe 
  v-if="documentMime === 'application/pdf'"
@@ -162,16 +162,4 @@ const loadDocument = async (archiveId) => {
 </template>
 
 <style scoped>
-.shadow-glow {
- box-shadow: 0 4px 24px rgba(99, 102, 241, 0.08) !important;
-}
-.bg-surface {
- background-color: rgb(var(--v-theme-surface));
-}
-.bg-surface-light {
- background-color: rgba(var(--v-theme-surface), 0.5);
-}
-.bg-black {
- background-color: #1a1a1a;
-}
 </style>

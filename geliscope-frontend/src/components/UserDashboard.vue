@@ -123,15 +123,42 @@ const recentExams = ref([
  { id: 103, exam_code: 'EXAM-2026-CHEM-01', title: 'Term 2 Mid-Term Chemistry', score: 62, max_score: 100, grade: 'B', date: '2026-07-05', status: 'Needs Revision' }
 ])
 
-// MongoDB Unstructured AI Diagnostics (`exam_analyses` & `student_skill_profiles`)
+// MongoDB Unstructured AI Diagnostics (`exam_analyses` & `student_cognitive_profiles`)
+const fetchingCognitiveProfile = ref(false)
 const bloomsMastery = ref({
- remembering: 92,
- understanding: 85,
- applying: 78,
- analyzing: 68,
- evaluating: 54,
- last_analyzed: '2 hours ago'
+ remembering: 0,
+ understanding: 0,
+ applying: 0,
+ analyzing: 0,
+ evaluating: 0,
+ last_analyzed: 'Never'
 })
+
+const fetchCognitiveProfile = async () => {
+ if (activeRole.value !== 'student' || !userProfile.value.student?.id) return
+
+ fetchingCognitiveProfile.value = true
+ try {
+   const response = await axios.get(`/api/v1/analysis/cognitive-profile/${userProfile.value.student.id}`, {
+     headers: { Authorization: `Bearer ${authStore.token}` }
+   })
+   if (response.data && response.data.average_blooms_taxonomy) {
+     const avgs = response.data.average_blooms_taxonomy
+     bloomsMastery.value = {
+       remembering: avgs.remembering || 0,
+       understanding: avgs.understanding || 0,
+       applying: avgs.applying || 0,
+       analyzing: avgs.analyzing || 0,
+       evaluating: avgs.evaluating || 0,
+       last_analyzed: new Date(response.data.last_updated).toLocaleDateString()
+     }
+   }
+ } catch (err) {
+   console.error('Failed to fetch cognitive profile', err)
+ } finally {
+   fetchingCognitiveProfile.value = false
+ }
+}
 
 const parentActionSteps = ref([
  { title: 'Trigonometric Sine Rule Practice', priority: 'High Priority', detail: 'Review triangle opposite vs. hypotenuse ratios before Sunday evening.', completed: false },
@@ -154,18 +181,19 @@ onMounted(() => {
  } else {
  loading.value = false
  fetchSuggestedCareers()
+ fetchCognitiveProfile()
  }
 })
 </script>
 
 
 <template>
- <v-container fluid class="py-8 ">
+ <v-container >
  <!-- Top Welcome Banner & Role Switcher -->
- <v-card class="pa-6 rounded-3xl border bg-surface shadow-glow mb-8" elevation="4">
+ <v-card class="pa-6 rounded-3xl border bg-surface  mb-8" elevation="4">
  <v-row align="center" justify="space-between">
  <v-col cols="12" md="7" class="d-flex align-center">
- <v-avatar :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="76" class="mr-6 font-weight-black text-h4 shadow-glow flex-shrink-0">
+ <v-avatar :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="76" class="mr-6 font-weight-black text-h4  flex-shrink-0">
  <span class="">{{ userProfile.first_name[0] }}{{ userProfile.last_name[0] }}</span>
  </v-avatar>
  <div>
@@ -201,8 +229,8 @@ onMounted(() => {
  <v-row>
  <!-- Career Suggestions -->
  <v-col cols="12" lg="4">
- <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column shadow-glow" elevation="4">
- <div class="mb-4">
+ <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column " elevation="4">
+ <div class="mb-6">
  <div class="d-flex align-center justify-space-between mb-4">
  <v-avatar color="primary" size="48" variant="tonal">
  <v-icon size="28">mdi-briefcase-search-outline</v-icon>
@@ -263,8 +291,8 @@ onMounted(() => {
  </v-col>
 
  <!-- Bloom's Taxonomy Cognitive Mastery (MongoDB) -->
- <v-col cols="12" lg="8">
- <v-card class="pa-6 rounded-3xl border bg-surface h-100 shadow-glow" elevation="4">
+ <v-col cols="6" lg="8">
+ <v-card class="pa-6 rounded-3xl border bg-surface h-100 " elevation="4">
  <div class="d-flex justify-space-between align-center mb-6">
  <div>
  <h2 class="text-h5 font-weight-black d-flex align-center">
@@ -322,12 +350,12 @@ onMounted(() => {
  </v-row>
 
  <!-- REPLACED SECTION: Chronological Trend of Student Average Marks Line Graph -->
- <v-card class="pa-6 rounded-3xl border bg-surface mt-8 shadow-glow" elevation="6">
+ <v-card class="pa-6 rounded-3xl border bg-surface mt-8 " elevation="6">
  <div class="d-flex flex-column flex-md-row justify-space-between align-md-center mb-6">
  <div>
  <div class="d-flex align-center gap-2 mb-1">
  <v-chip color="primary" size="small" variant="flat" class="font-weight-bold">LONGITUDINAL ACADEMIC TRAJECTORY</v-chip>
- <v-chip color="success" size="small" variant="tonal" class="font-weight-bold ma-5">ALL 12 EXAMS INCLUDED</v-chip>
+ 
  </div>
  <h2 class="text-h4 font-weight-black d-flex align-center">
  <v-icon color="primary" size="32" class="mr-3">mdi-chart-line-variant</v-icon>
@@ -491,7 +519,7 @@ onMounted(() => {
  <div v-else-if="activeRole === 'parent'">
  <v-row>
  <v-col cols="12" lg="8">
- <v-card class="pa-6 rounded-3xl border bg-surface h-100 shadow-glow" elevation="4">
+ <v-card class="pa-6 rounded-3xl border bg-surface h-100 " elevation="4">
  <div class="d-flex justify-space-between align-center mb-6">
  <div>
  <h2 class="text-h5 font-weight-black d-flex align-center">
@@ -526,7 +554,7 @@ onMounted(() => {
  </v-col>
 
  <v-col cols="12" lg="4">
- <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column justify-space-between shadow-glow" elevation="4">
+ <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column justify-space-between " elevation="4">
  <div>
  <h2 class="text-h5 font-weight-black mb-3 d-flex align-center">
  <v-icon color="success" class="mr-2">mdi-whatsapp</v-icon>
@@ -552,7 +580,7 @@ onMounted(() => {
  <div v-else>
  <v-row>
  <v-col cols="12" md="6">
- <v-card class="pa-6 rounded-3xl border bg-surface h-100 shadow-glow" elevation="4">
+ <v-card class="pa-6 rounded-3xl border bg-surface h-100 " elevation="4">
  <div class="d-flex justify-space-between align-center mb-4">
  <h2 class="text-h5 font-weight-black d-flex align-center">
  <v-icon color="secondary" class="mr-2">mdi-chart-bar</v-icon>
@@ -575,7 +603,7 @@ onMounted(() => {
  </v-col>
 
  <v-col cols="12" md="6">
- <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column justify-space-between shadow-glow" elevation="4">
+ <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column justify-space-between " elevation="4">
  <div>
  <div class="d-flex justify-space-between align-center mb-4">
  <h2 class="text-h5 font-weight-black d-flex align-center">
@@ -602,7 +630,7 @@ onMounted(() => {
  </div>
 
  <!-- MySQL Relational Assessment Table (Shown strictly for Parent and Teacher workspaces) -->
- <v-card v-if="activeRole !== 'student'" class="pa-4 pa-md-6 rounded-3xl border bg-surface mt-8 shadow-glow" elevation="4">
+ <v-card v-if="activeRole !== 'student'" class="pa-4 pa-md-6 rounded-3xl border bg-surface mt-8 " elevation="4">
  <div class="d-flex flex-column flex-md-row justify-space-between align-md-center mb-4">
  <div class="mb-3 mb-md-0">
  <h2 class="text-h5 font-weight-black d-flex align-center" style="word-break: break-word;">
