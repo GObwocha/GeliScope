@@ -18,9 +18,11 @@ class ExamRoundFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->randomElement(['Mid-Term 1', 'End Term 1', 'Mid-Term 2', 'End Term 2', 'Mid-Term 3', 'Final Exam']),
-            'term' => fake()->numberBetween(1, 3),
-            'academic_year' => fake()->randomElement(['2024/2025', '2025/2026']),
+            'name' => 'Round ' . $this->faker->unique()->numberBetween(1, 100),
+            'term' => $this->faker->numberBetween(1, 3),
+            'academic_year' => $this->faker->year(),
+            'start_date' => $this->faker->dateTimeBetween('-1 year', 'now')->format('Y-m-d'),
+            'end_date' => $this->faker->dateTimeBetween('now', '+1 month')->format('Y-m-d'),
         ];
     }
 }

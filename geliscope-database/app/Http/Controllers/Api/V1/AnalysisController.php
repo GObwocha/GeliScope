@@ -300,16 +300,27 @@ class AnalysisController extends Controller
             'files.*' => 'file|mimes:jpeg,png,pdf|max:16384',
             'student_id' => 'nullable|integer',
             'exam_id' => 'nullable|integer',
+            'action' => 'nullable|string|in:mark_and_analyze,analyze_only',
+            'marking_instructions' => 'nullable|string'
         ]);
+
+        $action = $request->input('action', 'analyze_only');
+        $markingInstructions = $request->input('marking_instructions', '');
 
         $apiKey = config('services.gemini.key');
         if (!$apiKey) {
             return response()->json(['message' => 'Gemini API key is missing.'], 500);
         }
 
+        $prompt = 'You are the GELISCOPE VISION & OCR ENGINE. Evaluate the provided exam script(s). Return ONLY valid JSON in the following format, with no markdown code blocks formatting, just the raw JSON: { "student_id": 1, "exam_id": 1, "ocr_raw_text": "[Extracted and structured text]", "blooms_taxonomy": { "remembering": 95, "understanding": 88, "applying": 82, "analyzing": 60, "evaluating": 45 }, "question_breakdown": [ { "q": 1, "topic": "Algebra", "score": 3, "max": 3, "status": "Perfect", "comment": "Excellent" } ], "overall_summary": "Summary text", "suggestions": [ "Suggestion 1" ] }';
+
+        if ($action === 'mark_and_analyze') {
+            $prompt .= ' SPECIAL INSTRUCTION: The teacher has requested you to strictly MARK this paper and provide an analysis. Use the following marking instructions when generating the question_breakdown scores and comments: "' . $markingInstructions . '"';
+        }
+
         $parts = [];
         $parts[] = [
-            'text' => 'You are the GELISCOPE VISION & OCR ENGINE. Evaluate the provided exam script(s). Return ONLY valid JSON in the following format, with no markdown code blocks formatting, just the raw JSON: { "student_id": 1, "exam_id": 1, "ocr_raw_text": "[Extracted and structured text]", "blooms_taxonomy": { "remembering": 95, "understanding": 88, "applying": 82, "analyzing": 60, "evaluating": 45 }, "question_breakdown": [ { "q": 1, "topic": "Algebra", "score": 3, "max": 3, "status": "Perfect", "comment": "Excellent" } ], "overall_summary": "Summary text", "suggestions": [ "Suggestion 1" ] }'
+            'text' => $prompt
         ];
 
         foreach ($request->file('files') as $file) {
@@ -503,6 +514,37 @@ class AnalysisController extends Controller
         }
         
         return response()->json($classes);
+    }
+
+    /**
+     * Get unique students for all classes a teacher teaches
+     */
+    public function teacherStudents($teacherId)
+    {
+        $teacher = \App\Models\Teacher::with('classes.students.user')->find((int) $teacherId);
+        if (!$teacher) {
+            return response()->json(['message' => 'Teacher not found'], 404);
+        }
+
+        $students = collect();
+
+        foreach ($teacher->classes as $class) {
+            foreach ($class->students as $student) {
+                if (!$students->contains('id', $student->id)) {
+                    $students->push([
+                        'id' => $student->id,
+                        'admission_number' => $student->admission_number,
+                        'user' => [
+                            'id' => $student->user->id,
+                            'first_name' => $student->user->first_name,
+                            'last_name' => $student->user->last_name,
+                        ]
+                    ]);
+                }
+            }
+        }
+
+        return response()->json($students->values()->all());
     }
 
     /**

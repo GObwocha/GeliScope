@@ -10,7 +10,7 @@ const router = useRouter()
 const loadingClasses = ref(true)
 const generating = ref(false)
 const classes = ref([])
-const selectedClassId = ref(null)
+const selectedClass = ref(null)
 const selectedExamId = ref(null)
 
 const diagnosisData = ref(null)
@@ -24,7 +24,7 @@ onMounted(async () => {
   }
   
   try {
-    const response = await axios.get(`/api/v1/analysis/teacher/${currentUser.value.id}/classes`, {
+    const response = await axios.get(`/api/v1/analysis/teacher/${currentUser.value.teacher.id}/classes`, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     })
     classes.value = response.data
@@ -34,18 +34,14 @@ onMounted(async () => {
     loadingClasses.value = false
   }
 })
-
-const selectedClass = computed(() => {
-  return classes.value.find(c => c.id === selectedClassId.value)
-})
-
+console.log()
 const examsForSelectedClass = computed(() => {
   if (!selectedClass.value) return []
   return selectedClass.value.exams || []
 })
 
 const generateDiagnosis = async () => {
-  if (!selectedClassId.value || !selectedExamId.value) return
+  if (!selectedClass.value || !selectedExamId.value) return
   
   generating.value = true
   diagnosisData.value = null
@@ -53,7 +49,7 @@ const generateDiagnosis = async () => {
   try {
     const response = await axios.post('/api/v1/analysis/class/generate-diagnosis', {
       teacher_id: currentUser.value.id,
-      class_id: selectedClassId.value,
+      class_id: selectedClass.value.id,
       subject_id: selectedClass.value.subject_id,
       exam_id: selectedExamId.value
     }, {
@@ -90,10 +86,10 @@ const generateDiagnosis = async () => {
       <v-row>
         <v-col cols="12" md="5">
           <v-select
-            v-model="selectedClassId"
+            v-model="selectedClass"
             :items="classes"
             item-title="name"
-            item-value="id"
+            return-object
             label="Select Class"
             variant="outlined"
             bg-color="background"
@@ -101,10 +97,10 @@ const generateDiagnosis = async () => {
             @update:modelValue="selectedExamId = null"
           >
             <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :subtitle="item.raw.subject_name"></v-list-item>
+              <v-list-item v-bind="props" :subtitle="item.subject_name"></v-list-item>
             </template>
             <template v-slot:selection="{ item }">
-              {{ item.raw.name }} ({{ item.raw.subject_name }})
+              {{ item.name }} ({{ item.subject_name }})
             </template>
           </v-select>
         </v-col>
@@ -118,7 +114,7 @@ const generateDiagnosis = async () => {
             label="Select Exam"
             variant="outlined"
             bg-color="background"
-            :disabled="!selectedClassId"
+            :disabled="!selectedClass"
           ></v-select>
         </v-col>
         
@@ -129,7 +125,7 @@ const generateDiagnosis = async () => {
             size="large" 
             class="rounded-xl font-weight-bold" 
             :loading="generating" 
-            :disabled="!selectedClassId || !selectedExamId"
+            :disabled="!selectedClass || !selectedExamId"
             @click="generateDiagnosis"
           >
             Generate

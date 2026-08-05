@@ -2,15 +2,18 @@
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
+import { useTeacherStore } from '@/stores/teacher'
 
 const students = ref([])
 const exams = ref([])
+const classesList = ref([])
 
 const selectedStudent = ref(null)
 const selectedExam = ref(null)
 
 const authStore = useAuthStore()
 const currentUser = authStore.currentUser
+const teacherStore = useTeacherStore()
 
 const loadingData = ref(true)
 
@@ -45,61 +48,69 @@ const progress = ref(0)
 const progressStep = ref('')
 const analysisResult = ref(null)
 
-onMounted(async () => {
- // Check for unsaved analysis in cache
- const cachedAnalysis = localStorage.getItem('unsaved_analysis')
- if (cachedAnalysis) {
- try {
- analysisResult.value = JSON.parse(cachedAnalysis)
- } catch (e) {
- console.error('Error parsing cached analysis', e)
- }
- }
+// Create Exam State
+const createExamDialog = ref(false)
+const creatingExam = ref(false)
+const examForm = ref({
+  name: '',
+  exam_code: '',
+  class_id: null,
+  subject_id: null,
+  exam_date: '',
+  term: 1,
+  academic_year: '2025'
+})
 
- loadingData.value = true
- try {
- const examResponse = await axios.get('/api/v1/exams')
- 
- if (currentUser) {
- if (currentUser.role === 'student' && currentUser.student) {
- students.value = [{
- id: currentUser.student.id,
- user: currentUser,
- admission_number: currentUser.student.admission_number 
- }]
- // FIX: Set to the ID to match item-value="id"
- selectedStudent.value = currentUser.student.id 
- } else if (currentUser.role === 'teacher' && currentUser.teacher) {
- students.value = [{
- id: currentUser.teacher.id,
- user: currentUser,
- admission_number: 'TEACHER'
- }]
- selectedStudent.value = currentUser.teacher.id
- } else {
- students.value = [{
- id: currentUser.id,
- user: currentUser,
- admission_number: currentUser.role
- }]
- selectedStudent.value = currentUser.id
- }
- }
- 
- // FIX: Properly extract the array and set the ID of the first exam
- if (examResponse.data && examResponse.data.data) {
- exams.value = examResponse.data.data
- 
- // Safely assign the first item's ID only after the array is populated
- if (exams.value.length > 0) {
- selectedExam.value = exams.value[0].id
- }
- }
- } catch (err) {
- console.error('Error fetching dropdowns:', err)
- } finally {
- loadingData.value = false
- }
+onMounted(async () => {
+  const cachedAnalysis = localStorage.getItem('unsaved_analysis')
+  if (cachedAnalysis) {
+    try {
+      analysisResult.value = JSON.parse(cachedAnalysis)
+    } catch (e) {
+      console.error('Error parsing cached analysis', e)
+    }
+  }
+
+  loadingData.value = true
+  try {
+    const examResponse = await axios.get('/api/v1/exams')
+    if (examResponse.data && examResponse.data.data) {
+      exams.value = examResponse.data.data
+    }
+
+    if (currentUser) {
+      if (currentUser.role === 'teacher' && currentUser.teacher) {
+        const teacherStudents = await teacherStore.fetchStudents(currentUser.teacher.id)
+        students.value = teacherStudents
+        
+        const teacherClasses = await teacherStore.fetchClasses(currentUser.teacher.id)
+        classesList.value = teacherClasses
+        
+      } else if (currentUser.role === 'student' && currentUser.student) {
+        students.value = [{
+          id: currentUser.student.id,
+          user: currentUser,
+          admission_number: currentUser.student.admission_number 
+        }]
+        selectedStudent.value = currentUser.student.id 
+      } else {
+        students.value = [{
+          id: currentUser.id,
+          user: currentUser,
+          admission_number: currentUser.role
+        }]
+        selectedStudent.value = currentUser.id
+      }
+    }
+    
+    if (exams.value.length > 0 && !selectedExam.value) {
+      selectedExam.value = exams.value[0].id
+    }
+  } catch (err) {
+    console.error('Error fetching data:', err)
+  } finally {
+    loadingData.value = false
+  }
 })
 
 watch([selectedStudent, selectedExam], async ([newStudent, newExam]) => {
@@ -118,59 +129,100 @@ watch([selectedStudent, selectedExam], async ([newStudent, newExam]) => {
  }
 })
 
-const startAnalysis = async () => {
- if (form.value) {
- const { valid } = await form.value.validate()
- if (!valid) return
- }
+const submitCreateExam = async () => {
+  creatingExam.value = true
+  try {
+    const selectedClassObj = classesList.value.find(c => c.id === examForm.value.class_id)
+    if (selectedClassObj) {
+      examForm.value.subject_id = selectedClassObj.subject_id
+    }
 
- if (files.value.length === 0) {
- alert('Please select or drag at least one exam paper image to scan.')
- return
- }
- analyzing.value = true
- progress.value = 25
- progressStep.value = 'Preparing exam script images and calling GELISCOPE VISION & OCR ENGINE...'
+    const response = await axios.post('/api/v1/exams', {
+      ...examForm.value,
+      created_by: currentUser.teacher.id
+    })
+    exams.value.push(response.data)
+    selectedExam.value = response.data.id
+    createExamDialog.value = false
+    alert('Exam created successfully!')
+  } catch (e) {
+    console.error(e)
+    alert('Failed to create exam.')
+  } finally {
+    creatingExam.value = false
+  }
+}
 
- try {
- const formData = new FormData()
- files.value.forEach(file => {
- formData.append('files[]', file)
- })
- 
- // FIX: selectedStudent and selectedExam now hold the primitive IDs directly
- if (selectedStudent.value) {
- formData.append('student_id', selectedStudent.value) 
- }
- 
- if (selectedExam.value) {
- formData.append('exam_id', selectedExam.value)
- }
+const startAnalysis = async (action = 'analyze_only') => {
+  if (form.value) {
+    const { valid } = await form.value.validate()
+    if (!valid) return
+  }
 
- progress.value = 60
- progressStep.value = 'Analyzing mathematical symbols, extracting text, and generating diagnostic report...'
+  if (files.value.length === 0) {
+    alert('Please select or drag at least one exam paper image to scan.')
+    return
+  }
+  
+  analyzing.value = true
+  progress.value = 25
+  progressStep.value = 'Preparing exam script images and calling GELISCOPE VISION & OCR ENGINE...'
 
- const response = await axios.post('/api/v1/analysis/process-vision', formData, {
- headers: {
- 'Content-Type': 'multipart/form-data'
- }
- })
+  try {
+    const formData = new FormData()
+    files.value.forEach(file => {
+      formData.append('files[]', file)
+    })
+    
+    if (selectedStudent.value) {
+      formData.append('student_id', selectedStudent.value) 
+    }
+    if (selectedExam.value) {
+      formData.append('exam_id', selectedExam.value)
+    }
 
- progress.value = 100
- progressStep.value = 'Finalizing diagnostic report...'
+    // Pass the action type to the backend
+    formData.append('action', action)
+    
+    if (action === 'mark_and_analyze' && selectedExam.value) {
+        try {
+            const configResp = await axios.get(`/api/v1/analysis/marking-config/${selectedExam.value}`)
+            if (configResp.data && configResp.data.instructions) {
+                // If instructions is an array of strings, join it
+                const instr = Array.isArray(configResp.data.instructions) ? configResp.data.instructions.join(' ') : configResp.data.instructions
+                formData.append('marking_instructions', instr)
+            }
+        } catch (ce) {
+            console.log('No specific marking config found, proceeding with default rubric.')
+        }
+    }
 
- analysisResult.value = response.data
- localStorage.setItem('unsaved_analysis', JSON.stringify(response.data))
- } catch (err) {
- console.error('Vision API Error:', err)
- let errorMsg = 'Failed to process images via Vision AI.'
- if (err.response && err.response.data && err.response.data.message) {
- errorMsg = err.response.data.message
- }
- alert(errorMsg)
- } finally {
- analyzing.value = false
- }
+    progress.value = 60
+    progressStep.value = action === 'mark_and_analyze' 
+        ? 'Grading script against rubric and generating diagnostic report...'
+        : 'Analyzing mathematical symbols, extracting text, and generating diagnostic report...'
+
+    const response = await axios.post('/api/v1/analysis/process-vision', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    progress.value = 100
+    progressStep.value = 'Finalizing diagnostic report...'
+
+    analysisResult.value = response.data
+    localStorage.setItem('unsaved_analysis', JSON.stringify(response.data))
+  } catch (err) {
+    console.error('Vision API Error:', err)
+    let errorMsg = 'Failed to process images via Vision AI.'
+    if (err.response && err.response.data && err.response.data.message) {
+      errorMsg = err.response.data.message
+    }
+    alert(errorMsg)
+  } finally {
+    analyzing.value = false
+  }
 }
 
 const saveToMongoDB = async () => {
@@ -263,62 +315,120 @@ const saveToMongoDB = async () => {
  {{ item.name || 'Unknown Exam' }} (Term {{ item.term || '-' }})
  </div>
  </template>
- <template v-slot:item="{ item, props }">
- <v-list-item v-bind="props" :title="item.name || 'Unknown Exam'" :subtitle="item.exam_code ? `Code: ${item.exam_code} • Term ${item.term}` : `Term ${item.term || '-'}`">
- <template v-slot:prepend>
- <v-chip size="x-small" color="secondary" variant="outlined" class="mr-2 font-mono font-weight-bold">{{ item.exam_code || 'EX' }}</v-chip>
- </template>
- </v-list-item>
- </template>
- </v-select>
+            <template v-slot:item="{ item, props }">
+              <v-list-item v-bind="props" :title="item.raw.name || 'Unknown Exam'" :subtitle="item.raw.exam_code ? `Code: ${item.raw.exam_code} • Term ${item.raw.term}` : `Term ${item.raw.term || '-'}`">
+                <template v-slot:prepend>
+                  <v-chip size="x-small" color="secondary" variant="outlined" class="mr-2 font-mono font-weight-bold">{{ item.raw.exam_code || 'EX' }}</v-chip>
+                </template>
+              </v-list-item>
+            </template>
+          </v-select>
 
- <v-form ref="form" @submit.prevent="startAnalysis">
- <!-- FIX: Moved the custom template slot INSIDE the v-file-input and destructured fileNames -->
- <v-file-input
- v-model="files"
- label="Upload Exam Script Image(s)"
- prepend-icon="mdi-camera"
- variant="outlined"
- multiple
- show-size
- chips
- counter
- accept="image/.jpg, image/.jpeg, image/.png, .pdf"
- color="primary"
- class="mb-6"
- :rules="fileRules"
- >
- <template #selection="{ fileNames }">
- <template v-for="(fileName, index) in fileNames" :key="fileName">
- <v-chip size="small" color="primary" class="me-2">
- {{ fileName }}
- </v-chip>
- </template>
- </template>
- </v-file-input>
+          <v-btn
+            v-if="currentUser?.role === 'teacher'"
+            variant="tonal"
+            color="secondary"
+            block
+            class="mb-6 font-weight-bold"
+            prepend-icon="mdi-plus"
+            @click="createExamDialog = true"
+          >
+            Create New Exam
+          </v-btn>
 
- <div 
- class="border-2 border-dashed border-primary border-opacity-50 rounded-2xl pa-8 text-center bg-surface cursor-pointer hover:bg-primary hover:bg-opacity-5 transition mb-6"
- @click="() => {}"
- >
- <v-icon size="48" color="primary" class="mb-2">mdi-cloud-upload-outline</v-icon>
- <div class="text-subtitle-1 font-weight-bold">Drag & Drop Scanned Sheets Here</div>
- <div class="text-caption text-medium-emphasis">Supports high-res JPG, PNG, WEBP, and PDF scripts up to 50MB</div>
- </div>
+          <v-dialog v-model="createExamDialog" max-width="500">
+            <v-card class="rounded-xl pa-4">
+              <v-card-title class="text-h6 font-weight-bold d-flex align-center">
+                <v-icon color="secondary" class="mr-2">mdi-file-document-edit</v-icon> Create Exam
+              </v-card-title>
+              <v-card-text>
+                <v-text-field v-model="examForm.name" label="Exam Name" variant="outlined" class="mb-4" />
+                <v-text-field v-model="examForm.exam_code" label="Exam Code (Optional)" variant="outlined" class="mb-4" />
+                <v-select v-model="examForm.class_id" :items="classesList" item-title="name" item-value="id" label="Class & Subject" variant="outlined" class="mb-4">
+                  <template v-slot:selection="{ item }">
+                    {{ item.raw.name }} ({{ item.raw.subject_name }})
+                  </template>
+                  <template v-slot:item="{ item, props }">
+                    <v-list-item v-bind="props" :title="item.raw.name" :subtitle="item.raw.subject_name"></v-list-item>
+                  </template>
+                </v-select>
+                <v-text-field v-model="examForm.exam_date" type="date" label="Exam Date" variant="outlined" class="mb-4" />
+                <v-row>
+                  <v-col cols="6"><v-text-field v-model.number="examForm.term" type="number" label="Term" variant="outlined" /></v-col>
+                  <v-col cols="6"><v-text-field v-model="examForm.academic_year" label="Academic Year" variant="outlined" /></v-col>
+                </v-row>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn variant="text" color="medium-emphasis" @click="createExamDialog = false">Cancel</v-btn>
+                <v-btn color="secondary" variant="flat" :loading="creatingExam" @click="submitCreateExam">Save Exam</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
 
- <v-btn
- color="primary"
- size="large"
- block
- type="submit"
- :loading="analyzing"
- prepend-icon="mdi-sparkles"
- elevation="4"
- class="py-4 font-weight-bold"
- >
- Analyze Exam Script with Vision AI
- </v-btn>
- </v-form>
+          <v-form ref="form">
+            <!-- Upload Input -->
+            <v-file-input
+              v-model="files"
+              label="Upload Exam Script Image(s)"
+              prepend-icon="mdi-camera"
+              variant="outlined"
+              multiple
+              show-size
+              chips
+              counter
+              accept="image/.jpg, image/.jpeg, image/.png, .pdf"
+              color="primary"
+              class="mb-6"
+              :rules="fileRules"
+            >
+              <template #selection="{ fileNames }">
+                <template v-for="(fileName, index) in fileNames" :key="fileName">
+                  <v-chip size="small" color="primary" class="me-2">{{ fileName }}</v-chip>
+                </template>
+              </template>
+            </v-file-input>
+
+            <div 
+              class="border-2 border-dashed border-primary border-opacity-50 rounded-2xl pa-8 text-center bg-surface cursor-pointer hover:bg-primary hover:bg-opacity-5 transition mb-6"
+            >
+              <v-icon size="48" color="primary" class="mb-2">mdi-cloud-upload-outline</v-icon>
+              <div class="text-subtitle-1 font-weight-bold">Drag & Drop Scanned Sheets Here</div>
+              <div class="text-caption text-medium-emphasis">Supports high-res JPG, PNG, WEBP, and PDF scripts up to 50MB</div>
+            </div>
+
+            <!-- Dual Action Buttons -->
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-btn
+                  color="accent"
+                  size="large"
+                  block
+                  :loading="analyzing"
+                  prepend-icon="mdi-marker-check"
+                  elevation="4"
+                  class="py-4 font-weight-bold"
+                  @click="startAnalysis('mark_and_analyze')"
+                >
+                  AI Mark & Analyze
+                </v-btn>
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-btn
+                  color="primary"
+                  size="large"
+                  block
+                  :loading="analyzing"
+                  prepend-icon="mdi-brain"
+                  elevation="4"
+                  class="py-4 font-weight-bold"
+                  @click="startAnalysis('analyze_only')"
+                >
+                  Analyze Only
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-form>
  </v-card>
  </v-col>
 

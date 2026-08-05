@@ -73,7 +73,7 @@ const markingInstructionsText = ref('')
 const fetchTeacherData = async () => {
   if (currentUser.value.role === 'teacher' && currentUser.value.id) {
     try {
-      const response = await axios.get(`/api/v1/analysis/teacher/${currentUser.value.id}/classes`, {
+      const response = await axios.get(`/api/v1/analysis/teacher/${currentUser.value.teacher.id}/classes`, {
         headers: { Authorization: `Bearer ${authStore.token}` }
       })
       const examsMap = new Map()
