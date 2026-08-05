@@ -19,6 +19,9 @@ const loadingData = ref(true)
 
 const files = ref([])
 const form = ref(null)
+const createExamFormRef = ref(null)
+
+const requiredRule = [v => !!v || 'This field is required']
 
 const fileRules = [
  v => !v || v.length <= 10 || 'Maximum 10 files allowed',
@@ -114,22 +117,33 @@ onMounted(async () => {
 })
 
 watch([selectedStudent, selectedExam], async ([newStudent, newExam]) => {
- if (newStudent && newExam) {
- try {
- loadingData.value = true
- const response = await axios.get(`/api/v1/analysis/exam/${newStudent}/${newExam}`)
- if (response.data && response.data._id) {
- analysisResult.value = response.data
- }
- } catch (e) {
- // Expected if no analysis exists yet
- } finally {
- loadingData.value = false
- }
- }
+  if (newStudent && newExam) {
+    try {
+      loadingData.value = true
+      // Clear previous analysis to prevent showing old data for a new student
+      analysisResult.value = null 
+      
+      const response = await axios.get(`/api/v1/analysis/exam/${newStudent}/${newExam}`)
+      if (response.data && response.data._id) {
+        analysisResult.value = response.data
+      }
+    } catch (e) {
+      // Expected 404 if no analysis exists yet; handle gracefully in the background
+      if (e.response && e.response.status !== 404) {
+        console.warn('Failed to check for existing analysis:', e.message)
+      }
+    } finally {
+      loadingData.value = false
+    }
+  }
 })
 
 const submitCreateExam = async () => {
+  if (createExamFormRef.value) {
+    const { valid } = await createExamFormRef.value.validate()
+    if (!valid) return
+  }
+
   creatingExam.value = true
   try {
     const selectedClassObj = classesList.value.find(c => c.id === examForm.value.class_id)
@@ -316,9 +330,9 @@ const saveToMongoDB = async () => {
  </div>
  </template>
             <template v-slot:item="{ item, props }">
-              <v-list-item v-bind="props" :title="item.raw.name || 'Unknown Exam'" :subtitle="item.raw.exam_code ? `Code: ${item.raw.exam_code} • Term ${item.raw.term}` : `Term ${item.raw.term || '-'}`">
+              <v-list-item v-bind="props" :title="item.name || 'Unknown Exam'" :subtitle="item.exam_code ? `Code: ${item.exam_code} • Term ${item.term}` : `Term ${item.term || '-'}`">
                 <template v-slot:prepend>
-                  <v-chip size="x-small" color="secondary" variant="outlined" class="mr-2 font-mono font-weight-bold">{{ item.raw.exam_code || 'EX' }}</v-chip>
+                  <v-chip size="x-small" color="secondary" variant="outlined" class="mr-2 font-mono font-weight-bold">{{ item.exam_code || 'EX' }}</v-chip>
                 </template>
               </v-list-item>
             </template>
@@ -342,21 +356,23 @@ const saveToMongoDB = async () => {
                 <v-icon color="secondary" class="mr-2">mdi-file-document-edit</v-icon> Create Exam
               </v-card-title>
               <v-card-text>
-                <v-text-field v-model="examForm.name" label="Exam Name" variant="outlined" class="mb-4" />
-                <v-text-field v-model="examForm.exam_code" label="Exam Code (Optional)" variant="outlined" class="mb-4" />
-                <v-select v-model="examForm.class_id" :items="classesList" item-title="name" item-value="id" label="Class & Subject" variant="outlined" class="mb-4">
-                  <template v-slot:selection="{ item }">
-                    {{ item.raw.name }} ({{ item.raw.subject_name }})
-                  </template>
-                  <template v-slot:item="{ item, props }">
-                    <v-list-item v-bind="props" :title="item.raw.name" :subtitle="item.raw.subject_name"></v-list-item>
-                  </template>
-                </v-select>
-                <v-text-field v-model="examForm.exam_date" type="date" label="Exam Date" variant="outlined" class="mb-4" />
-                <v-row>
-                  <v-col cols="6"><v-text-field v-model.number="examForm.term" type="number" label="Term" variant="outlined" /></v-col>
-                  <v-col cols="6"><v-text-field v-model="examForm.academic_year" label="Academic Year" variant="outlined" /></v-col>
-                </v-row>
+                <v-form ref="createExamFormRef" @submit.prevent="submitCreateExam">
+                  <v-text-field v-model="examForm.name" label="Exam Name" variant="outlined" class="mb-4" :rules="requiredRule" required />
+                  <v-text-field v-model="examForm.exam_code" label="Exam Code" variant="outlined" class="mb-4" :rules="requiredRule" required />
+                  <v-select v-model="examForm.class_id" :items="classesList" item-title="name" item-value="id" label="Class & Subject" variant="outlined" class="mb-4" :rules="requiredRule" required>
+                    <template v-slot:selection="{ item }">
+                      {{ item.raw.name }} ({{ item.raw.subject_name }})
+                    </template>
+                    <template v-slot:item="{ item, props }">
+                      <v-list-item v-bind="props" :title="item.raw.name" :subtitle="item.raw.subject_name"></v-list-item>
+                    </template>
+                  </v-select>
+                  <v-text-field v-model="examForm.exam_date" type="date" label="Exam Date" variant="outlined" class="mb-4" :rules="requiredRule" required />
+                  <v-row>
+                    <v-col cols="6"><v-text-field v-model.number="examForm.term" type="number" label="Term" variant="outlined" :rules="requiredRule" required /></v-col>
+                    <v-col cols="6"><v-text-field v-model="examForm.academic_year" label="Academic Year" variant="outlined" :rules="requiredRule" required /></v-col>
+                  </v-row>
+                </v-form>
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
