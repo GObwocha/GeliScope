@@ -17,6 +17,7 @@ import Leaderboard from '@/components/Leaderboard.vue'
 import AdminDashboard from '@/components/AdminDashboard.vue'
 import UserDashboard from '@/components/UserDashboard.vue'
 import ExamArchives from '@/components/ExamArchives.vue'
+import ClassDiagnosis from '../components/ClassDiagnosis.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -105,6 +106,12 @@ const router = createRouter({
       path: '/dashboard/exam-archives',
       component: ExamArchives,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/dashboard/class-diagnosis',
+      name: 'ClassDiagnosis',
+      component: ClassDiagnosis,
+      meta: { requiresAuth: true, role: 'teacher' }
     }
   ],
 })

@@ -46,6 +46,9 @@ Route::prefix('v1')->group(function () {
         Route::get('analysis/marking-config/{examId}', [AnalysisController::class, 'markingConfig']);
         Route::post('analysis/marking-config', [AnalysisController::class, 'storeMarkingConfig']);
         Route::post('analysis/careers/suggest', [AnalysisController::class, 'suggestCareers']);
+        Route::get('analysis/teacher/{teacherId}/dashboard', [AnalysisController::class, 'teacherDashboard']);
+        Route::get('analysis/teacher/{teacherId}/classes', [AnalysisController::class, 'teacherClasses']);
+        Route::post('analysis/class/generate-diagnosis', [AnalysisController::class, 'generateClassDiagnosis']);
         //Archives
         Route::get('archives/student/{studentId}', [AnalysisController::class, 'getArchives']);
         Route::get('archives/{archiveId}/download', [AnalysisController::class, 'downloadArchive']);
