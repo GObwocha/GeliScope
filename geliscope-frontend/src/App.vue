@@ -39,6 +39,15 @@ const dashboardNavItems = [
   { title: 'Settings', icon: 'mdi-cog', to: '/dashboard/settings' },
 ]
 
+const teacherDashboardNavItems = [
+  { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/dashboard' },
+  { title: 'Upload Centre', icon: 'mdi-cloud-upload', to: '/dashboard/upload-centre' },
+  { title: 'Performance', icon: 'mdi-speedometer', to: '/dashboard/student-performance' },
+  { title: 'Tutor Profile', icon: 'mdi-account-school', to: '/dashboard/student-profile-tutor' },
+  { title: 'Exam Archives', icon: 'mdi-archive', to: '/dashboard/exam-archives' },
+  { title: 'Settings', icon: 'mdi-cog', to: '/dashboard/settings' },
+]
+
 const isDashboard = computed(() => {
   return route.path.startsWith('/dashboard') || route.path === '/admin-dashboard'
 })
@@ -124,7 +133,7 @@ const isDashboard = computed(() => {
       
       <v-list density="compact" nav class="px-3">
         <template v-if="isDashboard && authStore.isAuthenticated">
-          <v-list-item v-for="(item, i) in dashboardNavItems" :key="i" :to="item.to" :prepend-icon="item.icon" :title="item.title" class="mb-2 rounded-lg py-2 transition-all" active-class="bg-primary text-white font-weight-bold "></v-list-item>
+          <v-list-item v-for="(item, i) in (authStore.activeRole === 'teacher' ? teacherDashboardNavItems : dashboardNavItems)" :key="i" :to="item.to" :prepend-icon="item.icon" :title="item.title" class="mb-2 rounded-lg py-2 transition-all" active-class="bg-primary text-white font-weight-bold "></v-list-item>
         </template>
         <template v-else>
           <v-list-item v-for="(item, i) in publicNavItems" :key="i" :to="item.to" :title="item.title" class="mb-2 rounded-lg py-2"></v-list-item>

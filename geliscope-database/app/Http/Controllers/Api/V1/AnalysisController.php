@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClassGroup;
 use App\Models\MongoDB\ExamAnalysis;
 use App\Models\MongoDB\StudentSkillProfile;
 use App\Models\MongoDB\StudentCognitiveProfile;
@@ -629,7 +630,7 @@ class AnalysisController extends Controller
         $subjectId = (int) $validated['subject_id'];
         $teacherId = (int) $validated['teacher_id'];
 
-        $classGroup = \App\Models\ClassGroup::with('students')->find($classId);
+        $classGroup = ClassGroup::with('students')->find($classId);
         if (!$classGroup) {
             return response()->json(['message' => 'Class not found'], 404);
         }
@@ -787,6 +788,61 @@ class AnalysisController extends Controller
         return response()->json([
             'rounds' => $roundNames,
             'subjects' => $subjectData
+        ]);
+    }
+
+    /**
+     * Get comprehensive profile and AI diagnostic performance for a student.
+     */
+    public function teacherStudentComprehensiveProfile(Request $request, $teacherId, $studentId)
+    {
+        $student = Student::with(['user', 'currentClass'])->find($studentId);
+        
+        if (!$student) {
+            return response()->json(['message' => 'Student not found'], 404);
+        }
+
+        $examResults = ExamResult::where('student_id', $student->id)
+            ->with(['exam.subject', 'exam.examRound'])
+            ->get();
+
+        $performance = [];
+
+        foreach ($examResults as $result) {
+            $analysis = \App\Models\MongoDB\ExamAnalysis::where('student_id', (int) $student->id)
+                ->where('exam_id', (int) $result->exam_id)
+                ->first();
+
+            $failurePoints = [];
+            if ($analysis) {
+                if (is_array($analysis->suggestions) && !empty($analysis->suggestions)) {
+                    $failurePoints = $analysis->suggestions;
+                } else if ($analysis->overall_summary) {
+                    $failurePoints = [$analysis->overall_summary];
+                }
+            }
+
+            $performance[] = [
+                'exam_name' => $result->exam->name ?? 'Unknown Exam',
+                'subject' => $result->exam->subject->name ?? 'Unknown Subject',
+                'round' => $result->exam->examRound->name ?? 'Unknown Round',
+                'score' => $result->total_score,
+                'max_score' => $result->max_score,
+                'percentage' => $result->max_score > 0 ? round(((float)$result->total_score / (float)$result->max_score) * 100) : 0,
+                'failure_points' => $failurePoints,
+                'date' => $result->created_at
+            ];
+        }
+
+        return response()->json([
+            'profile' => [
+                'first_name' => $student->user->first_name,
+                'last_name' => $student->user->last_name,
+                'email' => $student->user->email,
+                'admission_number' => $student->admission_number,
+                'class_name' => $student->classGroup ? $student->classGroup->name : 'N/A'
+            ],
+            'performance' => $performance
         ]);
     }
 }
