@@ -161,36 +161,27 @@ onMounted(() => {
 
 <template>
   <v-container fluid class="py-8 ">
-    <!-- Top Welcome Banner & Role Switcher -->
-    <v-card class="pa-6 rounded-3xl border bg-surface shadow-glow mb-8" elevation="4">
+    <!-- Top Welcome Banner & Role Switcher (For Parents and Teachers) -->
+    <v-card v-if="activeRole !== 'student'" class="pa-6 bg-surface shadow-glow mb-8" elevation="4">
       <v-row align="center" justify="space-between">
         <v-col cols="12" md="7" class="d-flex align-center">
-          <v-avatar :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="76" class="mr-6 font-weight-black text-h4 shadow-glow flex-shrink-0">
+          <v-avatar :color="activeRole === 'teacher' ? 'secondary' : 'accent'" size="76" class="mr-6 font-weight-black text-h4 shadow-glow flex-shrink-0">
             <span class="text-white">{{ userProfile.first_name[0] }}{{ userProfile.last_name[0] }}</span>
           </v-avatar>
           <div>
             <div class="d-flex align-center gap-2 mb-2">
-              <v-chip :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="small" variant="flat" class="font-weight-black uppercase">
+              <v-chip :color="activeRole === 'teacher' ? 'secondary' : 'accent'" size="small" variant="flat" class="font-weight-black uppercase">
                 {{ activeRole }} DASHBOARD
               </v-chip>
-              <v-chip :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="small" variant="outlined" class="font-weight-bold ma-5" v-if="activeRole === 'teacher' && userProfile.teacher">
+              <v-chip :color="activeRole === 'teacher' ? 'secondary' : 'accent'" size="small" variant="outlined" class="font-weight-bold ma-5" v-if="activeRole === 'teacher' && userProfile.teacher">
                 {{ userProfile.teacher?.employee_number }}
-              </v-chip>
-              <v-chip :color="activeRole === 'student' ? 'primary' : (activeRole === 'teacher' ? 'secondary' : 'accent')" size="small" variant="outlined" class="font-weight-bold ma-5" v-if="activeRole === 'student' && userProfile.student">
-                {{ userProfile.student?.admission_number }}
               </v-chip>
             </div>
             <h1 class="text-h3 font-weight-black">Welcome back, {{ userProfile.first_name }}!</h1>
             <p class="text-subtitle-1 text-medium-emphasis mb-0 d-flex align-center mt-1">
               <v-icon size="18" color="primary" class="mr-1">mdi-school-outline</v-icon>
-              {{ userProfile.student?.school?.name || userProfile.teacher?.school?.name || 'GeliScope Academy' }} &bull; {{ activeRole === 'teacher' ? 'TSC Examiner' : userProfile.class_group }}
+              {{ userProfile.teacher?.school?.name || 'GeliScope Academy' }} &bull; {{ activeRole === 'teacher' ? 'TSC Examiner' : userProfile.class_group }}
             </p>
-          </div>
-        </v-col>
-
-        <v-col cols="12" md="4" class="text-md-right d-flex align-center justify-md-end" v-if="activeRole === 'student' && userProfile.student?.personal_motto">
-          <div class="motto-display font-italic px-4 border-s-md" :style="mottoStyles">
-            "{{ userProfile.student?.personal_motto }}"
           </div>
         </v-col>
       </v-row>
@@ -198,9 +189,41 @@ onMounted(() => {
 
     <!-- STUDENT DASHBOARD WORKSPACE -->
     <div v-if="activeRole === 'student'">
-      <v-row>
+      <v-row class="mb-4">
+        <!-- Student Header (Left Half) -->
+        <v-col cols="12" lg="6">
+          <v-card class="pa-6 rounded-3xl border bg-surface shadow-glow h-100 d-flex flex-column justify-center" elevation="4">
+            <div class="d-flex align-center mb-6">
+              <v-avatar color="primary" size="76" class="mr-6 font-weight-black text-h4 shadow-glow flex-shrink-0">
+                <span class="text-white">{{ userProfile.first_name[0] }}{{ userProfile.last_name[0] }}</span>
+              </v-avatar>
+              <div>
+                <div class="d-flex align-center gap-2 mb-2">
+                  <v-chip color="primary" size="small" variant="flat" class="font-weight-black uppercase">
+                    STUDENT DASHBOARD
+                  </v-chip>
+                  <v-chip color="primary" size="small" variant="outlined" class="font-weight-bold ma-5" v-if="userProfile.student">
+                    {{ userProfile.student?.admission_number }}
+                  </v-chip>
+                </div>
+                <h1 class="text-h3 font-weight-black">Welcome back, {{ userProfile.first_name }}!</h1>
+                <p class="text-subtitle-1 text-medium-emphasis mb-0 d-flex align-center mt-1">
+                  <v-icon size="18" color="primary" class="mr-1">mdi-school-outline</v-icon>
+                  {{ userProfile.student?.school?.name || 'GeliScope Academy' }} &bull; {{ userProfile.class_group }}
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-auto" v-if="userProfile.student?.personal_motto">
+              <div class="motto-display font-italic px-4 py-3 border-s-lg bg-surface-light rounded-e-xl" style="border-left-color: rgb(var(--v-theme-primary)) !important; min-height: 50px;">
+                <span :style="mottoStyles" >{{ userProfile.student?.personal_motto }}</span>
+              </div>
+            </div>
+          </v-card>
+        </v-col>
+
         <!-- Career Suggestions -->
-        <v-col cols="12" lg="4">
+        <v-col cols="12" lg="6">
           <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column shadow-glow" elevation="4">
             <div class="mb-4">
               <div class="d-flex align-center justify-space-between mb-4">
@@ -215,7 +238,7 @@ onMounted(() => {
               </p>
             </div>
             
-            <div class="flex-grow-1 overflow-y-auto pr-2 extracted-style-2">
+            <div class="flex-grow-1 overflow-y-auto pr-2 extracted-style-2" style="max-height: 250px;">
               <!-- Loading State -->
               <div v-if="fetchingCareers" class="d-flex flex-column justify-center align-center h-100">
                 <v-progress-circular indeterminate color="primary" size="40" class="mb-4"></v-progress-circular>
@@ -261,9 +284,11 @@ onMounted(() => {
             </div>
           </v-card>
         </v-col>
+      </v-row>
 
+      <v-row>
         <!-- Bloom's Taxonomy Cognitive Mastery (MongoDB) -->
-        <v-col cols="12" lg="8">
+        <v-col cols="12">
           <v-card class="pa-6 rounded-3xl border bg-surface h-100 shadow-glow" elevation="4">
             <div class="d-flex justify-space-between align-center mb-6">
               <div>

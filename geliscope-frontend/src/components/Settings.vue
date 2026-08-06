@@ -1,36 +1,35 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { computed } from 'vue'
+import axios from 'axios'
 
 const authStore = useAuthStore()
 const loading = ref(false)
 
-// Simulating logged-in user context
-const currentUser = computed(() => {
-  return authStore.currentUser || {
-    role: 'student', // 'student', 'teacher', or 'parent'
-    first_name: 'Isabella',
-    last_name: 'Lewis',
-    email: 'isabella.lewis@example.com',
-    password: '',
-    profile_photo_url: null,
-    
-    // Student specific
-    admission_number: '',
-    school_id: 1,
-    current_class_id: 2,
-    date_of_birth: '',
-    personal_motto: '',
+// Simulating logged-in user context if none is present
+const currentUser = ref({
+  id: authStore.currentUser?.id || null,
+  role: authStore.currentUser?.role || 'student', // 'student', 'teacher', or 'parent'
+  first_name: authStore.currentUser?.first_name || 'Isabella',
+  last_name: authStore.currentUser?.last_name || 'Lewis',
+  email: authStore.currentUser?.email || 'isabella.lewis@example.com',
+  password: '',
+  profile_photo_url: authStore.currentUser?.profile_photo_url || null,
+  
+  // Student specific
+  admission_number: authStore.currentUser?.student?.admission_number || '',
+  school_id: authStore.currentUser?.student?.school_id || 1,
+  current_class_id: authStore.currentUser?.student?.current_class_id || 2,
+  date_of_birth: authStore.currentUser?.student?.date_of_birth || '',
+  personal_motto: authStore.currentUser?.student?.personal_motto || '',
 
-    // Parent specific
-    phone_number: '',
-    occupation: '',
+  // Parent specific
+  phone_number: authStore.currentUser?.parentProfile?.phone_number || '',
+  occupation: authStore.currentUser?.parentProfile?.occupation || '',
 
-    // Teacher specific
-    employee_number: '',
-    specialization: ''
-  }
+  // Teacher specific
+  employee_number: authStore.currentUser?.teacher?.employee_number || '',
+  specialization: authStore.currentUser?.teacher?.specialization || ''
 })
 
 const schools = ref([
@@ -48,6 +47,8 @@ const classes = ref([
 
 const activeTab = ref(0)
 const snackbar = ref(false)
+const errorMessage = ref('')
+const errorSnackbar = ref(false)
 
 const mottoFontType = ref(localStorage.getItem('motto_font_type') || 'Inter')
 const mottoFontSize = ref(localStorage.getItem('motto_font_size') || '16')
@@ -65,7 +66,7 @@ const mottoError = computed(() => {
   return words.length > 7 ? 'Motto cannot exceed 7 words.' : ''
 })
 
-const saveChanges = () => {
+const saveChanges = async () => {
   if (mottoError.value) return
   loading.value = true
   
@@ -75,11 +76,49 @@ const saveChanges = () => {
     localStorage.setItem('motto_font_color', mottoFontColor.value)
   }
 
-  setTimeout(() => {
-    loading.value = false
-    snackbar.value = true
-    console.log('Settings saved:', currentUser.value)
-  }, 1000)
+  if (currentUser.value.id && authStore.token) {
+    try {
+      const payload = {
+        first_name: currentUser.value.first_name,
+        last_name: currentUser.value.last_name,
+        email: currentUser.value.email,
+        ...(currentUser.value.password && { password: currentUser.value.password }),
+      }
+
+      if (currentUser.value.role === 'student') {
+        Object.assign(payload, {
+          admission_number: currentUser.value.admission_number,
+          school_id: currentUser.value.school_id,
+          current_class_id: currentUser.value.current_class_id,
+          date_of_birth: currentUser.value.date_of_birth,
+          personal_motto: currentUser.value.personal_motto,
+        })
+      }
+
+      const response = await axios.put(`/api/v1/users/${currentUser.value.id}`, payload, {
+        headers: {
+          Authorization: `Bearer ${authStore.token}`
+        }
+      })
+      
+      authStore.user = response.data
+      localStorage.setItem('geliscope_user', JSON.stringify(response.data))
+      snackbar.value = true
+    } catch (err) {
+      console.error('Failed to update profile:', err)
+      errorMessage.value = err.response?.data?.message || 'Failed to update profile'
+      errorSnackbar.value = true
+    } finally {
+      loading.value = false
+    }
+  } else {
+    // If mocking/no backend
+    setTimeout(() => {
+      loading.value = false
+      snackbar.value = true
+      console.log('Settings saved:', currentUser.value)
+    }, 1000)
+  }
 }
 </script>
 
@@ -356,6 +395,7 @@ const saveChanges = () => {
                   ></v-text-field>
 
                   <v-text-field
+                    v-model="currentUser.password"
                     label="New Password"
                     type="password"
                     variant="outlined"
@@ -394,6 +434,9 @@ const saveChanges = () => {
 
     <v-snackbar v-model="snackbar" color="success" variant="flat" location="bottom right">
       Settings successfully updated!
+    </v-snackbar>
+    <v-snackbar v-model="errorSnackbar" color="error" variant="flat" location="bottom right">
+      {{ errorMessage }}
     </v-snackbar>
   </v-container>
 </template>
