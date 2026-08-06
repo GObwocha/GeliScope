@@ -22,9 +22,13 @@ Route::prefix('v1')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         //Users
         Route::apiResource('users', UserController::class)->except(['store']);
+        //Subjects
+        Route::get('subjects', [\App\Http\Controllers\Api\V1\SubjectController::class, 'index']);
         //Schools
         Route::apiResource('schools', SchoolController::class)->except(['index']);
         Route::post('schools/{id}/classes', [SchoolController::class, 'storeClass']);
+        //Exam Rounds
+        Route::get('exam-rounds', [\App\Http\Controllers\Api\V1\ExamRoundController::class, 'index']);
         //Exams
         Route::apiResource('exams', ExamController::class);
         Route::post('exams/{examId}/results', [ExamController::class, 'storeResult']);
@@ -36,11 +40,19 @@ Route::prefix('v1')->group(function () {
         Route::post('analysis/process-vision', [AnalysisController::class, 'processVision']);
         Route::get('analysis/skills/{studentId}', [AnalysisController::class, 'skillProfile']);
         Route::post('analysis/skills', [AnalysisController::class, 'storeSkillProfile']);
+        Route::get('analysis/cognitive-profile/{studentId}', [AnalysisController::class, 'cognitiveProfile']);
         Route::get('analysis/class/{classId}/{examId}', [AnalysisController::class, 'classAnalysis']);
         Route::post('analysis/class', [AnalysisController::class, 'storeClassAnalysis']);
         Route::get('analysis/marking-config/{examId}', [AnalysisController::class, 'markingConfig']);
         Route::post('analysis/marking-config', [AnalysisController::class, 'storeMarkingConfig']);
         Route::post('analysis/careers/suggest', [AnalysisController::class, 'suggestCareers']);
+        Route::get('analysis/teacher/{teacherId}/dashboard', [AnalysisController::class, 'teacherDashboard']);
+        Route::get('analysis/teacher/{teacherId}/classes', [AnalysisController::class, 'teacherClasses']);
+        Route::get('analysis/teacher/{teacherId}/students', [AnalysisController::class, 'teacherStudents']);
+        Route::post('analysis/class/generate-diagnosis', [AnalysisController::class, 'generateClassDiagnosis']);
+        //Archives
+        Route::get('archives/student/{studentId}', [AnalysisController::class, 'getArchives']);
+        Route::get('archives/{archiveId}/download', [AnalysisController::class, 'downloadArchive']);
         //Leaderboard
         Route::get('leaderboard', [LeaderboardController::class, 'index']);
         //Parents

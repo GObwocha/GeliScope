@@ -2,12 +2,13 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useTheme } from 'vuetify'
+import { useTheme, useDisplay } from 'vuetify'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const theme = useTheme()
+const { mobile } = useDisplay()
 const drawer = ref(false)
 
 const toggleTheme = () => {
@@ -44,15 +45,16 @@ const isDashboard = computed(() => {
 </script>
 
 <template>
-  <v-app class="app-container ">
-    <!-- Top App Bar -->
-    <v-app-bar :elevation="isDashboard ? 1 : 0" :class="isDashboard ? 'bg-surface' : 'navbar-glass bg-transparent'" height="80">
-      <v-container class="d-flex align-center px-0 w-100 fill-height" :max-width="isDashboard ? 'fluid' : '1200'">
+  <v-app class="app-container">
+    
+    <!-- Public App Bar (Modern Floating Pill) -->
+    <v-app-bar v-if="!isDashboard" color="transparent" elevation="0" height="100">
+      <v-card class="mx-auto rounded-pill d-flex align-center px-4 px-md-8 w-100 border-opacity-10" max-width="1100" height="70"  elevation="8">
         <v-app-bar-nav-icon @click="drawer = !drawer" class="hidden-md-and-up"></v-app-bar-nav-icon>
         
         <!-- Logo Area -->
         <div class="d-flex align-center cursor-pointer" @click="router.push('/')">
-          <v-avatar color="secondary" size="40" class="mr-3 shadow-glow" rounded="lg">
+          <v-avatar color="secondary" size="40" class="mr-3 " rounded="lg">
             <v-icon color="background">mdi-shield-check</v-icon>
           </v-avatar>
           <div class="text-h6 font-weight-bold d-flex align-center">
@@ -63,27 +65,22 @@ const isDashboard = computed(() => {
         <v-spacer></v-spacer>
 
         <!-- Centered Links (Public only) -->
-        <div v-if="!isDashboard" class="hidden-sm-and-down d-flex gap-6">
-          <router-link v-for="item in publicNavItems" :key="item.title" :to="item.to" class="text-decoration-none text-muted font-weight-medium px-4 py-2 transition-fast-in-fast-out hover:text-white" style="transition: color 0.3s;" active-class="text-white">
+        <div class="hidden-sm-and-down d-flex gap-6">
+          <router-link v-for="item in publicNavItems" :key="item.title" :to="item.to" class="text-decoration-none text-muted font-weight-medium px-4 py-2 transition-fast-in-fast-out hover:text-primary" style="transition: color 0.3s;" active-class="text-primary font-weight-bold">
             {{ item.title }}
           </router-link>
         </div>
 
-        <v-spacer v-if="!isDashboard"></v-spacer>
+        <v-spacer class="hidden-sm-and-down"></v-spacer>
 
-        <!-- Right Side Auth / Dashboard Actions -->
+        <!-- Right Side Auth Actions -->
         <template v-if="authStore.isAuthenticated">
           <div class="hidden-sm-and-down d-flex align-center gap-2">
-            <template v-if="isDashboard">
-              <v-btn v-for="item in dashboardNavItems" :key="item.title" variant="text" :to="item.to" :prepend-icon="item.icon" class="text-capitalize">{{ item.title }}</v-btn>
-            </template>
-            <template v-else>
-              <v-btn color="secondary" variant="flat" to="/dashboard" class="pill-btn px-6 mx-2">Go to Dashboard</v-btn>
-            </template>
+            <v-btn color="secondary" variant="flat" to="/dashboard" class="pill-btn px-6 mx-2">Dashboard</v-btn>
             <v-btn icon @click="toggleTheme" variant="text" class="ml-2">
               <v-icon>{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
             </v-btn>
-            <v-btn color="error" variant="flat" @click="handleLogout" class="pill-btn ml-2 text-white">Log Out</v-btn>
+            <v-btn color="error" variant="flat" @click="handleLogout" class="pill-btn ml-2">Log Out</v-btn>
           </div>
         </template>
         <template v-else>
@@ -91,46 +88,82 @@ const isDashboard = computed(() => {
             <v-btn icon @click="toggleTheme" variant="text" class="mx-2">
               <v-icon>{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
             </v-btn>
-            <v-btn variant="outlined" color="muted" class="pill-btn px-6 text-white border-opacity-50 mx-2" to="/login">Log In</v-btn>
-            <v-btn color="secondary" variant="flat" class="pill-btn px-6 text-background font-weight-bold" to="/register">Get started for free</v-btn>
+            <v-btn variant="outlined" color="muted" class="pill-btn px-6 border-opacity-50 mx-2" to="/login">Log In</v-btn>
+            <v-btn color="secondary" variant="flat" class="pill-btn px-6 font-weight-bold" to="/register">Get Started</v-btn>
           </div>
         </template>
-      </v-container>
+      </v-card>
     </v-app-bar>
 
-    <!-- Navigation Drawer for Mobile -->
-    <v-navigation-drawer v-model="drawer" temporary class="bg-cardBg">
-      <div class="pa-4 d-flex align-center border-b border-opacity-10">
-        <v-avatar color="secondary" size="32" class="mr-3" rounded="sm">
+    <!-- Dashboard Top Bar (Mobile Only) -->
+    <v-app-bar v-if="isDashboard" class="d-lg-none bg-surface border-b border-opacity-10" elevation="0" height="70">
+      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
+      <div class="text-h6 font-weight-bold ml-2">Dashboard</div>
+      <v-spacer></v-spacer>
+    </v-app-bar>
+
+    <!-- Navigation Drawer (Left Sidebar for Dashboard / Mobile Menu for Public) -->
+    <v-navigation-drawer 
+      v-model="drawer" 
+      :permanent="isDashboard && !mobile" 
+      :temporary="!isDashboard || mobile" 
+      class="bg-cardBg border-r border-opacity-10 "
+      width="280"
+      style="height: 100vh; position: fixed; top: 0; left: 0;"
+    >
+      <div class="pa-4 d-flex align-center border-b border-opacity-10 cursor-pointer" @click="router.push('/')">
+        <v-avatar color="secondary" size="36" class="mr-3 " rounded="lg">
           <v-icon color="background" size="small">mdi-shield-check</v-icon>
         </v-avatar>
-        <span class="font-weight-bold ">GeliScope</span>
+        <span class="font-weight-black text-h5 tracking-tight">GeliScope</span>
       </div>
-      <v-list density="compact" nav>
+      
+      <div class="px-3 pt-6 pb-2" v-if="isDashboard">
+        <div class="text-caption text-uppercase font-weight-bold text-muted mb-2 px-2 tracking-widest">Main Menu</div>
+      </div>
+      
+      <v-list density="compact" nav class="px-3">
         <template v-if="isDashboard && authStore.isAuthenticated">
-          <v-list-item v-for="(item, i) in dashboardNavItems" :key="i" :to="item.to" :prepend-icon="item.icon" :title="item.title"></v-list-item>
+          <v-list-item v-for="(item, i) in dashboardNavItems" :key="i" :to="item.to" :prepend-icon="item.icon" :title="item.title" class="mb-2 rounded-lg py-2 transition-all" active-class="bg-primary text-white font-weight-bold "></v-list-item>
         </template>
         <template v-else>
-          <v-list-item v-for="(item, i) in publicNavItems" :key="i" :to="item.to" :title="item.title"></v-list-item>
+          <v-list-item v-for="(item, i) in publicNavItems" :key="i" :to="item.to" :title="item.title" class="mb-2 rounded-lg py-2"></v-list-item>
         </template>
       </v-list>
-      <div class="pa-4" v-if="!authStore.isAuthenticated">
-        <v-btn block variant="outlined" color="white" class="mb-4 pill-btn" to="/login">Log In</v-btn>
-        <v-btn block color="secondary" variant="flat" class="pill-btn text-background mb-4" to="/register">Get started</v-btn>
-        <v-btn block variant="tonal" @click="toggleTheme" class="pill-btn">
-          Toggle {{ theme.global.current.value.dark ? 'Light' : 'Dark' }} Mode
-        </v-btn>
-      </div>
-      <div class="pa-4" v-else>
-        <v-btn block variant="tonal" @click="toggleTheme" class="pill-btn">
-          Toggle {{ theme.global.current.value.dark ? 'Light' : 'Dark' }} Mode
-        </v-btn>
-        <v-btn block color="error" variant="flat" @click="handleLogout" class="pill-btn text-white">Log Out</v-btn>
-      </div>
+      
+      <template v-slot:append>
+        <div class="pa-4 border-t border-opacity-10" v-if="!authStore.isAuthenticated">
+          <v-btn block variant="outlined" color="primary" class="mb-4 pill-btn" to="/login">Log In</v-btn>
+          <v-btn block color="secondary" variant="flat" class="pill-btn mb-4 text-background font-weight-bold" to="/register">Get Started</v-btn>
+          <v-btn block variant="tonal" @click="toggleTheme" class="pill-btn">
+            <v-icon left class="mr-2">{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
+            {{ theme.global.current.value.dark ? 'Light Mode' : 'Dark Mode' }}
+          </v-btn>
+        </div>
+        <div class="pa-4 border-t border-opacity-10" v-else>
+          <div class="d-flex align-center mb-6 px-2 bg-background rounded-xl pa-3 border border-opacity-5">
+            <v-avatar color="primary" size="40" class="mr-3 text-white font-weight-bold ">
+               {{ authStore.currentUser?.first_name ? authStore.currentUser.first_name[0] : 'U' }}
+            </v-avatar>
+            <div class="overflow-hidden">
+               <div class="text-body-2 font-weight-bold text-truncate">{{ authStore.currentUser?.first_name }} {{ authStore.currentUser?.last_name }}</div>
+               <div class="text-caption text-primary text-uppercase font-weight-bold text-truncate">{{ authStore.currentUser?.role }}</div>
+            </div>
+          </div>
+          <v-btn block variant="tonal" @click="toggleTheme" class="pill-btn mb-3">
+            <v-icon left class="mr-2">{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
+            {{ theme.global.current.value.dark ? 'Light Mode' : 'Dark Mode' }}
+          </v-btn>
+          <v-btn block color="error" variant="flat" @click="handleLogout" class="pill-btn font-weight-bold">
+            <v-icon left class="mr-2">mdi-logout</v-icon>
+            Log Out
+          </v-btn>
+        </div>
+      </template>
     </v-navigation-drawer>
 
     <!-- Main Content Area -->
-    <v-main class="bg-background position-relative ">
+    <v-main class="bg-background position-relative h-100 w-100">
       <div class="glow-blur-purple" style="top: -100px; left: -100px;"></div>
       <div class="glow-blur-green" style="top: 40%; right: -150px;"></div>
       <router-view v-slot="{ Component }">
@@ -162,9 +195,6 @@ const isDashboard = computed(() => {
 .app-container {
   font-family: 'Outfit', sans-serif;
 }
-.shadow-glow {
-  box-shadow: 0 0 16px rgba(81, 250, 170, 0.4);
-}
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -174,7 +204,13 @@ const isDashboard = computed(() => {
   opacity: 0;
   transform: translateY(10px);
 }
-.hover\:text-white:hover {
-  color: #FFFFFF !important;
+.hover\:text-primary:hover {
+  color: rgb(var(--v-theme-primary)) !important;
+}
+.tracking-tight {
+  letter-spacing: -0.05em;
+}
+.tracking-widest {
+  letter-spacing: 0.1em;
 }
 </style>

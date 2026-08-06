@@ -26,9 +26,11 @@ class SubjectFactory extends Factory
             'History' => 'Humanities',
             'Geography' => 'Humanities',
             'Computer Studies' => 'Technical',
+            'Business Studies' => 'Technical',
+            'Agriculture' => 'Technical',
         ];
 
-        $name = fake()->unique()->randomElement(array_keys($subjects));
+        $name = fake()->randomElement(array_keys($subjects));
 
         return [
             'name' => $name,
