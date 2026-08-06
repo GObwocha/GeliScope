@@ -215,33 +215,6 @@ const getBarColor = (score) => {
 
 <template>
  <v-container fluid class="bg-background min-vh-100 pa-6 font-family-sans">
- 
- <!-- Role Switcher removed in favor of Auth state -->
-
- <!-- Header Navigation -->
- <!-- <v-row align="center" class="mb-8 px-4">
- <v-col cols="12" md="2">
- <div class="text-h5 font-weight-black">EdTech</div>
- </v-col>
- <v-col cols="12" md="7" class="d-flex gap-6 text-body-2 font-weight-medium text-medium-emphasis">
- <span class="text-primary font-weight-bold cursor-pointer">Dashboard</span>
- <span class="cursor-pointer hover-primary transition-colors">Activity</span>
- <span class="cursor-pointer hover-primary transition-colors">Teachers</span>
- <span class="cursor-pointer hover-primary transition-colors">Events</span>
- <span class="cursor-pointer hover-primary transition-colors">Payments</span>
- <span class="cursor-pointer hover-primary transition-colors">Parent's Guide</span>
- </v-col>
- <v-col cols="12" md="3" class="d-flex justify-end align-center gap-4">
- <v-btn icon="mdi-bell-outline" variant="text" size="small" class="text-medium-emphasis"></v-btn>
- <div class="d-flex align-center gap-2 cursor-pointer">
- <v-avatar size="32" color="primary">
- <span class=" text-caption font-weight-bold">I</span>
- </v-avatar>
- <span class="text-body-2 font-weight-bold">Isabella Lewis</span>
- <v-icon size="small">mdi-chevron-down</v-icon>
- </div>
- </v-col>
- </v-row> -->
 
  <!-- Top Section: Metric, Chart, Contacts -->
  <v-row class="mb-8">

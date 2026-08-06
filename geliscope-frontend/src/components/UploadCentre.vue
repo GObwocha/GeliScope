@@ -64,6 +64,8 @@ const examForm = ref({
   academic_year: '2025'
 })
 
+const isDragging = ref(false);
+
 onMounted(async () => {
   const cachedAnalysis = localStorage.getItem('unsaved_analysis')
   if (cachedAnalysis) {
@@ -258,6 +260,23 @@ const saveToMongoDB = async () => {
  }
 }
 
+//Drop Zone Configurations
+function handleDragLeave(e) {
+  // Prevent flickering when dragging over child elements inside the dropzone
+  if (!e.currentTarget.contains(e.relatedTarget)) {
+    isDragging.value = false;
+  }
+}
+
+function handleDrop(e) {
+  isDragging.value = false;
+  const droppedFiles = Array.from(e.dataTransfer.files);
+  files.value = [...files.value, ...droppedFiles];
+}
+
+const removeFile = (index) => {
+  files.value.splice(index, 1);
+}
 </script>
 
 <template>
@@ -401,19 +420,23 @@ const saveToMongoDB = async () => {
             >
               <template #selection="{ fileNames }">
                 <template v-for="(fileName, index) in fileNames" :key="fileName">
-                  <v-chip size="small" color="primary" class="me-2">{{ fileName }}</v-chip>
+                  <v-chip closable @click:close="removeFile(index)" size="small" color="primary" class="me-2">{{ fileName }}</v-chip>
                 </template>
               </template>
             </v-file-input>
-
-            <div 
-              class="border-2 border-dashed border-primary border-opacity-50 rounded-2xl pa-8 text-center bg-surface cursor-pointer hover:bg-primary hover:bg-opacity-5 transition mb-6"
-            >
-              <v-icon size="48" color="primary" class="mb-2">mdi-cloud-upload-outline</v-icon>
+            <!-- Drag and drop zone -->
+             <div 
+              class="drop-zone cursor-pointer"
+              :class="{ 'is-dragging': isDragging }"
+              @dragenter.prevent="isDragging = true"
+              @dragover.prevent="isDragging = true"
+              @dragleave.prevent="handleDragLeave"
+              @drop.prevent="handleDrop"
+              >
+             <v-icon size="48" color="primary" class="mb-2">mdi-cloud-upload-outline</v-icon>
               <div class="text-subtitle-1 font-weight-bold">Drag & Drop Scanned Sheets Here</div>
               <div class="text-caption text-medium-emphasis">Supports high-res JPG, PNG, WEBP, and PDF scripts up to 50MB</div>
             </div>
-
             <!-- Dual Action Buttons -->
             <v-row>
               <v-col cols="12" md="6">
