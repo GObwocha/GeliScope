@@ -18,6 +18,7 @@ import AdminDashboard from '@/components/AdminDashboard.vue'
 import UserDashboard from '@/components/UserDashboard.vue'
 import ExamArchives from '@/components/ExamArchives.vue'
 import ClassDiagnosis from '../components/ClassDiagnosis.vue'
+import AuthCallback from '@../components/AuthCallback.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,6 +27,12 @@ const router = createRouter({
       path: '/',
       component: LandingPage,
       meta: { requiresAuth: false }
+    },
+    {
+    // This route handles the return from your Laravel backend
+    path: '/google-callback',
+    name: 'google-callback',
+    component: AuthCallback
     },
     {
       path: '/features',

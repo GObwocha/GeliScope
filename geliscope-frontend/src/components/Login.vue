@@ -1,11 +1,12 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useTheme } from 'vuetify';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
 const theme = useTheme();
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 
 const step = ref(1);
@@ -57,6 +58,16 @@ const goBack = () => {
  password.value = '';
  errorMsg.value = '';
 }
+
+const googleLogin = async () => {
+    await authStore.loginWithGoogle();
+}
+
+onMounted(() => {
+    if (route.query.error === 'user_not_found') {
+        errorMsg.value = 'User not found. Please ensure you are registered.';
+    }
+});
 </script>
 
 <template>
@@ -145,6 +156,8 @@ const goBack = () => {
  size="large"
  variant="flat"
  class="text-none mb-8 mt-4"
+ :loading="loading"
+ @click="googleLogin"
  >
  Google
  </v-btn>
