@@ -54,7 +54,7 @@ const fetchStudentProfile = async () => {
     <!-- Header & Student Selection -->
     <v-row class="mb-6">
       <v-col cols="12">
-        <v-card class="rounded-xl pa-5 bg-surface elevation-2 border d-flex flex-wrap align-center justify-space-between gap-4">
+        <v-card class="pa-5 border d-flex flex-wrap align-center justify-space-between gap-4">
           <div>
             <h1 class="text-h4 font-weight-black lh-tight mb-1 d-flex align-center gap-3">
               <v-icon color="primary" size="36">mdi-account-school</v-icon>

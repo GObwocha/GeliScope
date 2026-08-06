@@ -645,7 +645,7 @@ onMounted(() => {
  <div class="text-caption text-medium-emphasis">Average stream mastery across your assigned classes</div>
  </div>
  <div class="pa-4 rounded-2xl bg-surface border mb-6">
- <div class="text-caption font-weight-bold text-error uppercase mb-1">Top Pedagogical Bottleneck (`ClassAnalysis`)</div>
+ <div class="text-caption font-weight-bold text-error uppercase mb-1">Top Pedagogical Bottleneck</div>
  <div class="font-weight-bold text-body-1">{{ teacherStreamSummary.top_error }}</div>
  </div>
  <v-btn color="secondary" block size="large" to="/dashboard/class-diagnosis" prepend-icon="mdi-google-circles-extended" class="font-weight-bold rounded-xl">
@@ -664,7 +664,7 @@ onMounted(() => {
  </h2>
  </div>
  <p class="text-subtitle-2 text-medium-emphasis mb-6">
- Configure your custom marking instructions (TeacherMarkingConfig) in MongoDB so the neural VLM grades student scripts according to your exact curriculum scheme.
+ Configure your custom marking instructions so the system assigns grades to student scripts according to your exact curriculum scheme.
  </p>
  </div>
  <div>
@@ -739,9 +739,9 @@ onMounted(() => {
  <div class="mb-3 mb-md-0">
  <h2 class="text-h5 font-weight-black d-flex align-center" style="word-break: break-word;">
  <v-icon color="primary" class="mr-2">mdi-table-check</v-icon>
- Verified Assessment Records (exam_results MySQL Table)
+ Verified Assessment Records
  </h2>
- <p class="text-caption text-medium-emphasis mb-0">Structured ACID grade sync linked via mongo_analysis_id to detailed vision reports</p>
+ <p class="text-caption text-medium-emphasis mb-0">Structured ACID grade</p>
  </div>
  <v-btn color="primary" variant="tonal" to="/dashboard/leaderboard" class="align-self-start align-self-md-center">View Academic Leaderboard</v-btn>
  </div>
