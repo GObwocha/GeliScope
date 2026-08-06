@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Socialite;
 
 class AuthController extends Controller
 {
@@ -81,7 +81,7 @@ class AuthController extends Controller
         $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])->where('email', $googleUser->email)->first();
 
         if (!$user ){
-            return redirect()->away(env('FRONTEND_URL') . '/login?error=user_not_found');
+            return redirect()->away(config('app.frontend_url') . '/login?error=user_not_found');
         }
 
         // Delete all previous tokens (optional, but good for single-device sessions or general cleanup)
@@ -90,7 +90,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         // 4. Redirect back to your Vue frontend, passing the token in the URL
-        $frontendUrl = env('FRONTEND_URL') . '/google-callback?token=' . $token;
+        $frontendUrl = config('app.frontend_url') . '/google-callback?token=' . $token;
         
         return redirect()->away($frontendUrl);
     }
