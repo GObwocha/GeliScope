@@ -1,7 +1,21 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement
+} from 'chart.js'
+import { Bar, Line } from 'vue-chartjs'
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement)
 
 const authStore = useAuthStore()
 const activeRole = computed(() => authStore.activeRole || 'student')
@@ -129,6 +143,70 @@ const loadingHistory = ref(true)
 const subjects = ref([{ id: '', name: 'Overall (All Subjects)' }])
 const selectedSubject = ref('')
 
+// Teacher specific state
+const teacherClasses = ref([])
+const selectedClass = ref(null)
+const classPerformanceData = ref({ rounds: [], subjects: [] })
+
+const fetchTeacherClasses = async () => {
+  if (activeRole.value !== 'teacher') return
+  const teacherId = authStore.currentUser?.teacher?.id || authStore.currentUser?.id
+  try {
+    const res = await axios.get(`/api/v1/analysis/teacher/${teacherId}/classes`)
+    teacherClasses.value = res.data
+    if (res.data.length > 0) {
+      selectedClass.value = res.data[0].id
+      fetchClassPerformance()
+    }
+  } catch (err) {
+    console.error('Failed to fetch teacher classes', err)
+  }
+}
+
+const fetchClassPerformance = async () => {
+  if (activeRole.value !== 'teacher' || !selectedClass.value) return
+  const teacherId = authStore.currentUser?.teacher?.id || authStore.currentUser?.id
+  try {
+    loadingHistory.value = true
+    const res = await axios.get(`/api/v1/analysis/teacher/${teacherId}/class-performance?class_id=${selectedClass.value}`)
+    classPerformanceData.value = res.data
+  } catch (err) {
+    console.error('Failed to fetch class performance', err)
+  } finally {
+    loadingHistory.value = false
+  }
+}
+
+const classChartData = computed(() => {
+  const datasets = classPerformanceData.value.subjects.map((subj, idx) => {
+    const hue = (idx * 137.5) % 360; 
+    return {
+      label: subj.name,
+      data: subj.data,
+      backgroundColor: `hsla(${hue}, 70%, 50%, 0.5)`,
+      borderColor: `hsl(${hue}, 70%, 50%)`,
+      borderWidth: 2,
+      tension: 0.3
+    }
+  });
+
+  return {
+    labels: classPerformanceData.value.rounds,
+    datasets
+  }
+})
+
+const classChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  scales: {
+    y: {
+      beginAtZero: true,
+      max: 100
+    }
+  }
+}
+
 const fetchExamHistory = async () => {
   try {
     loadingHistory.value = true
@@ -170,7 +248,11 @@ onMounted(async () => {
     console.error('Failed to load subjects', e)
   }
 
-  fetchExamHistory()
+  if (activeRole.value === 'teacher') {
+    fetchTeacherClasses()
+  } else {
+    fetchExamHistory()
+  }
 })
 
 const chartMetrics = computed(() => {
@@ -214,15 +296,15 @@ const getBarColor = (score) => {
 </script>
 
 <template>
- <v-container fluid class="bg-background min-vh-100 pa-6 font-family-sans">
+ <v-container fluid class="bg-background pa-6 font-family-sans">
 
  <!-- Top Section: Metric, Chart, Contacts -->
- <v-row class="mb-8">
+ <!-- <v-row class="mb-8"> -->
  
  <!-- Big Metric -->
- <v-col cols="12" md="3" class="d-flex flex-column pl-6">
- <v-card class="rounded-xl pa-5 bg-surface elevation-2 border h-100 d-flex flex-column justify-center">
- <h1 class="text-h3 font-weight-medium lh-tight mb-6" style="max-width: 300px;">
+ <v-row class="d-flex flex-column px-6">
+ <v-card class=" pa-5 border d-flex flex-column justify-center">
+ <h1 class="text-h3 font-weight-medium lh-tight mb-6">
  {{ displayData.title }}
  </h1>
  <div class="text-caption text-medium-emphasis mb-1">{{ displayData.subtitle }}</div>
@@ -234,14 +316,27 @@ const getBarColor = (score) => {
  Latest update added: <span class="text-high-emphasis font-weight-bold">{{ displayData.updateDate }}</span>
  </div>
  </v-card>
- </v-col>
+ </v-row>
  <!-- Bar / Line Chart -->
- <v-col cols="12" md="5" class="px-6 d-flex flex-column">
- <v-card class="rounded-xl pa-5 bg-surface elevation-2 border flex-grow-1 d-flex flex-column">
+ <v-row class="px-6 d-flex flex-column">
+ <v-card class=" pa-5 border d-flex flex-column justify-center">
  <div class="d-flex flex-wrap align-center justify-space-between mb-4 gap-4">
  <div class="text-h6 font-weight-bold">Average Marks</div>
  <div class="d-flex align-center gap-4">
  <v-select
+ v-if="activeRole === 'teacher'"
+ v-model="selectedClass"
+ :items="teacherClasses"
+ item-title="name"
+ item-value="id"
+ density="compact"
+ variant="outlined"
+ hide-details
+ @update:modelValue="fetchClassPerformance"
+ style="max-width: 200px"
+ ></v-select>
+ <v-select
+ v-else
  v-model="selectedSubject"
  :items="subjects"
  item-title="name"
@@ -253,15 +348,46 @@ const getBarColor = (score) => {
  style="max-width: 200px"
  ></v-select>
  <v-btn-toggle v-model="graphType" mandatory color="primary" variant="outlined" class="rounded-lg bg-surface" >
- <v-btn value="bar" icon="mdi-chart-bar" size="small"></v-btn>
- <v-btn value="line" icon="mdi-chart-line-variant" size="small"></v-btn>
+ <v-btn value="table" icon="mdi-table" size="small" class="mr-4"></v-btn>
+ <v-btn value="bar" icon="mdi-chart-bar" size="small" class="mr-4"></v-btn>
+ <v-btn value="line" icon="mdi-chart-line-variant" size="small" class="mr-4"></v-btn>
  </v-btn-toggle>
  </div>
  </div>
  
  <!-- Custom Visualization -->
- <div class="chart-container flex-grow-1 d-flex flex-column justify-end pt-4">
+ <div class="chart-container flex-grow-1 d-flex flex-column justify-end pt-4" >
  
+ <!-- Teacher View -->
+ <template v-if="activeRole === 'teacher'">
+   <div v-if="graphType === 'table'" class="w-100 h-100 overflow-auto">
+     <v-table density="compact" class="border">
+       <thead>
+         <tr>
+           <th class="font-weight-bold">Subject</th>
+           <th v-for="(round, idx) in classPerformanceData.rounds" :key="idx" class="font-weight-bold text-center">{{ round }}</th>
+         </tr>
+       </thead>
+       <tbody>
+         <tr v-for="(subj, idx) in classPerformanceData.subjects" :key="idx">
+           <td class="font-weight-medium">{{ subj.name }}</td>
+           <td v-for="(score, sIdx) in subj.data" :key="sIdx" class="text-center">
+             {{ score !== null ? score + '%' : '-' }}
+           </td>
+         </tr>
+       </tbody>
+     </v-table>
+   </div>
+   <div v-else-if="graphType === 'bar'" class="w-100 h-100 position-relative" style="min-height: 250px;">
+     <Bar :data="classChartData" :options="classChartOptions" />
+   </div>
+   <div v-else-if="graphType === 'line'" class="w-100 h-100 position-relative" style="min-height: 250px;">
+     <Line :data="classChartData" :options="classChartOptions" />
+   </div>
+ </template>
+
+ <!-- Student/Parent View -->
+ <template v-else>
  <!-- Bar Graph -->
  <div v-if="graphType === 'bar'" class="d-flex justify-space-between align-end h-100 pb-2 px-2 gap-4">
  <div v-for="(exam, i) in chartMetrics.points" :key="i" class="d-flex flex-column align-center w-100 h-100 justify-end position-relative group">
@@ -278,7 +404,7 @@ const getBarColor = (score) => {
  </div>
  
  <!-- Line Graph -->
- <div v-else class="h-100 w-100 position-relative pb-0 d-flex flex-column justify-end">
+ <div v-else-if="graphType === 'line'" class="h-100 w-100 position-relative pb-0 d-flex flex-column justify-end">
  <svg :viewBox="`0 0 ${chartMetrics.width} ${chartMetrics.height}`" class="w-100 overflow-visible" style="max-height: 180px;">
  <!-- Connecting Line -->
  <polyline 
@@ -329,14 +455,15 @@ const getBarColor = (score) => {
  </g>
  </svg>
  </div>
+ </template>
  
  </div>
  </v-card>
- </v-col>
+ </v-row>
 
  <!-- Contacts List -->
- <v-col cols="12" md="4" class="px-6">
- <v-card class="rounded-xl pa-5 bg-surface elevation-2 border h-100 d-flex flex-column">
+ <v-row class="px-6 d-flex flex-column">
+ <v-card class=" pa-5  border h-100 d-flex flex-column">
  <div class="text-h6 font-weight-regular mb-1">{{ displayData.contactsTitle }}</div>
  <div class="text-caption text-medium-emphasis mb-6">{{ displayData.contactsSubtitle }}</div>
  
@@ -359,101 +486,8 @@ const getBarColor = (score) => {
  Show all
  </v-btn>
  </v-card>
- </v-col>
  </v-row>
-
- <!-- Divider Line -->
- <v-divider class="mb-8" style="opacity: 0.1;"></v-divider>
-
- <!-- Bottom Section: Calendar, Schedule, Events -->
- <v-row class="px-2">
  
- <!-- Upcoming Tests -->
- <v-col cols="12" md="4" class="px-4">
- <div class="d-flex justify-space-between align-center mb-6">
- <div class="text-h6 font-weight-regular">Upcoming Tests</div>
- <div class="text-caption text-medium-emphasis font-weight-medium d-flex align-center gap-1">
- <span class="dot bg-high-emphasis"></span> Test Day <v-icon size="small" class="ml-1">mdi-calendar-blank</v-icon>
- </div>
- </div>
- 
- <div class="calendar-grid">
- <div 
- v-for="(day, i) in displayData.upcomingTests" 
- :key="i" 
- class="calendar-card rounded-xl pa-4 d-flex flex-column justify-space-between transition-all"
- :class="day.active ? 'bg-high-emphasis ' : 'bg-surface text-high-emphasis elevation-1'"
- >
- <div>
- <div class="text-h5 font-weight-medium">{{ day.day }}</div>
- <div class="text-caption mt-1 font-weight-medium" :class="day.active ? ' opacity-80' : 'text-medium-emphasis'">
- <template v-if="day.title">{{ day.title }}<br></template>
- {{ day.weekday }}
- </div>
- </div>
- 
- <!-- Graphic element for last card (Sunburst) -->
- <div v-if="i === 4" class="sunburst-graphic mt-auto align-self-center">
- <v-icon size="x-large" color="medium-emphasis">mdi-weather-sunset</v-icon>
- </div>
- </div>
- </div>
- </v-col>
-
- <!-- Today's Schedule -->
- <v-col cols="12" md="4" class="px-6 border-right border-left">
- <div class="text-h6 font-weight-regular mb-6">Today's Schedule</div>
- 
- <div class="d-flex flex-column gap-0">
- <div v-for="(item, i) in displayData.schedule" :key="i" class="d-flex justify-space-between align-center py-4 border-bottom-light">
- <div class="text-caption text-medium-emphasis font-weight-medium">{{ item.time }}</div>
- <div class="text-body-2 font-weight-bold">{{ item.subject }}</div>
- </div>
- </div>
- </v-col>
-
- <!-- Performance Insights -->
- <v-col cols="12" md="4" class="px-6 d-flex flex-column">
- <div class="d-flex justify-space-between align-center mb-6">
- <div class="text-h6 font-weight-regular">Performance Insights</div>
- </div>
- 
- <v-card class="rounded-xl bg-surface elevation-2 border flex-grow-1 overflow-hidden">
- <v-expansion-panels variant="accordion" class="h-100">
- <!-- Strengths Dropdown -->
- <v-expansion-panel class="bg-surface rounded-0 border-bottom">
- <v-expansion-panel-title class="font-weight-bold text-success">
- <div class="d-flex align-center">
- <v-icon color="success" class="mr-3">mdi-trending-up</v-icon> Core Strengths
- </div>
- </v-expansion-panel-title>
- <v-expansion-panel-text class="pt-4 bg-background">
- <div v-for="(str, i) in displayData.strengths" :key="i" class="mb-4">
- <div class="text-body-2 font-weight-bold">{{ str.title }}</div>
- <div class="text-caption text-medium-emphasis">{{ str.detail }}</div>
- </div>
- </v-expansion-panel-text>
- </v-expansion-panel>
-
- <!-- Weaknesses Dropdown -->
- <v-expansion-panel class="bg-surface rounded-0">
- <v-expansion-panel-title class="font-weight-bold text-error">
- <div class="d-flex align-center">
- <v-icon color="error" class="mr-3">mdi-trending-down</v-icon> Areas for Improvement
- </div>
- </v-expansion-panel-title>
- <v-expansion-panel-text class="pt-4 bg-background">
- <div v-for="(wk, i) in displayData.weaknesses" :key="i" class="mb-4">
- <div class="text-body-2 font-weight-bold">{{ wk.title }}</div>
- <div class="text-caption text-medium-emphasis">{{ wk.detail }}</div>
- </div>
- </v-expansion-panel-text>
- </v-expansion-panel>
- </v-expansion-panels>
- </v-card>
- </v-col>
-
- </v-row>
  </v-container>
 </template>
 
@@ -546,20 +580,6 @@ const getBarColor = (score) => {
 .border-bottom-light {
  border-bottom: 1px solid rgba(var(--v-border-color), 0.05);
 }
-
-/* Calendar Grid */
-.calendar-grid {
- display: grid;
- grid-template-columns: repeat(3, 1fr);
- gap: 16px;
- grid-auto-rows: 120px;
-}
-
-.calendar-grid .calendar-card:nth-child(1) { grid-column: 1 / 2; grid-row: 1 / 2; }
-.calendar-grid .calendar-card:nth-child(2) { grid-column: 2 / 3; grid-row: 1 / 2; }
-.calendar-grid .calendar-card:nth-child(3) { grid-column: 3 / 4; grid-row: 1 / 2; }
-.calendar-grid .calendar-card:nth-child(4) { grid-column: 1 / 2; grid-row: 2 / 3; }
-.calendar-grid .calendar-card:nth-child(5) { grid-column: 2 / 3; grid-row: 2 / 3; }
 
 .opacity-80 {
  opacity: 0.8;

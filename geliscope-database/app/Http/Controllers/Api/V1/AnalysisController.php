@@ -732,4 +732,61 @@ class AnalysisController extends Controller
 
         return response()->json($analysis, 201);
     }
+
+    /**
+     * Get class performance history for a teacher (grouped by subject and ordered by exam rounds).
+     */
+    public function teacherClassPerformance(Request $request, $teacherId)
+    {
+        $classId = $request->query('class_id');
+        
+        if (!$classId) {
+            return response()->json(['message' => 'class_id is required'], 400);
+        }
+
+        // Fetch exams for this class, with their round and subject, and their results
+        $exams = \App\Models\Exam::where('class_id', $classId)
+            ->whereNotNull('exam_round_id')
+            ->with(['examRound', 'subject', 'results'])
+            ->get();
+
+        // Extract unique rounds sorted by start_date (or id)
+        $rounds = $exams->pluck('examRound')->unique('id')->sortBy('start_date')->values();
+        $subjects = $exams->pluck('subject')->unique('id')->values();
+
+        $roundNames = $rounds->pluck('name')->toArray();
+        $roundIds = $rounds->pluck('id')->toArray();
+
+        $subjectData = [];
+
+        foreach ($subjects as $subject) {
+            $data = [];
+            foreach ($roundIds as $roundId) {
+                // Find the exam for this subject and round
+                $exam = $exams->first(function ($e) use ($subject, $roundId) {
+                    return $e->subject_id == $subject->id && $e->exam_round_id == $roundId;
+                });
+
+                if ($exam && $exam->results->count() > 0) {
+                    $totalScore = $exam->results->sum(function($res) {
+                        return ($res->total_score / $res->max_score) * 100;
+                    });
+                    $avg = round($totalScore / $exam->results->count(), 2);
+                    $data[] = $avg;
+                } else {
+                    $data[] = null;
+                }
+            }
+            
+            $subjectData[] = [
+                'name' => $subject->name,
+                'data' => $data,
+            ];
+        }
+
+        return response()->json([
+            'rounds' => $roundNames,
+            'subjects' => $subjectData
+        ]);
+    }
 }

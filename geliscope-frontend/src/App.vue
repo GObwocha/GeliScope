@@ -163,7 +163,7 @@ const isDashboard = computed(() => {
     </v-navigation-drawer>
 
     <!-- Main Content Area -->
-    <v-main class="bg-background position-relative h-100 w-100">
+    <v-main class="bg-background position-relative w-100">
       <div class="glow-blur-purple" style="top: -100px; left: -100px;"></div>
       <div class="glow-blur-green" style="top: 40%; right: -150px;"></div>
       <router-view v-slot="{ Component }">

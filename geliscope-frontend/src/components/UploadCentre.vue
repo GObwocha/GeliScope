@@ -432,6 +432,7 @@ const removeFile = (index) => {
               @dragover.prevent="isDragging = true"
               @dragleave.prevent="handleDragLeave"
               @drop.prevent="handleDrop"
+              ma-4
               >
              <v-icon size="48" color="primary" class="mb-2">mdi-cloud-upload-outline</v-icon>
               <div class="text-subtitle-1 font-weight-bold">Drag & Drop Scanned Sheets Here</div>
@@ -448,13 +449,13 @@ const removeFile = (index) => {
                   :loading="analyzing"
                   prepend-icon="mdi-marker-check"
                   elevation="4"
-                  class="py-4 font-weight-bold"
+                  class="py-4 font-weight-bold mt-4"
                   @click="startAnalysis('mark_and_analyze')"
                 >
                   Mark & Analyze
                 </v-btn>
               </v-col>
-              <v-col cols="12" md="{{ currentUser.role == 'teacher' ? 6 : 12 }}">
+              <v-col cols="{{ currentUser.role == 'teacher' ? 6 : 12 }}" md="6" >
                 <v-btn
                   color="primary"
                   size="large"
@@ -462,7 +463,7 @@ const removeFile = (index) => {
                   :loading="analyzing"
                   prepend-icon="mdi-brain"
                   elevation="4"
-                  class="py-4 font-weight-bold"
+                  class="mt-4 font-weight-bold"
                   @click="startAnalysis('analyze_only')"
                 >
                   Analyze Only

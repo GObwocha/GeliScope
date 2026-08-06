@@ -77,6 +77,20 @@ watch(trendExams, (newVal) => {
   }
 }, { immediate: true })
 
+const presentCumulativeAvg = computed(() => {
+  if (!trendExams.value || trendExams.value.length === 0) return '0.0';
+  const sum = trendExams.value.reduce((acc, curr) => acc + (Number(curr.avg) || 0), 0);
+  return (sum / trendExams.value.length).toFixed(1);
+})
+
+const overallTrajectoryGain = computed(() => {
+  if (!trendExams.value || trendExams.value.length < 2) return '0.0';
+  const first = Number(trendExams.value[0].avg) || 0;
+  const last = Number(trendExams.value[trendExams.value.length - 1].avg) || 0;
+  const diff = last - first;
+  return diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
+})
+
 // SVG Chart Metrics (Computed for high-precision vector rendering without external bundle overhead)
 const chartMetrics = computed(() => {
  const width = 800
@@ -406,11 +420,11 @@ onMounted(() => {
  <div class="d-flex gap-3 mt-4 mt-md-0">
  <div class="pa-3 rounded-2xl border bg-surface text-center px-5">
  <div class="text-caption text-medium-emphasis font-weight-bold uppercase">Present Cumulative Avg</div>
- <div class="text-h5 font-weight-black text-primary">85.4%</div>
+ <div class="text-h5 font-weight-black text-primary">{{ presentCumulativeAvg }}%</div>
  </div>
  <div class="pa-3 rounded-2xl border bg-surface text-center px-5">
  <div class="text-caption text-medium-emphasis font-weight-bold uppercase">Overall Trajectory Gain</div>
- <div class="text-h5 font-weight-black text-success">+27.4%</div>
+ <div class="text-h5 font-weight-black" :class="Number(overallTrajectoryGain) >= 0 ? 'text-success' : 'text-error'">{{ overallTrajectoryGain }}%</div>
  </div>
  </div>
  </div>

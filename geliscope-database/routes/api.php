@@ -54,6 +54,7 @@ Route::prefix('v1')->group(function () {
         Route::get('analysis/teacher/{teacherId}/dashboard', [AnalysisController::class, 'teacherDashboard']);
         Route::get('analysis/teacher/{teacherId}/classes', [AnalysisController::class, 'teacherClasses']);
         Route::get('analysis/teacher/{teacherId}/students', [AnalysisController::class, 'teacherStudents']);
+        Route::get('analysis/teacher/{teacherId}/class-performance', [AnalysisController::class, 'teacherClassPerformance']);
         Route::post('analysis/class/generate-diagnosis', [AnalysisController::class, 'generateClassDiagnosis']);
         //Archives
         Route::get('archives/student/{studentId}', [AnalysisController::class, 'getArchives']);
