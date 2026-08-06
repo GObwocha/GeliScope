@@ -172,12 +172,41 @@ const parentActionSteps = ref([
 ])
 
 const teacherStreamSummary = ref({
- class_name: 'Form 2 East (Mathematics)',
- total_students: 45,
- stream_average: '68.4%',
- top_error: 'Quadratic Factorization Sign Derivation (62% of stream)',
- pending_scans: 8
+ class_name: 'Loading...',
+ total_students: 0,
+ stream_average: '0%',
+ top_error: 'Loading...',
+ pending_scans: 0
 })
+
+const latestExamMean = ref(null)
+const aiReportDialog = ref(false)
+
+const fetchTeacherDashboard = async () => {
+  if (activeRole.value !== 'teacher' || !userProfile.value.teacher?.id) return
+  
+  try {
+    const response = await axios.get(`/api/v1/analysis/teacher/${userProfile.value.teacher.id}/dashboard`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+    
+    teacherStreamSummary.value = {
+      class_name: 'All Assigned Classes',
+      total_students: '-',
+      stream_average: response.data.class_mean + '%',
+      top_error: response.data.stream_bottleneck,
+      pending_scans: 0
+    }
+    
+    latestExamMean.value = {
+      mean: response.data.class_mean,
+      exam_name: response.data.exam_name,
+      date_recorded: response.data.date_recorded
+    }
+  } catch (error) {
+    console.error('Failed to fetch teacher dashboard', error)
+  }
+}
 
 // Load active session from local storage or backend API
 onMounted(() => {
@@ -185,9 +214,10 @@ onMounted(() => {
  router.push('/login')
  } else {
  loading.value = false
- fetchSuggestedCareers()
- fetchCognitiveProfile()
- if (userProfile.value.student?.id) {
+  fetchSuggestedCareers()
+  fetchCognitiveProfile()
+  fetchTeacherDashboard()
+  if (userProfile.value.student?.id) {
    examStore.fetchStudentExams(userProfile.value.student.id)
  }
  }
@@ -598,14 +628,14 @@ onMounted(() => {
  </div>
  <div class="mb-6">
  <div class="text-h3 font-weight-black text-secondary">{{ teacherStreamSummary.stream_average }}</div>
- <div class="text-caption text-medium-emphasis">Average stream mastery across {{ teacherStreamSummary.total_students }} enrolled candidates</div>
+ <div class="text-caption text-medium-emphasis">Average stream mastery across your assigned classes</div>
  </div>
  <div class="pa-4 rounded-2xl bg-surface border mb-6">
  <div class="text-caption font-weight-bold text-error uppercase mb-1">Top Pedagogical Bottleneck (`ClassAnalysis`)</div>
  <div class="font-weight-bold text-body-1">{{ teacherStreamSummary.top_error }}</div>
  </div>
- <v-btn color="secondary" block size="large" to="/dashboard/student-profile-tutor" prepend-icon="mdi-account-group" class="font-weight-bold rounded-xl">
- Open Stream Diagnostics
+ <v-btn color="secondary" block size="large" to="/dashboard/class-diagnosis" prepend-icon="mdi-google-circles-extended" class="font-weight-bold rounded-xl">
+ Open Class Diagnosis
  </v-btn>
  </v-card>
  </v-col>
@@ -616,17 +646,16 @@ onMounted(() => {
  <div class="d-flex justify-space-between align-center mb-4">
  <h2 class="text-h5 font-weight-black d-flex align-center">
  <v-icon color="primary" class="mr-2">mdi-file-document-check</v-icon>
- Marking Rubrics & OCR Queue
+ Marking Rubrics & Configurations
  </h2>
- <v-chip color="warning" size="small" variant="flat" class="font-weight-bold">{{ teacherStreamSummary.pending_scans }} Pending Scans</v-chip>
  </div>
  <p class="text-subtitle-2 text-medium-emphasis mb-6">
  Configure your custom marking instructions (TeacherMarkingConfig) in MongoDB so the neural VLM grades student scripts according to your exact curriculum scheme.
  </p>
  </div>
  <div>
- <v-btn color="primary" block size="large" to="/dashboard/upload-centre" prepend-icon="mdi-cog-outline" class="font-weight-bold rounded-xl mb-3">
- Configure Marking Rubric (TeacherMarkingConfig)
+ <v-btn color="primary" block size="large" to="/dashboard/settings" prepend-icon="mdi-cog-outline" class="font-weight-bold rounded-xl mb-3">
+ Configure Marking Rubric
  </v-btn>
  <v-btn variant="outlined" color="surface" block to="/admin-dashboard" prepend-icon="mdi-domain" class="font-weight-bold rounded-xl">
  Institutional Admin Oversight
@@ -635,7 +664,60 @@ onMounted(() => {
  </v-card>
  </v-col>
  </v-row>
+ 
+ <!-- New Card for Latest Exam Round -->
+ <v-card class="pa-6 rounded-3xl border bg-surface mt-8 " elevation="6" v-if="latestExamMean">
+ <div class="d-flex flex-column flex-md-row justify-space-between align-md-center mb-6">
+ <div>
+ <div class="d-flex align-center gap-2 mb-1">
+ <v-chip color="primary" size="small" variant="flat" class="font-weight-bold">EXAM ROUND SUMMARY</v-chip>
  </div>
+ <h2 class="text-h4 font-weight-black d-flex align-center mt-2">
+ <v-icon color="primary" size="32" class="mr-3">mdi-google-analytics</v-icon>
+ Latest Exam Round: {{ latestExamMean.exam_name }}
+ </h2>
+ </div>
+ <div class="d-flex gap-3 mt-4 mt-md-0">
+ <div class="pa-3 rounded-2xl border bg-surface text-center px-5">
+ <div class="text-caption text-medium-emphasis font-weight-bold uppercase">Class Mean</div>
+ <div class="text-h5 font-weight-black text-primary">{{ latestExamMean.mean }}%</div>
+ </div>
+ </div>
+ </div>
+ 
+ <div class="d-flex justify-end">
+ <v-btn color="secondary" size="large" prepend-icon="mdi-robot-outline" class="font-weight-bold rounded-xl" @click="aiReportDialog = true">
+ AI Report
+ </v-btn>
+ </div>
+ </v-card>
+ </div>
+
+ <!-- AI Report Dialog -->
+ <v-dialog v-model="aiReportDialog" max-width="600">
+ <v-card class="rounded-3xl border bg-surface pa-2">
+ <v-card-title class="text-h5 font-weight-black d-flex align-center mt-4 mx-4">
+ <v-icon color="primary" class="mr-2">mdi-robot-outline</v-icon> AI Round Summary
+ </v-card-title>
+ <v-card-text class="pt-4 mx-4">
+ <div class="mb-4 text-body-1">
+ This feature summarizes the performance of all your assigned classes for the round: <strong>{{ latestExamMean?.exam_name }}</strong>.
+ </div>
+ <div class="pa-4 rounded-xl bg-surface-light border mb-4">
+ <div class="font-weight-bold mb-2"><v-icon size="small" class="mr-2" color="success">mdi-check-circle</v-icon>Overall Impression</div>
+ The classes showed strong foundational knowledge, averaging {{ latestExamMean?.mean }}%. However, advanced application questions remain a significant bottleneck for a large portion of the cohort.
+ </div>
+ <div class="text-body-2 text-medium-emphasis">
+ To view specific, granular AI analysis per class and subject, please navigate to the <strong>Class Diagnosis</strong> section.
+ </div>
+ </v-card-text>
+ <v-card-actions class="mb-2 mx-4 pb-4">
+ <v-spacer></v-spacer>
+ <v-btn color="primary" variant="flat" class="rounded-xl px-6 font-weight-bold" to="/dashboard/class-diagnosis" @click="aiReportDialog = false">Go to Class Diagnosis</v-btn>
+ <v-btn color="surface" variant="outlined" class="rounded-xl px-6 font-weight-bold" @click="aiReportDialog = false">Close</v-btn>
+ </v-card-actions>
+ </v-card>
+ </v-dialog>
 
  <!-- MySQL Relational Assessment Table (Shown strictly for Parent and Teacher workspaces) -->
  <v-card v-if="activeRole !== 'student'" class="pa-4 pa-md-6 rounded-3xl border bg-surface mt-8 " elevation="4">

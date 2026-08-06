@@ -1,7 +1,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
+import axios from 'axios'
 
 const authStore = useAuthStore()
 const loading = ref(false)
@@ -65,7 +66,50 @@ const mottoError = computed(() => {
  return words.length > 7 ? 'Motto cannot exceed 7 words.' : ''
 })
 
-const saveChanges = () => {
+const teacherExams = ref([])
+const selectedMarkingExam = ref(null)
+const markingInstructionsText = ref('')
+
+const fetchTeacherData = async () => {
+  if (currentUser.value.role === 'teacher' && currentUser.value.id) {
+    try {
+      const response = await axios.get(`/api/v1/analysis/teacher/${currentUser.value.teacher.id}/classes`, {
+        headers: { Authorization: `Bearer ${authStore.token}` }
+      })
+      const examsMap = new Map()
+      response.data.forEach(cls => {
+        if (cls.exams) {
+          cls.exams.forEach(ex => {
+            examsMap.set(ex.id, ex)
+          })
+        }
+      })
+      teacherExams.value = Array.from(examsMap.values())
+    } catch (error) {
+      console.error('Error fetching teacher data:', error)
+    }
+  }
+}
+
+const fetchMarkingConfig = async (examId) => {
+  if (!examId) return
+  markingInstructionsText.value = ''
+  try {
+    const response = await axios.get(`/api/v1/analysis/marking-config/${examId}`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+    markingInstructionsText.value = response.data.instructions?.raw_text || ''
+  } catch (error) {
+    console.error('Error fetching marking config:', error)
+    markingInstructionsText.value = ''
+  }
+}
+
+onMounted(() => {
+  fetchTeacherData()
+})
+
+const saveChanges = async () => {
  if (mottoError.value) return
  loading.value = true
  
@@ -75,11 +119,23 @@ const saveChanges = () => {
  localStorage.setItem('motto_font_color', mottoFontColor.value)
  }
 
- setTimeout(() => {
+ if (currentUser.value.role === 'teacher' && selectedMarkingExam.value) {
+   try {
+     await axios.post('/api/v1/analysis/marking-config', {
+         teacher_id: currentUser.value.id,
+         exam_id: selectedMarkingExam.value,
+         instructions: { raw_text: markingInstructionsText.value }
+     }, {
+         headers: { Authorization: `Bearer ${authStore.token}` }
+     })
+   } catch (error) {
+     console.error('Error saving marking config:', error)
+   }
+ }
+
  loading.value = false
  snackbar.value = true
  console.log('Settings saved:', currentUser.value)
- }, 1000)
 }
 </script>
 
@@ -107,6 +163,9 @@ const saveChanges = () => {
  </v-tab>
  <v-tab value="2" class="justify-start px-6 font-weight-bold text-none">
  <v-icon start class="mr-3">mdi-shield-lock-outline</v-icon> Security
+ </v-tab>
+ <v-tab v-if="currentUser.role === 'teacher'" value="3" class="justify-start px-6 font-weight-bold text-none">
+ <v-icon start class="mr-3">mdi-clipboard-check-outline</v-icon> Marking Configurations
  </v-tab>
  </v-tabs>
  </div>
@@ -370,6 +429,36 @@ const saveChanges = () => {
  bg-color="background"
  density="comfortable"
  ></v-text-field>
+ </v-window-item>
+
+ <!-- 4. Marking Configurations Tab (Teacher Only) -->
+ <v-window-item value="3" v-if="currentUser.role === 'teacher'">
+ <h3 class="text-h5 font-weight-bold mb-6">Marking Configurations</h3>
+ <div class="mb-4 text-body-2 text-medium-emphasis">Configure custom AI grading instructions. Specify keywords and specific things to look out for during automated grading.</div>
+ 
+ <v-select
+ v-model="selectedMarkingExam"
+ :items="teacherExams"
+ item-title="name"
+ item-value="id"
+ label="Select Exam"
+ variant="outlined"
+ bg-color="background"
+ density="comfortable"
+ @update:modelValue="fetchMarkingConfig"
+ ></v-select>
+ 
+ <div v-if="selectedMarkingExam">
+ <v-textarea
+ v-model="markingInstructionsText"
+ label="Marking Instructions (Keywords, rules, expectations)"
+ variant="outlined"
+ bg-color="background"
+ rows="6"
+ hint="Example: Look out for formula derivation. Award partial marks for substitution."
+ persistent-hint
+ ></v-textarea>
+ </div>
  </v-window-item>
  </v-window>
 
