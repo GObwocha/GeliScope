@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Socialite\Socialite;
 
 class AuthController extends Controller
 {
@@ -62,6 +63,45 @@ class AuthController extends Controller
             'user' => $user,
             'token' => $token,
         ], 200);
+    }
+
+    // Step 1: Send the Google login URL to Vue
+    public function googleRedirect()
+    {
+        $driver = Socialite::driver('google');
+        $url = $driver->stateless()->redirect()->getTargetUrl();
+        return response()->json(['url' => $url]);
+    }
+
+    // Step 2: Handle the return from Google
+    public function googleCallback()
+    {
+        // 1. Get the user data from Google
+        $googleUser = Socialite::driver('google')->stateless()->user();
+        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])->where('email', $googleUser->email)->first();
+
+        if (!$user ){
+            return redirect()->away(config('app.frontend_url') . '/login?error=user_not_found');
+        }
+
+        // Delete all previous tokens (optional, but good for single-device sessions or general cleanup)
+        $user->tokens()->delete();
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        // 4. Redirect back to your Vue frontend, passing the token in the URL
+        $frontendUrl = config('app.frontend_url') . '/google-callback?token=' . $token;
+        
+        return redirect()->away($frontendUrl);
+    }
+
+    /**
+     * Get the authenticated User
+     */
+    public function me(Request $request)
+    {
+        $user = $request->user()->load(['student.school', 'student.skills', 'teacher.school', 'parentProfile']);
+        return response()->json($user, 200);
     }
 
     /**

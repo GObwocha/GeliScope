@@ -96,3 +96,16 @@ body {
 .text-muted {
   color: #616083 !important;
 }
+
+.drop-zone {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.drop-zone.is-dragging {
+  border-color: #42b883;
+  background-color: rgba(66, 184, 131, 0.1);
+}

@@ -1,11 +1,12 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useTheme } from 'vuetify';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
 const theme = useTheme();
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 
 const step = ref(1);
@@ -13,6 +14,7 @@ const email = ref('');
 const password = ref('');
 const showPassword = ref(false);
 const loading = ref(false);
+const loadingGoogle = ref(false);
 const errorMsg = ref('');
 const userData = ref(null);
 
@@ -57,6 +59,23 @@ const goBack = () => {
  password.value = '';
  errorMsg.value = '';
 }
+
+const googleLogin = async () => {
+    loadingGoogle.value = true
+    await authStore.loginWithGoogle();
+    loadingGoogle.value = false
+}
+
+onMounted(() => {
+    if (route.query.error === 'user_not_found') {
+        errorMsg.value = 'User not found. Please ensure you are registered.';
+        
+        // Remove the error query parameter from the URL so it doesn't persist on refresh
+        const query = { ...route.query };
+        delete query.error;
+        router.replace({ path: route.path, query });
+    }
+});
 </script>
 
 <template>
@@ -145,6 +164,8 @@ const goBack = () => {
  size="large"
  variant="flat"
  class="text-none mb-8 mt-4"
+ :loading="loadingGoogle"
+ @click="googleLogin"
  >
  Google
  </v-btn>

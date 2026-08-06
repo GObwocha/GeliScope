@@ -70,8 +70,6 @@ const tiers = [
 
 <template>
  <div class="pricing-page position-relative w-100 overflow-hidden pb-16">
- <div class="glow-blur-purple e%); opacity: 0.3;"></div>
- <div class="glow-blur-green e0%; opacity: 0.2;"></div>
 
  <v-container class="pt-16 mt-8 position-relative z-10">
  <div class="text-center max-w-3xl mx-auto mb-16">

@@ -38,6 +38,38 @@ export const useAuthStore = defineStore('auth', {
         throw error
       }
     },
+
+    async loginWithGoogle() {
+      try {
+          // Ask Laravel for the Google URL
+          const response = await axios.get('/api/v1/auth/google/redirect')
+          
+          // Physically redirect the user's browser to Google
+          window.location.href = response.data.url;
+      } catch (error) {
+          console.error("Failed to fetch Google URL", error);
+      }
+    },
+
+    async fetchUser(token) {
+      try {
+        const response = await axios.get('/api/v1/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        this.user = response.data;
+        this.token = token;
+        
+        localStorage.setItem('geliscope_user', JSON.stringify(this.user));
+        localStorage.setItem('geliscope_token', this.token);
+        
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
     
     async logout() {
       try {

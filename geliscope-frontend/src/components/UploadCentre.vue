@@ -64,6 +64,8 @@ const examForm = ref({
   academic_year: '2025'
 })
 
+const isDragging = ref(false);
+
 onMounted(async () => {
   const cachedAnalysis = localStorage.getItem('unsaved_analysis')
   if (cachedAnalysis) {
@@ -257,6 +259,24 @@ const saveToMongoDB = async () => {
  alert('Analysis saved locally! (Note: Live MongoDB driver will sync upon extension install as per Walkthrough step 1)')
  }
 }
+
+//Drop Zone Configurations
+function handleDragLeave(e) {
+  // Prevent flickering when dragging over child elements inside the dropzone
+  if (!e.currentTarget.contains(e.relatedTarget)) {
+    isDragging.value = false;
+  }
+}
+
+function handleDrop(e) {
+  isDragging.value = false;
+  const droppedFiles = Array.from(e.dataTransfer.files);
+  files.value = [...files.value, ...droppedFiles];
+}
+
+const removeFile = (index) => {
+  files.value.splice(index, 1);
+}
 </script>
 
 <template>
@@ -400,36 +420,42 @@ const saveToMongoDB = async () => {
             >
               <template #selection="{ fileNames }">
                 <template v-for="(fileName, index) in fileNames" :key="fileName">
-                  <v-chip size="small" color="primary" class="me-2">{{ fileName }}</v-chip>
+                  <v-chip closable @click:close="removeFile(index)" size="small" color="primary" class="me-2">{{ fileName }}</v-chip>
                 </template>
               </template>
             </v-file-input>
-
-            <div 
-              class="border-2 border-dashed border-primary border-opacity-50 rounded-2xl pa-8 text-center bg-surface cursor-pointer hover:bg-primary hover:bg-opacity-5 transition mb-6"
-            >
-              <v-icon size="48" color="primary" class="mb-2">mdi-cloud-upload-outline</v-icon>
+            <!-- Drag and drop zone -->
+             <div 
+              class="drop-zone cursor-pointer"
+              :class="{ 'is-dragging': isDragging }"
+              @dragenter.prevent="isDragging = true"
+              @dragover.prevent="isDragging = true"
+              @dragleave.prevent="handleDragLeave"
+              @drop.prevent="handleDrop"
+              ma-4
+              >
+             <v-icon size="48" color="primary" class="mb-2">mdi-cloud-upload-outline</v-icon>
               <div class="text-subtitle-1 font-weight-bold">Drag & Drop Scanned Sheets Here</div>
               <div class="text-caption text-medium-emphasis">Supports high-res JPG, PNG, WEBP, and PDF scripts up to 50MB</div>
             </div>
-
             <!-- Dual Action Buttons -->
             <v-row>
               <v-col cols="12" md="6">
                 <v-btn
+                  v-if="currentUser.role == 'teacher'"
                   color="accent"
                   size="large"
                   block
                   :loading="analyzing"
                   prepend-icon="mdi-marker-check"
                   elevation="4"
-                  class="py-4 font-weight-bold"
+                  class="py-4 font-weight-bold mt-4"
                   @click="startAnalysis('mark_and_analyze')"
                 >
-                  AI Mark & Analyze
+                  Mark & Analyze
                 </v-btn>
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col cols="{{ currentUser.role == 'teacher' ? 6 : 12 }}" md="6" >
                 <v-btn
                   color="primary"
                   size="large"
@@ -437,7 +463,7 @@ const saveToMongoDB = async () => {
                   :loading="analyzing"
                   prepend-icon="mdi-brain"
                   elevation="4"
-                  class="py-4 font-weight-bold"
+                  class="mt-4 font-weight-bold"
                   @click="startAnalysis('analyze_only')"
                 >
                   Analyze Only

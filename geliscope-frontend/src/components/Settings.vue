@@ -1,10 +1,12 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { computed, onMounted } from 'vue'
 import axios from 'axios'
+import { useExamStore } from '@/stores/exams'
+import { useSchoolStore } from '@/stores/schools'
 
 const authStore = useAuthStore()
+const schoolStore = useSchoolStore()
 const loading = ref(false)
 
 // Simulating logged-in user context
@@ -34,12 +36,6 @@ const currentUser = computed(() => {
  }
 })
 
-const schools = ref([
- { id: 1, name: 'Alliance High School' },
- { id: 2, name: 'Maseno School' },
- { id: 3, name: 'Kenya High School' }
-])
-
 const classes = ref([
  { id: 1, name: 'Form 1' },
  { id: 2, name: 'Form 2' },
@@ -49,6 +45,8 @@ const classes = ref([
 
 const activeTab = ref(0)
 const snackbar = ref(false)
+const errorMessage = ref('')
+const errorSnackbar = ref(false)
 
 const mottoFontType = ref(localStorage.getItem('motto_font_type') || 'Inter')
 const mottoFontSize = ref(localStorage.getItem('motto_font_size') || '16')
@@ -107,6 +105,7 @@ const fetchMarkingConfig = async (examId) => {
 
 onMounted(() => {
   fetchTeacherData()
+  schoolStore.fetchSchools()
 })
 
 const saveChanges = async () => {
@@ -315,7 +314,7 @@ const saveChanges = async () => {
  <v-col cols="12" sm="6">
  <v-select
  v-model="currentUser.school_id"
- :items="schools"
+ :items="schoolStore.schools"
  item-title="name"
  item-value="id"
  label="School"
@@ -344,7 +343,7 @@ const saveChanges = async () => {
  <v-row dense>
  <v-col cols="12" sm="6">
  <v-text-field
- v-model="currentUser.employee_number"
+ v-model="currentUser.teacher.employee_number"
  label="Employee Number (TSC)"
  variant="outlined"
  bg-color="background"
@@ -354,7 +353,7 @@ const saveChanges = async () => {
  </v-col>
  <v-col cols="12" sm="6">
  <v-text-field
- v-model="currentUser.specialization"
+ v-model="currentUser.teacher.specialization"
  label="Specialization"
  variant="outlined"
  bg-color="background"
@@ -363,8 +362,8 @@ const saveChanges = async () => {
  </v-col>
  </v-row>
  <v-select
- v-model="currentUser.school_id"
- :items="schools"
+ v-model="currentUser.teacher.school_id"
+ :items="schoolStore.schools"
  item-title="name"
  item-value="id"
  label="Assigned School"

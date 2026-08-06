@@ -11,13 +11,15 @@ import StudentPerformance from '@/components/StudentPerformance.vue'
 import StudentProfileP from '@/components/StudentProfileP.vue'
 import StudentProfileS from '@/components/StudentProfileS.vue'
 import StudentProfileT from '@/components/StudentProfileS.vue'
+import StudentProfileTutor from '@/components/StudentProfileTutor.vue'
 import Testimonials from '@/components/Testimonials.vue'
 import UploadCentre from '@/components/UploadCentre.vue'
 import Leaderboard from '@/components/Leaderboard.vue'
 import AdminDashboard from '@/components/AdminDashboard.vue'
 import UserDashboard from '@/components/UserDashboard.vue'
 import ExamArchives from '@/components/ExamArchives.vue'
-import ClassDiagnosis from '../components/ClassDiagnosis.vue'
+import ClassDiagnosis from '@/components/ClassDiagnosis.vue'
+import AuthCallBack from '@/components/AuthCallBack.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,6 +28,12 @@ const router = createRouter({
       path: '/',
       component: LandingPage,
       meta: { requiresAuth: false }
+    },
+    {
+    // This route handles the return from your Laravel backend
+    path: '/google-callback',
+    name: 'google-callback',
+    component: AuthCallBack
     },
     {
       path: '/features',
@@ -89,6 +97,11 @@ const router = createRouter({
     },
     {
       path: '/dashboard/student-profile-tutor',
+      component: StudentProfileTutor,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/dashboard/student-profile-teacher',
       component: StudentProfileT,
       meta: { requiresAuth: true }
     },

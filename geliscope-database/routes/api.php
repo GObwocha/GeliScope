@@ -13,6 +13,10 @@ Route::prefix('v1')->group(function () {
     // Unprotected Routes (Login and Registration)
     Route::post('auth/check-email', [AuthController::class, 'checkEmail']);
     Route::post('auth/login', [AuthController::class, 'login']);
+    //Google OAuth
+    Route::get('/auth/google/redirect', [AuthController::class, 'googleRedirect']);
+    Route::get('/auth/google/callback', [AuthController::class, 'googleCallback']);
+
     Route::post('register-user', [UserController::class, 'store']); // Registration
     Route::get('schools', [SchoolController::class, 'index']); // For registration
     Route::get('schools/{id}/classes', [SchoolController::class, 'classes']); // For registration
@@ -20,6 +24,7 @@ Route::prefix('v1')->group(function () {
     // Protected Routes
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
+        Route::get('auth/me', [AuthController::class, 'me']);
         //Users
         Route::apiResource('users', UserController::class)->except(['store']);
         //Subjects
@@ -49,6 +54,8 @@ Route::prefix('v1')->group(function () {
         Route::get('analysis/teacher/{teacherId}/dashboard', [AnalysisController::class, 'teacherDashboard']);
         Route::get('analysis/teacher/{teacherId}/classes', [AnalysisController::class, 'teacherClasses']);
         Route::get('analysis/teacher/{teacherId}/students', [AnalysisController::class, 'teacherStudents']);
+        Route::get('analysis/teacher/{teacherId}/student/{studentId}/comprehensive-profile', [AnalysisController::class, 'teacherStudentComprehensiveProfile']);
+        Route::get('analysis/teacher/{teacherId}/class-performance', [AnalysisController::class, 'teacherClassPerformance']);
         Route::post('analysis/class/generate-diagnosis', [AnalysisController::class, 'generateClassDiagnosis']);
         //Archives
         Route::get('archives/student/{studentId}', [AnalysisController::class, 'getArchives']);
