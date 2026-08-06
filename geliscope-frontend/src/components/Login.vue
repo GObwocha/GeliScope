@@ -14,6 +14,7 @@ const email = ref('');
 const password = ref('');
 const showPassword = ref(false);
 const loading = ref(false);
+const loadingGoogle = ref(false);
 const errorMsg = ref('');
 const userData = ref(null);
 
@@ -60,12 +61,19 @@ const goBack = () => {
 }
 
 const googleLogin = async () => {
+    loadingGoogle.value = true
     await authStore.loginWithGoogle();
+    loadingGoogle.value = false
 }
 
 onMounted(() => {
     if (route.query.error === 'user_not_found') {
         errorMsg.value = 'User not found. Please ensure you are registered.';
+        
+        // Remove the error query parameter from the URL so it doesn't persist on refresh
+        const query = { ...route.query };
+        delete query.error;
+        router.replace({ path: route.path, query });
     }
 });
 </script>
@@ -156,7 +164,7 @@ onMounted(() => {
  size="large"
  variant="flat"
  class="text-none mb-8 mt-4"
- :loading="loading"
+ :loading="loadingGoogle"
  @click="googleLogin"
  >
  Google

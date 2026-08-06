@@ -1,7 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { computed, onMounted } from 'vue'
 import axios from 'axios'
 
 const authStore = useAuthStore()

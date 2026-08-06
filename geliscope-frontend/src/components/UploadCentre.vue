@@ -257,6 +257,7 @@ const saveToMongoDB = async () => {
  alert('Analysis saved locally! (Note: Live MongoDB driver will sync upon extension install as per Walkthrough step 1)')
  }
 }
+
 </script>
 
 <template>
@@ -417,6 +418,7 @@ const saveToMongoDB = async () => {
             <v-row>
               <v-col cols="12" md="6">
                 <v-btn
+                  v-if="currentUser.role == 'teacher'"
                   color="accent"
                   size="large"
                   block
@@ -426,10 +428,10 @@ const saveToMongoDB = async () => {
                   class="py-4 font-weight-bold"
                   @click="startAnalysis('mark_and_analyze')"
                 >
-                  AI Mark & Analyze
+                  Mark & Analyze
                 </v-btn>
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="{{ currentUser.role == 'teacher' ? 6 : 12 }}">
                 <v-btn
                   color="primary"
                   size="large"

@@ -16,6 +16,7 @@ export const useSchoolStore = defineStore('school', {
         const response = await axios.get('/api/v1/schools')
         // Laravel's index route might return a paginator object or just an array
         this.schools = response.data.data || response.data
+        console.log(response.data)
       } catch (err) {
         console.error('Failed to fetch schools:', err)
         this.error = 'Failed to load schools'
