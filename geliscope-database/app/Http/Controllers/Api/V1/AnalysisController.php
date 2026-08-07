@@ -745,35 +745,43 @@ class AnalysisController extends Controller
             return response()->json(['message' => 'class_id is required'], 400);
         }
 
-        // Fetch exams for this class, with their round and subject, and their results
-        $exams = \App\Models\Exam::where('class_id', $classId)
-            ->whereNotNull('exam_round_id')
-            ->with(['examRound', 'subject', 'results'])
-            ->get();
+        // Fetch unique rounds and subjects directly from the database for this class
+        $rounds = \App\Models\ExamRound::whereHas('exams', function($query) use ($classId) {
+            $query->where('class_id', $classId);
+        })->orderBy('start_date')->get();
 
-        // Extract unique rounds sorted by start_date (or id)
-        $rounds = $exams->pluck('examRound')->unique('id')->sortBy('start_date')->values();
-        $subjects = $exams->pluck('subject')->unique('id')->values();
+        $subjects = \App\Models\Subject::whereHas('exams', function($query) use ($classId) {
+            $query->where('class_id', $classId)->whereNotNull('exam_round_id');
+        })->get();
 
         $roundNames = $rounds->pluck('name')->toArray();
         $roundIds = $rounds->pluck('id')->toArray();
+
+        // Perform the aggregation entirely in SQL using Laravel's Query Builder
+        $aggregatedResults = \Illuminate\Support\Facades\DB::table('exam_results')
+            ->join('exams', 'exam_results.exam_id', '=', 'exams.id')
+            ->where('exams.class_id', $classId)
+            ->whereNotNull('exams.exam_round_id')
+            ->selectRaw('
+                exams.subject_id,
+                exams.exam_round_id,
+                AVG((exam_results.total_score / exam_results.max_score) * 100) as avg_score
+            ')
+            ->groupBy('exams.subject_id', 'exams.exam_round_id')
+            ->get();
 
         $subjectData = [];
 
         foreach ($subjects as $subject) {
             $data = [];
             foreach ($roundIds as $roundId) {
-                // Find the exam for this subject and round
-                $exam = $exams->first(function ($e) use ($subject, $roundId) {
-                    return $e->subject_id == $subject->id && $e->exam_round_id == $roundId;
+                // Find the aggregated result for this subject and round
+                $result = $aggregatedResults->first(function ($r) use ($subject, $roundId) {
+                    return $r->subject_id == $subject->id && $r->exam_round_id == $roundId;
                 });
 
-                if ($exam && $exam->results->count() > 0) {
-                    $totalScore = $exam->results->sum(function($res) {
-                        return ($res->total_score / $res->max_score) * 100;
-                    });
-                    $avg = round($totalScore / $exam->results->count(), 2);
-                    $data[] = $avg;
+                if ($result) {
+                    $data[] = round($result->avg_score, 2);
                 } else {
                     $data[] = null;
                 }
