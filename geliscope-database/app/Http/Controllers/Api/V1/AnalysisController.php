@@ -110,6 +110,19 @@ class AnalysisController extends Controller
             $examResult->update(['mongo_analysis_id' => $analysis->_id]);
         }
         
+        // Auto-generate To-Do items from AI suggestions
+        if (!empty($validated['suggestions'])) {
+            foreach ($validated['suggestions'] as $suggestion) {
+                $title = is_array($suggestion) ? ($suggestion['title'] ?? $suggestion['text'] ?? json_encode($suggestion)) : (string) $suggestion;
+                
+                \App\Models\StudentTodo::firstOrCreate([
+                    'student_id' => (int) $validated['student_id'],
+                    'exam_analysis_id' => (string) $analysis->_id,
+                    'title' => substr($title, 0, 255), // Enforce max length
+                ]);
+            }
+        }
+        
         // Recalculate Bloom's Taxonomy Cognitive Profile Averages
         $allAnalyses = ExamAnalysis::where('student_id', (int) $validated['student_id'])->get();
         $bloomSums = [

@@ -248,10 +248,73 @@ onMounted(async () => {
     console.error('Failed to load subjects', e)
   }
 
-  if (activeRole.value === 'teacher') {
-    fetchTeacherClasses()
-  } else {
-    fetchExamHistory()
+  if (activeRole.value === 'student') {
+    await fetchExamHistory()
+    await loadTodos()
+  } else if (activeRole.value === 'teacher') {
+    await fetchTeacherClasses()
+  }
+})
+
+// --- To-Do List Logic ---
+import StudentTodoService from '@/services/StudentTodoService'
+
+const todos = ref([])
+const newTodoTitle = ref('')
+const loadingTodos = ref(false)
+
+const loadTodos = async () => {
+  const studentId = authStore.currentUser?.student?.id
+  if (!studentId) return
+  try {
+    loadingTodos.value = true
+    todos.value = await StudentTodoService.getTodos(studentId)
+  } catch (err) {
+    console.error('Failed to load todos', err)
+  } finally {
+    loadingTodos.value = false
+  }
+}
+
+const addTodo = async () => {
+  if (!newTodoTitle.value.trim()) return
+  const studentId = authStore.currentUser?.student?.id
+  if (!studentId) return
+  
+  try {
+    const todo = await StudentTodoService.createTodo(studentId, newTodoTitle.value)
+    todos.value.unshift(todo)
+    newTodoTitle.value = ''
+  } catch (err) {
+    console.error('Failed to create todo', err)
+  }
+}
+
+const toggleTodo = async (todo) => {
+  try {
+    todo.is_completed = !todo.is_completed
+    await StudentTodoService.updateTodo(todo.id, { is_completed: todo.is_completed })
+  } catch (err) {
+    console.error('Failed to update todo', err)
+    todo.is_completed = !todo.is_completed // revert
+  }
+}
+
+const deleteTodo = async (todoId) => {
+  try {
+    await StudentTodoService.deleteTodo(todoId)
+    todos.value = todos.value.filter(t => t.id !== todoId)
+  } catch (err) {
+    console.error('Failed to delete todo', err)
+  }
+}
+
+watch(activeRole, async (newRole) => {
+  if (newRole === 'student') {
+    await fetchExamHistory()
+    await loadTodos()
+  } else if (newRole === 'teacher') {
+    await fetchTeacherClasses()
   }
 })
 
@@ -461,9 +524,47 @@ const getBarColor = (score) => {
  </v-card>
  </v-row>
 
- <!-- Contacts List -->
+ <!-- Action Items / Contacts List -->
  <v-row class="px-6 d-flex flex-column">
  <v-card class=" pa-5  border h-100 d-flex flex-column">
+ 
+ <!-- To-Do List for Students -->
+ <template v-if="activeRole === 'student'">
+ <div class="text-h6 font-weight-regular mb-1">Your To-Do List</div>
+ <div class="text-caption text-medium-emphasis mb-6">Action items pulled from your exam analyses.</div>
+ 
+ <div class="d-flex flex-column gap-2 flex-grow-1" style="max-height: 250px; overflow-y: auto;">
+ <v-progress-circular v-if="loadingTodos" indeterminate color="primary" class="align-self-center mt-4"></v-progress-circular>
+ <template v-else>
+ <div v-if="todos.length === 0" class="text-caption text-medium-emphasis text-center mt-4">
+ No to-do items yet. Complete an exam to get AI suggestions!
+ </div>
+ <div v-for="todo in todos" :key="todo.id" class="d-flex align-center justify-space-between bg-grey-lighten-4 pa-2 rounded mb-2">
+ <v-checkbox-btn :model-value="todo.is_completed" @update:modelValue="toggleTodo(todo)" color="primary" class="flex-grow-0 me-3"></v-checkbox-btn>
+ <div class="text-body-2 flex-grow-1" :class="{ 'text-decoration-line-through text-medium-emphasis': todo.is_completed }">
+ {{ todo.title }}
+ </div>
+ <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click="deleteTodo(todo.id)"></v-btn>
+ </div>
+ </template>
+ </div>
+ 
+ <div class="d-flex align-center mt-4 pt-4 border-t">
+ <v-text-field
+ v-model="newTodoTitle"
+ density="compact"
+ variant="outlined"
+ hide-details
+ placeholder="Add a new task..."
+ class="me-2"
+ @keyup.enter="addTodo"
+ ></v-text-field>
+ <v-btn color="primary" icon="mdi-plus" size="small" @click="addTodo"></v-btn>
+ </div>
+ </template>
+
+ <!-- Contacts List for Teachers/Parents -->
+ <template v-else>
  <div class="text-h6 font-weight-regular mb-1">{{ displayData.contactsTitle }}</div>
  <div class="text-caption text-medium-emphasis mb-6">{{ displayData.contactsSubtitle }}</div>
  
@@ -485,6 +586,7 @@ const getBarColor = (score) => {
  <v-btn size="small" variant="flat" color="surface" class="mt-6 elevation-1 font-weight-bold rounded-lg px-4 w-100">
  Show all
  </v-btn>
+ </template>
  </v-card>
  </v-row>
  

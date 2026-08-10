@@ -69,5 +69,11 @@ Route::prefix('v1')->group(function () {
         Route::get('parents/{parentId}/students/{studentId}/report', [ParentController::class, 'studentReport']);
         Route::post('parents/reports', [ParentController::class, 'storeStudentReport']);
         Route::get('parents/{parentId}/students/{studentId}/teachers', [ParentController::class, 'childTeachers']);
+
+        // Student Todos
+        Route::get('students/{studentId}/todos', [\App\Http\Controllers\Api\V1\StudentTodoController::class, 'index']);
+        Route::post('students/{studentId}/todos', [\App\Http\Controllers\Api\V1\StudentTodoController::class, 'store']);
+        Route::put('todos/{id}', [\App\Http\Controllers\Api\V1\StudentTodoController::class, 'update']);
+        Route::delete('todos/{id}', [\App\Http\Controllers\Api\V1\StudentTodoController::class, 'destroy']);
     });
 });
