@@ -13,6 +13,7 @@ use App\Models\MongoDB\ExamArchive;
 use App\Models\Student;
 use App\Models\ExamResult;
 use App\Models\QuestionScore;
+use App\Models\StudentTodo;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -115,7 +116,7 @@ class AnalysisController extends Controller
             foreach ($validated['suggestions'] as $suggestion) {
                 $title = is_array($suggestion) ? ($suggestion['title'] ?? $suggestion['text'] ?? json_encode($suggestion)) : (string) $suggestion;
                 
-                \App\Models\StudentTodo::firstOrCreate([
+                StudentTodo::firstOrCreate([
                     'student_id' => (int) $validated['student_id'],
                     'exam_analysis_id' => (string) $analysis->_id,
                     'title' => substr($title, 0, 255), // Enforce max length
@@ -830,7 +831,7 @@ class AnalysisController extends Controller
         $performance = [];
 
         foreach ($examResults as $result) {
-            $analysis = \App\Models\MongoDB\ExamAnalysis::where('student_id', (int) $student->id)
+            $analysis = ExamAnalysis::where('student_id', (int) $student->id)
                 ->where('exam_id', (int) $result->exam_id)
                 ->first();
 

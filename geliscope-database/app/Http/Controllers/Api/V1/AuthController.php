@@ -84,6 +84,11 @@ class AuthController extends Controller
             return redirect()->away(config('app.frontend_url') . '/login?error=user_not_found');
         }
 
+        if (!$user->profile_photo_url && $googleUser->avatar) {
+            $user->profile_photo_url = $googleUser->avatar;
+            $user->save();
+        }
+
         // Delete all previous tokens (optional, but good for single-device sessions or general cleanup)
         $user->tokens()->delete();
 

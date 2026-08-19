@@ -28,6 +28,8 @@ Route::prefix('v1')->group(function () {
         Route::get('auth/me', [AuthController::class, 'me']);
         //Users
         Route::apiResource('users', UserController::class)->except(['store']);
+        Route::post('users/{user}/avatar', [UserController::class, 'uploadAvatar']);
+        Route::delete('users/{user}/avatar', [UserController::class, 'removeAvatar']);
         //Subjects
         Route::get('subjects', [\App\Http\Controllers\Api\V1\SubjectController::class, 'index']);
         //Schools

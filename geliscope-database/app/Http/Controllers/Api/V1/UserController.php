@@ -10,6 +10,7 @@ use App\Models\ParentProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -156,5 +157,71 @@ class UserController extends Controller
         $user->delete();
 
         return response()->json(['message' => 'User deleted successfully'], 200);
+    }
+
+    /**
+     * Upload an avatar for the user.
+     */
+    public function uploadAvatar(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            $filename = 'avatar_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            
+            // Store the file in the 'public/avatars' directory
+            $path = $file->storeAs('avatars', $filename, 'public');
+            
+            // Generate full URL (requires php artisan storage:link)
+            $url = config('app.url') . '/storage/' . $path;
+
+            // Delete old avatar if it exists and is hosted locally
+            if ($user->profile_photo_url && str_contains($user->profile_photo_url, '/storage/avatars/')) {
+                $oldPath = str_replace(config('app.url') . '/storage/', '', $user->profile_photo_url);
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($oldPath)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+                }
+            }
+
+            $user->profile_photo_url = $url;
+            $user->save();
+
+            return response()->json([
+                'message' => 'Avatar uploaded successfully',
+                'profile_photo_url' => $url,
+                'user' => $user->fresh(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])
+            ], 200);
+        }
+
+        return response()->json(['message' => 'No file provided'], 400);
+    }
+
+    /**
+     * Remove the user's avatar.
+     */
+    public function removeAvatar($id)
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->profile_photo_url) {
+            if (str_contains($user->profile_photo_url, '/storage/avatars/')) {
+                $oldPath = str_replace(config('app.url') . '/storage/', '', $user->profile_photo_url);
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($oldPath)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+                }
+            }
+            $user->profile_photo_url = null;
+            $user->save();
+        }
+
+        return response()->json([
+            'message' => 'Avatar removed successfully',
+            'user' => $user->fresh(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])
+        ], 200);
     }
 }
