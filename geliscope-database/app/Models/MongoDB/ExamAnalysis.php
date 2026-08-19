@@ -60,6 +60,9 @@ class ExamAnalysis extends Model
     protected function casts(): array
     {
         return [
+            'student_id' => 'integer',
+            'exam_id' => 'integer',
+            'exam_result_id' => 'integer',
             'blooms_taxonomy' => 'array',
             'suggestions' => 'array',
             'generated_at' => 'datetime',
