@@ -406,8 +406,30 @@ const getBarColor = (score) => {
 
  <!-- Student/Parent View -->
  <template v-else>
- <!-- Bar Graph -->
-  <div v-if="graphType === 'bar'" class="d-flex justify-space-between align-end h-100 pb-2 px-2 gap-4" style="height: 250px;">
+ 
+  <!-- Table View -->
+  <div v-if="graphType === 'table'" class="w-100 overflow-auto" style="height: 250px;">
+    <v-table density="compact" class="border">
+      <thead>
+        <tr>
+          <th class="font-weight-bold text-left">Exam</th>
+          <th class="font-weight-bold text-center">Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(exam, i) in examHistory" :key="i">
+          <td class="font-weight-medium text-left">{{ exam.name }} ({{ exam.id }})</td>
+          <td class="text-center font-weight-bold" :class="getBarColor(exam.score).replace('bg-', 'text-')">{{ exam.score }}%</td>
+        </tr>
+        <tr v-if="examHistory.length === 0">
+          <td colspan="2" class="text-center text-medium-emphasis py-4">No exam history available</td>
+        </tr>
+      </tbody>
+    </v-table>
+  </div>
+  
+  <!-- Bar Graph -->
+  <div v-else-if="graphType === 'bar'" class="d-flex justify-space-between align-end h-100 pb-2 px-2 gap-4" style="height: 250px;">
  <div v-for="(exam, i) in chartMetrics.points" :key="i" class="d-flex flex-column align-center w-100 h-100 justify-end position-relative group">
  <!-- Score label -->
  <div class="text-caption font-weight-bold mb-1 opacity-80" :class="getBarColor(exam.score).replace('bg-', 'text-')">{{ exam.score }}%</div>
