@@ -51,6 +51,13 @@ const teacherDashboardNavItems = [
 const isDashboard = computed(() => {
   return route.path.startsWith('/dashboard') || route.path === '/admin-dashboard'
 })
+
+const currentMenuTitle = computed(() => {
+  if (!isDashboard.value) return 'Dashboard'
+  const navItems = authStore.activeRole === 'teacher' ? teacherDashboardNavItems : dashboardNavItems
+  const currentItem = navItems.find(item => item.to === route.path)
+  return currentItem ? currentItem.title : 'Dashboard'
+})
 </script>
 
 <template>
@@ -107,7 +114,7 @@ const isDashboard = computed(() => {
     <!-- Dashboard Top Bar (Mobile Only) -->
     <v-app-bar v-if="isDashboard" class="d-lg-none bg-surface border-b border-opacity-10" elevation="0" height="70">
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <div class="text-h6 font-weight-bold ml-2">Dashboard</div>
+      <div class="text-h6 font-weight-bold ml-2">{{ currentMenuTitle }}</div>
       <v-spacer></v-spacer>
     </v-app-bar>
 
@@ -152,7 +159,10 @@ const isDashboard = computed(() => {
         <div class="pa-4 border-t border-opacity-10" v-else>
           <div class="d-flex align-center mb-6 px-2 bg-background rounded-xl pa-3 border border-opacity-5">
             <v-avatar color="primary" size="40" class="mr-3 text-white font-weight-bold ">
-               {{ authStore.currentUser?.first_name ? authStore.currentUser.first_name[0] : 'U' }}
+              <span class="text-h4 font-weight-bold" v-if="!authStore.currentUser.profile_photo_url">
+              {{ authStore.currentUser.first_name ? authStore.currentUser.first_name[0] : 'U' }}
+              </span>
+              <v-img v-else :src="authStore.currentUser.profile_photo_url"></v-img>
             </v-avatar>
             <div class="overflow-hidden">
                <div class="text-body-2 font-weight-bold text-truncate">{{ authStore.currentUser?.first_name }} {{ authStore.currentUser?.last_name }}</div>

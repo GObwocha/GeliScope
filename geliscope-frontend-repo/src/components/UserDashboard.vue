@@ -281,7 +281,7 @@ onMounted(() => {
  <v-row>
  <!-- Career Suggestions -->
  <v-col cols="12" lg="4">
- <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column " elevation="4">
+ <v-card class="pa-6 border  h-100 d-flex flex-column " elevation="4">
  <div class="mb-6">
  <div class="d-flex align-center justify-space-between mb-4">
  <v-avatar color="primary" size="48" variant="tonal">
@@ -343,8 +343,8 @@ onMounted(() => {
  </v-col>
 
  <!-- Bloom's Taxonomy Cognitive Mastery (MongoDB) -->
- <v-col cols="6" lg="8">
- <v-card class="pa-6 rounded-3xl border bg-surface h-100 " elevation="4">
+ <v-col cols="12" lg="8">
+ <v-card class="pa-6 border h-100 d-flex flex-column" elevation="4">
  <div class="d-flex justify-space-between align-center mb-6">
  <div>
  <h2 class="text-h5 font-weight-black d-flex align-center">

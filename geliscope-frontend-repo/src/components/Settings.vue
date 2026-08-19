@@ -108,33 +108,113 @@ onMounted(() => {
   schoolStore.fetchSchools()
 })
 
-const saveChanges = async () => {
- if (mottoError.value) return
- loading.value = true
- 
- if (currentUser.value.role === 'student') {
- localStorage.setItem('motto_font_type', mottoFontType.value)
- localStorage.setItem('motto_font_size', mottoFontSize.value)
- localStorage.setItem('motto_font_color', mottoFontColor.value)
- }
+ const saveChanges = async () => {
+  if (mottoError.value) return
+  loading.value = true
+  
+  if (currentUser.value.role === 'student') {
+  localStorage.setItem('motto_font_type', mottoFontType.value)
+  localStorage.setItem('motto_font_size', mottoFontSize.value)
+  localStorage.setItem('motto_font_color', mottoFontColor.value)
+  }
 
- if (currentUser.value.role === 'teacher' && selectedMarkingExam.value) {
-   try {
-     await axios.post('/api/v1/analysis/marking-config', {
-         teacher_id: currentUser.value.id,
-         exam_id: selectedMarkingExam.value,
-         instructions: { raw_text: markingInstructionsText.value }
-     }, {
-         headers: { Authorization: `Bearer ${authStore.token}` }
-     })
-   } catch (error) {
-     console.error('Error saving marking config:', error)
-   }
- }
+  if (currentUser.value.role === 'teacher' && selectedMarkingExam.value) {
+    try {
+      await axios.post('/api/v1/analysis/marking-config', {
+          teacher_id: currentUser.value.id,
+          exam_id: selectedMarkingExam.value,
+          instructions: { raw_text: markingInstructionsText.value }
+      }, {
+          headers: { Authorization: `Bearer ${authStore.token}` }
+      })
+    } catch (error) {
+      console.error('Error saving marking config:', error)
+    }
+  }
 
- loading.value = false
- snackbar.value = true
- console.log('Settings saved:', currentUser.value)
+  loading.value = false
+  snackbar.value = true
+  console.log('Settings saved:', currentUser.value)
+}
+
+// Avatar Upload Logic
+const fileInput = ref(null)
+const uploadingAvatar = ref(false)
+
+const triggerFileInput = () => {
+  if (fileInput.value) {
+    fileInput.value.click()
+  }
+}
+
+const handleFileSelected = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  if (file.size > 2 * 1024 * 1024) {
+    errorMessage.value = 'Image size must be less than 2MB'
+    errorSnackbar.value = true
+    return
+  }
+
+  const formData = new FormData()
+  formData.append('avatar', file)
+
+  try {
+    uploadingAvatar.value = true
+    const response = await axios.post(`/api/v1/users/${currentUser.value.id}/avatar`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Authorization: `Bearer ${authStore.token}`
+      }
+    })
+
+    const newUrl = response.data.profile_photo_url
+    // Update local reactive user and the auth store
+    currentUser.value.profile_photo_url = newUrl
+    if (authStore.user) {
+      authStore.user.profile_photo_url = newUrl
+      localStorage.setItem('geliscope_user', JSON.stringify(authStore.user))
+    }
+
+    snackbar.value = true
+    errorMessage.value = 'Avatar updated successfully!'
+  } catch (err) {
+    console.error('Avatar upload failed', err)
+    errorMessage.value = 'Failed to upload avatar. Please try again.'
+    errorSnackbar.value = true
+  } finally {
+    uploadingAvatar.value = false
+    event.target.value = '' // reset input
+  }
+}
+
+const removingAvatar = ref(false)
+
+const removeAvatar = async () => {
+  if (!confirm('Are you sure you want to remove your profile photo?')) return;
+  
+  try {
+    removingAvatar.value = true
+    await axios.delete(`/api/v1/users/${currentUser.value.id}/avatar`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+
+    currentUser.value.profile_photo_url = null
+    if (authStore.user) {
+      authStore.user.profile_photo_url = null
+      localStorage.setItem('geliscope_user', JSON.stringify(authStore.user))
+    }
+
+    snackbar.value = true
+    errorMessage.value = 'Avatar removed successfully!'
+  } catch (err) {
+    console.error('Avatar removal failed', err)
+    errorMessage.value = 'Failed to remove avatar. Please try again.'
+    errorSnackbar.value = true
+  } finally {
+    removingAvatar.value = false
+  }
 }
 </script>
 
@@ -181,14 +261,19 @@ const saveChanges = async () => {
  <!-- Profile Photo -->
  <div class="d-flex align-center gap-6 mb-8">
  <v-avatar size="80" color="primary" variant="tonal">
- <span class="text-h4 font-weight-bold" v-if="!currentUser.profile_photo_url">
- {{ currentUser.first_name[0] }}
+ <v-progress-circular v-if="uploadingAvatar || removingAvatar" indeterminate color="primary"></v-progress-circular>
+ <span class="text-h4 font-weight-bold" v-else-if="!currentUser.profile_photo_url">
+ {{ currentUser.first_name ? currentUser.first_name[0] : 'U' }}
  </span>
  <v-img v-else :src="currentUser.profile_photo_url"></v-img>
  </v-avatar>
  <div>
- <v-btn variant="outlined" size="small" class="rounded-lg text-none font-weight-bold mb-2">Change Avatar</v-btn>
- <div class="text-caption text-medium-emphasis">JPG, GIF or PNG. Max size of 800K</div>
+ <input type="file" ref="fileInput" accept="image/jpeg, image/png, image/gif" class="d-none" @change="handleFileSelected" />
+ <div class="d-flex gap-2 mb-2">
+   <v-btn variant="outlined" size="small" class="rounded-lg text-none font-weight-bold" @click="triggerFileInput" :loading="uploadingAvatar">Change Avatar</v-btn>
+   <v-btn v-if="currentUser.profile_photo_url" variant="text" color="error" size="small" class="rounded-lg text-none font-weight-bold" @click="removeAvatar" :loading="removingAvatar">Remove</v-btn>
+ </div>
+ <div class="text-caption text-medium-emphasis">JPG, GIF or PNG. Max size of 2MB</div>
  </div>
  </div>
 
@@ -289,7 +374,7 @@ const saveChanges = async () => {
  <v-row dense>
  <v-col cols="12" sm="6">
  <v-text-field
- v-model="currentUser.admission_number"
+ v-model="currentUser.student.admission_number"
  label="Admission Number"
  variant="outlined"
  bg-color="background"
@@ -301,7 +386,7 @@ const saveChanges = async () => {
  </v-col>
  <v-col cols="12" sm="6">
  <v-text-field
- v-model="currentUser.date_of_birth"
+ v-model="currentUser.student.date_of_birth"
  label="Date of Birth"
  type="date"
  variant="outlined"
@@ -313,7 +398,7 @@ const saveChanges = async () => {
  <v-row dense class="mt-4">
  <v-col cols="12" sm="6">
  <v-select
- v-model="currentUser.school_id"
+ v-model="currentUser.student.school_id"
  :items="schoolStore.schools"
  item-title="name"
  item-value="id"
@@ -325,7 +410,7 @@ const saveChanges = async () => {
  </v-col>
  <v-col cols="12" sm="6">
  <v-select
- v-model="currentUser.current_class_id"
+ v-model="currentUser.student.current_class_id"
  :items="classes"
  item-title="name"
  item-value="id"

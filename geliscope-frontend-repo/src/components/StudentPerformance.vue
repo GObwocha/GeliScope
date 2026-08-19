@@ -539,7 +539,7 @@ const getBarColor = (score) => {
  <div v-if="todos.length === 0" class="text-caption text-medium-emphasis text-center mt-4">
  No to-do items yet. Complete an exam to get AI suggestions!
  </div>
- <div v-for="todo in todos" :key="todo.id" class="d-flex align-center justify-space-between bg-grey-lighten-4 pa-2 rounded mb-2">
+ <div v-for="todo in todos" :key="todo.id" class="d-flex align-center justify-space-between ">
  <v-checkbox-btn :model-value="todo.is_completed" @update:modelValue="toggleTodo(todo)" color="primary" class="flex-grow-0 me-3"></v-checkbox-btn>
  <div class="text-body-2 flex-grow-1" :class="{ 'text-decoration-line-through text-medium-emphasis': todo.is_completed }">
  {{ todo.title }}
