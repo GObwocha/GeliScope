@@ -34,7 +34,7 @@ onMounted(async () => {
     loadingClasses.value = false
   }
 })
-console.log()
+
 const examsForSelectedClass = computed(() => {
   if (!selectedClass.value) return []
   return selectedClass.value.exams || []

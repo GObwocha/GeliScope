@@ -19,7 +19,7 @@ import AdminDashboard from '@/components/AdminDashboard.vue'
 import UserDashboard from '@/components/UserDashboard.vue'
 import ExamArchives from '@/components/ExamArchives.vue'
 import ClassDiagnosis from '@/components/ClassDiagnosis.vue'
-import AuthCallBack from '@/components/AuthCallBack.vue'
+import AuthCallBack from '@/components/AuthCallback.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

@@ -231,6 +231,7 @@ const loadTodos = async () => {
   try {
     loadingTodos.value = true
     todos.value = await StudentTodoService.getTodos(studentId)
+    console.log(todos.value)
   } catch (err) {
     console.error('Failed to load todos', err)
   } finally {
@@ -408,7 +409,7 @@ const getBarColor = (score) => {
  <template v-else>
  
   <!-- Table View -->
-  <div v-if="graphType === 'table'" class="w-100 overflow-auto" style="height: 250px;">
+  <div v-if="graphType === 'table'" class="w-100 overflow-auto" >
     <v-table density="compact" class="border">
       <thead>
         <tr>
@@ -429,7 +430,7 @@ const getBarColor = (score) => {
   </div>
   
   <!-- Bar Graph -->
-  <div v-else-if="graphType === 'bar'" class="d-flex justify-space-between align-end h-100 pb-2 px-2 gap-4" style="height: 250px;">
+  <div v-else-if="graphType === 'bar'" class="d-flex justify-space-between " style="height: 250px;">
  <div v-for="(exam, i) in chartMetrics.points" :key="i" class="d-flex flex-column align-center w-100 h-100 justify-end position-relative group">
  <!-- Score label -->
  <div class="text-caption font-weight-bold mb-1 opacity-80" :class="getBarColor(exam.score).replace('bg-', 'text-')">{{ exam.score }}%</div>
