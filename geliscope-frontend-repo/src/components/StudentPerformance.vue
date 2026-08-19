@@ -36,21 +36,6 @@ const displayData = computed(() => {
  { name: "Mary Wanjiku", role: "Physics", phone: "+254 723 456 789", avatar: "M" },
  { name: "Peter Ochieng", role: "Chemistry", phone: "+254 734 567 890", avatar: "P" }
  ],
- upcomingTests: [
- { day: '22', weekday: 'Monday', active: false },
- { day: '23', weekday: 'Tuesday', active: true, title: 'Math' },
- { day: '24', weekday: 'Wednesday', active: false, title: 'Art' },
- { day: '25', weekday: 'Thursday', active: false },
- { day: '26', weekday: 'Friday', active: false }
- ],
- schedule: [
- { time: "8:45 AM - 10:10 AM", subject: "English Language Arts" },
- { time: "10:13 AM - 10:54 AM", subject: "Physical Education" },
- { time: "10:57 AM - 11:37 AM", subject: "Mathematics" },
- { time: "11:40 AM - 12:20 PM", subject: "Lunch & Advisory" },
- { time: "12:23 PM - 1:03 PM", subject: "Enrichment" },
- { time: "1:06 PM - 1:47 PM", subject: "Science" }
- ],
  strengths: [
  { title: 'Algebraic Formulation', detail: 'Flawless execution of quadratic equations.' },
  { title: 'Logical Deduction', detail: 'Strong performance in step transformations.' }
@@ -65,29 +50,6 @@ const displayData = computed(() => {
  title: "Keep Track of Your Success",
  subtitle: "Personal grading overview",
  grade: "A,",
- percent: "92%",
- updateDate: "January 29",
- contactsTitle: "Study Group",
- contactsSubtitle: "Here you can see your peers and their contacts.",
- contacts: [
- { name: "Brian Otieno", role: "Class President", phone: "+254 711 111 111", avatar: "B" },
- { name: "Alice Njoroge", role: "Math Club Head", phone: "+254 722 222 222", avatar: "A" },
- { name: "Kevin Kiprop", role: "Lab Partner", phone: "+254 733 333 333", avatar: "K" }
- ],
- upcomingTests: [
- { day: '22', weekday: 'Monday', active: false },
- { day: '23', weekday: 'Tuesday', active: true, title: 'Math' },
- { day: '24', weekday: 'Wednesday', active: false, title: 'Art' },
- { day: '25', weekday: 'Thursday', active: false },
- { day: '26', weekday: 'Friday', active: false }
- ],
- schedule: [
- { time: "8:45 AM - 10:10 AM", subject: "English Language Arts" },
- { time: "10:13 AM - 10:54 AM", subject: "Physical Education" },
- { time: "10:57 AM - 11:37 AM", subject: "Mathematics" },
- { time: "11:40 AM - 12:20 PM", subject: "Lunch" },
- { time: "12:23 PM - 1:03 PM", subject: "Chemistry Lab" }
- ],
  strengths: [
  { title: 'Algebraic Formulation', detail: 'Consistent high marks in algebra.' },
  { title: 'Logical Deduction', detail: 'Quickly solves logic puzzles.' }
@@ -354,7 +316,7 @@ const chartMetrics = computed(() => {
 const getBarColor = (score) => {
  if (score === chartMetrics.value.maxScore) return 'bg-success text-success'
  if (score === chartMetrics.value.minScore) return 'bg-error text-error'
- return 'bg-high-emphasis text-high-emphasis'
+ return 'bg-primary text-primary'
 }
 </script>
 
@@ -371,13 +333,6 @@ const getBarColor = (score) => {
  {{ displayData.title }}
  </h1>
  <div class="text-caption text-medium-emphasis mb-1">{{ displayData.subtitle }}</div>
- <div class="d-flex align-baseline gap-2 mb-2">
- <span class="text-h1 font-weight-regular">{{ displayData.grade }}</span>
- <span class="text-h1 font-weight-regular">{{ displayData.percent }}</span>
- </div>
- <div class="text-caption text-medium-emphasis font-weight-medium">
- Latest update added: <span class="text-high-emphasis font-weight-bold">{{ displayData.updateDate }}</span>
- </div>
  </v-card>
  </v-row>
  <!-- Bar / Line Chart -->
@@ -452,7 +407,7 @@ const getBarColor = (score) => {
  <!-- Student/Parent View -->
  <template v-else>
  <!-- Bar Graph -->
- <div v-if="graphType === 'bar'" class="d-flex justify-space-between align-end h-100 pb-2 px-2 gap-4">
+  <div v-if="graphType === 'bar'" class="d-flex justify-space-between align-end h-100 pb-2 px-2 gap-4" style="height: 250px;">
  <div v-for="(exam, i) in chartMetrics.points" :key="i" class="d-flex flex-column align-center w-100 h-100 justify-end position-relative group">
  <!-- Score label -->
  <div class="text-caption font-weight-bold mb-1 opacity-80" :class="getBarColor(exam.score).replace('bg-', 'text-')">{{ exam.score }}%</div>
