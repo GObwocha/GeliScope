@@ -7,6 +7,7 @@ import { useTeacherStore } from '@/stores/teacher'
 const students = ref([])
 const exams = ref([])
 const classesList = ref([])
+const examRounds = ref([])
 
 const selectedStudent = ref(null)
 const selectedExam = ref(null)
@@ -47,6 +48,7 @@ const fileRules = [
 ]
 
 const analyzing = ref(false)
+const marking = ref(false)
 const progress = ref(0)
 const progressStep = ref('')
 const analysisResult = ref(null)
@@ -57,6 +59,7 @@ const creatingExam = ref(false)
 const examForm = ref({
   name: '',
   exam_code: '',
+  exam_round_id: null,
   class_id: null,
   subject_id: null,
   exam_date: '',
@@ -110,6 +113,11 @@ onMounted(async () => {
     
     if (exams.value.length > 0 && !selectedExam.value) {
       selectedExam.value = exams.value[0].id
+    }
+
+    const roundsResponse = await axios.get('/api/v1/exam-rounds')
+    if (roundsResponse.data && roundsResponse.data.data) {
+      examRounds.value = roundsResponse.data.data
     }
   } catch (err) {
     console.error('Error fetching data:', err)
@@ -202,6 +210,7 @@ const startAnalysis = async (action = 'analyze_only') => {
     
     if (action === 'mark_and_analyze' && selectedExam.value) {
         try {
+          marking.value = true
             const configResp = await axios.get(`/api/v1/analysis/marking-config/${selectedExam.value}`)
             if (configResp.data && configResp.data.instructions) {
                 // If instructions is an array of strings, join it
@@ -257,7 +266,9 @@ const saveToMongoDB = async () => {
  alert('Analysis successfully saved to MongoDB / MySQL backend!')
  } catch (err) {
  alert('Analysis saved locally! (Note: Live MongoDB driver will sync upon extension install as per Walkthrough step 1)')
- }
+ } finally {
+    marking.value = false
+  }
 }
 
 //Drop Zone Configurations
@@ -379,12 +390,13 @@ const removeFile = (index) => {
                 <v-form ref="createExamFormRef" @submit.prevent="submitCreateExam">
                   <v-text-field v-model="examForm.name" label="Exam Name" variant="outlined" class="mb-4" :rules="requiredRule" required />
                   <v-text-field v-model="examForm.exam_code" label="Exam Code" variant="outlined" class="mb-4" :rules="requiredRule" required />
+                  <v-select v-model="examForm.exam_round_id" :items="examRounds" item-title="name" item-value="id" label="Exam Round (Optional)" variant="outlined" class="mb-4" clearable />
                   <v-select v-model="examForm.class_id" :items="classesList" item-title="name" item-value="id" label="Class & Subject" variant="outlined" class="mb-4" :rules="requiredRule" required>
                     <template v-slot:selection="{ item }">
-                      {{ item.raw.name }} ({{ item.raw.subject_name }})
+                      {{ item.name }} ({{ item.subject_name }})
                     </template>
                     <template v-slot:item="{ item, props }">
-                      <v-list-item v-bind="props" :title="item.raw.name" :subtitle="item.raw.subject_name"></v-list-item>
+                      <v-list-item v-bind="props" :title="item.name" :subtitle="item.subject_name"></v-list-item>
                     </template>
                   </v-select>
                   <v-text-field v-model="examForm.exam_date" type="date" label="Exam Date" variant="outlined" class="mb-4" :rules="requiredRule" required />
@@ -446,7 +458,7 @@ const removeFile = (index) => {
                   color="accent"
                   size="large"
                   block
-                  :loading="analyzing"
+                  :loading="marking"
                   prepend-icon="mdi-marker-check"
                   elevation="4"
                   class="py-4 font-weight-bold mt-4"
@@ -569,7 +581,7 @@ const removeFile = (index) => {
  {{ idx + 1 }}
  </v-avatar>
  </template>
- <v-list-item-title class="text-body-2 font-weight-medium w-auto" >{{ sug }}</v-list-item-title>
+ <v-list-item-title class="text-body-2 font-weight-medium text-wrap" >{{ sug }}</v-list-item-title>
  </v-list-item>
  </v-list>
  </v-card>
