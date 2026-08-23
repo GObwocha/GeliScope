@@ -507,12 +507,15 @@ class AnalysisController extends Controller
         $classes = [];
         $subjectIds = [];
         foreach ($teacher->classes as $class) {
+            if ($class->school_id !== $teacher->school_id) continue;
             $subjectIds[] = $class->pivot->subject_id;
         }
         
         $subjects = \App\Models\Subject::whereIn('id', $subjectIds)->get()->keyBy('id');
         
         foreach ($teacher->classes as $class) {
+            if ($class->school_id !== $teacher->school_id) continue;
+            
             $subId = $class->pivot->subject_id;
             $exams = \App\Models\Exam::where('class_id', $class->id)
                 ->where('subject_id', $subId)
@@ -534,17 +537,23 @@ class AnalysisController extends Controller
     /**
      * Get unique students for all classes a teacher teaches
      */
-    public function teacherStudents($teacherId)
+    public function teacherStudents(Request $request, $teacherId)
     {
         $teacher = \App\Models\Teacher::with('classes.students.user')->find((int) $teacherId);
         if (!$teacher) {
             return response()->json(['message' => 'Teacher not found'], 404);
         }
 
+        $classId = $request->query('class_id');
         $students = collect();
 
         foreach ($teacher->classes as $class) {
+            if ($class->school_id !== $teacher->school_id) continue;
+            if ($classId && $class->id != $classId) continue;
+
             foreach ($class->students as $student) {
+                if ($student->school_id !== $teacher->school_id) continue;
+
                 if (!$students->contains('id', $student->id)) {
                     $students->push([
                         'id' => $student->id,

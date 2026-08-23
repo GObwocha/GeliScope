@@ -7,20 +7,33 @@ const authStore = useAuthStore()
 const activeRole = computed(() => authStore.activeRole || 'student')
 
 const teacherStudents = ref([])
+const teacherClasses = ref([])
+const selectedClass = ref(null)
 const selectedStudent = ref(null)
 const profileData = ref(null)
 const loading = ref(false)
 
 onMounted(async () => {
   if (activeRole.value !== 'teacher') return
-  await fetchTeacherStudents()
+  await fetchTeacherClasses()
 })
 
-const fetchTeacherStudents = async () => {
+const fetchTeacherClasses = async () => {
   const teacherId = authStore.currentUser?.teacher?.id
   if (!teacherId) return
   try {
-    const res = await axios.get(`/api/v1/analysis/teacher/${teacherId}/students`)
+    const res = await axios.get(`/api/v1/analysis/teacher/${teacherId}/classes`)
+    teacherClasses.value = res.data.data || res.data
+  } catch (err) {
+    console.error('Failed to fetch teacher classes', err)
+  }
+}
+
+const fetchTeacherStudents = async () => {
+  const teacherId = authStore.currentUser?.teacher?.id
+  if (!teacherId || !selectedClass.value) return
+  try {
+    const res = await axios.get(`/api/v1/analysis/teacher/${teacherId}/students?class_id=${selectedClass.value}`)
     teacherStudents.value = res.data.map(s => ({
       id: s.id,
       name: `${s.user.first_name} ${s.user.last_name} (${s.admission_number})`,
@@ -30,6 +43,14 @@ const fetchTeacherStudents = async () => {
     console.error('Failed to fetch teacher students', err)
   }
 }
+
+watch(selectedClass, async () => {
+  selectedStudent.value = null
+  teacherStudents.value = []
+  if (selectedClass.value) {
+    await fetchTeacherStudents()
+  }
+})
 
 const fetchStudentProfile = async () => {
   if (!selectedStudent.value) {
@@ -64,7 +85,20 @@ const fetchStudentProfile = async () => {
             </h1>
             <div class="text-caption text-medium-emphasis">Select a student you teach to view their comprehensive diagnostic profile.</div>
           </div>
-          <div style="min-width: 300px;">
+          <div class="d-flex gap-4" style="min-width: 400px; flex-wrap: wrap;">
+            <v-select
+              v-model="selectedClass"
+              :items="teacherClasses"
+              item-title="name"
+              item-value="id"
+              label="Select Class"
+              variant="outlined"
+              color="primary"
+              hide-details
+              clearable
+              style="flex: 1; min-width: 150px;"
+            ></v-select>
+            
             <v-autocomplete
               v-model="selectedStudent"
               :items="teacherStudents"
@@ -77,6 +111,8 @@ const fetchStudentProfile = async () => {
               clearable
               prepend-inner-icon="mdi-magnify"
               @update:modelValue="fetchStudentProfile"
+              :disabled="!selectedClass"
+              style="flex: 1; min-width: 200px;"
             ></v-autocomplete>
           </div>
         </v-card>
