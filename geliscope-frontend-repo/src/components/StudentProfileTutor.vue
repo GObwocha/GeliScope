@@ -17,13 +17,14 @@ onMounted(async () => {
 })
 
 const fetchTeacherStudents = async () => {
-  const teacherId = authStore.currentUser?.teacher?.id || authStore.currentUser?.id
+  const teacherId = authStore.currentUser?.teacher?.id
   if (!teacherId) return
   try {
     const res = await axios.get(`/api/v1/analysis/teacher/${teacherId}/students`)
     teacherStudents.value = res.data.map(s => ({
       id: s.id,
-      name: `${s.user.first_name} ${s.user.last_name} (${s.admission_number})`
+      name: `${s.user.first_name} ${s.user.last_name} (${s.admission_number})`,
+      avatar: s.user.first_name.charAt(0)
     }))
   } catch (err) {
     console.error('Failed to fetch teacher students', err)
@@ -36,7 +37,8 @@ const fetchStudentProfile = async () => {
     return
   }
 
-  const teacherId = authStore.currentUser?.teacher?.id || authStore.currentUser?.id
+  const teacherId = authStore.currentUser?.teacher?.id
+  if (!teacherId) return
   try {
     loading.value = true
     const res = await axios.get(`/api/v1/analysis/teacher/${teacherId}/student/${selectedStudent.value}/comprehensive-profile`)
