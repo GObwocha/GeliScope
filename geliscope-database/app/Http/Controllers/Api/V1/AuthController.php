@@ -46,7 +46,7 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
-        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])->where('email', $request->email)->first();
+        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile.students.user'])->where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
@@ -78,10 +78,15 @@ class AuthController extends Controller
     {
         // 1. Get the user data from Google
         $googleUser = Socialite::driver('google')->stateless()->user();
-        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])->where('email', $googleUser->email)->first();
+        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile.students.user'])->where('email', $googleUser->email)->first();
 
         if (!$user ){
             return redirect()->away(config('app.frontend_url') . '/login?error=user_not_found');
+        }
+
+        if (!$user->profile_photo_url && $googleUser->avatar) {
+            $user->profile_photo_url = $googleUser->avatar;
+            $user->save();
         }
 
         // Delete all previous tokens (optional, but good for single-device sessions or general cleanup)
@@ -100,7 +105,7 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        $user = $request->user()->load(['student.school', 'student.skills', 'teacher.school', 'parentProfile']);
+        $user = $request->user()->load(['student.school', 'student.skills', 'teacher.school', 'parentProfile.students.user']);
         return response()->json($user, 200);
     }
 

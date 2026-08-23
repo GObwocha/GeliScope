@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClassGroup;
+use App\Models\Exam;
 use App\Models\MongoDB\ExamAnalysis;
 use App\Models\MongoDB\StudentSkillProfile;
 use App\Models\MongoDB\StudentCognitiveProfile;
@@ -12,7 +13,11 @@ use App\Models\MongoDB\TeacherMarkingConfig;
 use App\Models\MongoDB\ExamArchive;
 use App\Models\Student;
 use App\Models\ExamResult;
+use App\Models\ExamRound;
 use App\Models\QuestionScore;
+use App\Models\StudentTodo;
+use App\Models\Subject;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -108,6 +113,19 @@ class AnalysisController extends Controller
 
         if ($examResult) {
             $examResult->update(['mongo_analysis_id' => $analysis->_id]);
+        }
+        
+        // Auto-generate To-Do items from AI suggestions
+        if (!empty($validated['suggestions'])) {
+            foreach ($validated['suggestions'] as $suggestion) {
+                $title = is_array($suggestion) ? ($suggestion['title'] ?? $suggestion['text'] ?? json_encode($suggestion)) : (string) $suggestion;
+                
+                StudentTodo::firstOrCreate([
+                    'student_id' => (int) $validated['student_id'],
+                    'exam_analysis_id' => (string) $analysis->_id,
+                    'title' => substr($title, 0, 255), // Enforce max length
+                ]);
+            }
         }
         
         // Recalculate Bloom's Taxonomy Cognitive Profile Averages
@@ -485,7 +503,7 @@ class AnalysisController extends Controller
      */
     public function teacherClasses($teacherId)
     {
-        $teacher = \App\Models\Teacher::with('classes')->find((int) $teacherId);
+        $teacher = Teacher::with('classes')->find((int) $teacherId);
         if (!$teacher) {
             return response()->json(['message' => 'Teacher not found'], 404);
         }
@@ -493,14 +511,17 @@ class AnalysisController extends Controller
         $classes = [];
         $subjectIds = [];
         foreach ($teacher->classes as $class) {
+            if ($class->school_id !== $teacher->school_id) continue;
             $subjectIds[] = $class->pivot->subject_id;
         }
         
-        $subjects = \App\Models\Subject::whereIn('id', $subjectIds)->get()->keyBy('id');
+        $subjects = Subject::whereIn('id', $subjectIds)->get()->keyBy('id');
         
         foreach ($teacher->classes as $class) {
+            if ($class->school_id !== $teacher->school_id) continue;
+            
             $subId = $class->pivot->subject_id;
-            $exams = \App\Models\Exam::where('class_id', $class->id)
+            $exams = Exam::where('class_id', $class->id)
                 ->where('subject_id', $subId)
                 ->select('id', 'name', 'exam_round_id')
                 ->get();
@@ -520,18 +541,32 @@ class AnalysisController extends Controller
     /**
      * Get unique students for all classes a teacher teaches
      */
-    public function teacherStudents($teacherId)
+    public function teacherStudents(Request $request, $teacherId)
     {
-        $teacher = \App\Models\Teacher::with('classes.students.user')->find((int) $teacherId);
+        $teacher = Teacher::with(['classes.students.user', 'classes.students.parents.user'])->find((int) $teacherId);
         if (!$teacher) {
             return response()->json(['message' => 'Teacher not found'], 404);
         }
 
+        $classId = $request->query('class_id');
         $students = collect();
 
         foreach ($teacher->classes as $class) {
+            if ($class->school_id !== $teacher->school_id) continue;
+            if ($classId && $class->id != $classId) continue;
+
             foreach ($class->students as $student) {
+                if ($student->school_id !== $teacher->school_id) continue;
+
                 if (!$students->contains('id', $student->id)) {
+                    $parents = $student->parents->map(function ($parent) {
+                        return [
+                            'id' => $parent->id,
+                            'phone_number' => $parent->phone_number,
+                            'name' => $parent->user->first_name . ' ' . $parent->user->last_name,
+                        ];
+                    });
+
                     $students->push([
                         'id' => $student->id,
                         'admission_number' => $student->admission_number,
@@ -539,7 +574,8 @@ class AnalysisController extends Controller
                             'id' => $student->user->id,
                             'first_name' => $student->user->first_name,
                             'last_name' => $student->user->last_name,
-                        ]
+                        ],
+                        'parents' => $parents
                     ]);
                 }
             }
@@ -553,7 +589,7 @@ class AnalysisController extends Controller
      */
     public function teacherDashboard($teacherId)
     {
-        $teacher = \App\Models\Teacher::with('classes')->find((int) $teacherId);
+        $teacher = Teacher::with('classes')->find((int) $teacherId);
         if (!$teacher) {
             return response()->json(['message' => 'Teacher not found'], 404);
         }
@@ -577,7 +613,7 @@ class AnalysisController extends Controller
         }
         
         // 2. Class mean of the latest exam round
-        $latestRound = \App\Models\ExamRound::orderBy('start_date', 'desc')->first();
+        $latestRound = ExamRound::orderBy('start_date', 'desc')->first();
         $classMean = 0;
         $examName = "No Exams Found";
         $dateRecorded = "N/A";
@@ -588,7 +624,7 @@ class AnalysisController extends Controller
             
             $examIds = [];
             foreach ($teacher->classes as $cls) {
-                $eIds = \App\Models\Exam::where('exam_round_id', $latestRound->id)
+                $eIds = Exam::where('exam_round_id', $latestRound->id)
                     ->where('class_id', $cls->id)
                     ->where('subject_id', $cls->pivot->subject_id)
                     ->pluck('id')->toArray();
@@ -596,7 +632,7 @@ class AnalysisController extends Controller
             }
             
             if (count($examIds) > 0) {
-                $avg = \App\Models\ExamResult::whereIn('exam_id', $examIds)
+                $avg = ExamResult::whereIn('exam_id', $examIds)
                     ->selectRaw('SUM(total_score) as total_sum, SUM(max_score) as max_sum')
                     ->first();
                 if ($avg && $avg->max_sum > 0) {
@@ -745,35 +781,43 @@ class AnalysisController extends Controller
             return response()->json(['message' => 'class_id is required'], 400);
         }
 
-        // Fetch exams for this class, with their round and subject, and their results
-        $exams = \App\Models\Exam::where('class_id', $classId)
-            ->whereNotNull('exam_round_id')
-            ->with(['examRound', 'subject', 'results'])
-            ->get();
+        // Fetch unique rounds and subjects directly from the database for this class
+        $rounds = ExamRound::whereHas('exams', function($query) use ($classId) {
+            $query->where('class_id', $classId);
+        })->orderBy('start_date')->get();
 
-        // Extract unique rounds sorted by start_date (or id)
-        $rounds = $exams->pluck('examRound')->unique('id')->sortBy('start_date')->values();
-        $subjects = $exams->pluck('subject')->unique('id')->values();
+        $subjects = Subject::whereHas('exams', function($query) use ($classId) {
+            $query->where('class_id', $classId)->whereNotNull('exam_round_id');
+        })->get();
 
         $roundNames = $rounds->pluck('name')->toArray();
         $roundIds = $rounds->pluck('id')->toArray();
+
+        // Perform the aggregation entirely in SQL using Laravel's Query Builder
+        $aggregatedResults = \Illuminate\Support\Facades\DB::table('exam_results')
+            ->join('exams', 'exam_results.exam_id', '=', 'exams.id')
+            ->where('exams.class_id', $classId)
+            ->whereNotNull('exams.exam_round_id')
+            ->selectRaw('
+                exams.subject_id,
+                exams.exam_round_id,
+                AVG((exam_results.total_score / exam_results.max_score) * 100) as avg_score
+            ')
+            ->groupBy('exams.subject_id', 'exams.exam_round_id')
+            ->get();
 
         $subjectData = [];
 
         foreach ($subjects as $subject) {
             $data = [];
             foreach ($roundIds as $roundId) {
-                // Find the exam for this subject and round
-                $exam = $exams->first(function ($e) use ($subject, $roundId) {
-                    return $e->subject_id == $subject->id && $e->exam_round_id == $roundId;
+                // Find the aggregated result for this subject and round
+                $result = $aggregatedResults->first(function ($r) use ($subject, $roundId) {
+                    return $r->subject_id == $subject->id && $r->exam_round_id == $roundId;
                 });
 
-                if ($exam && $exam->results->count() > 0) {
-                    $totalScore = $exam->results->sum(function($res) {
-                        return ($res->total_score / $res->max_score) * 100;
-                    });
-                    $avg = round($totalScore / $exam->results->count(), 2);
-                    $data[] = $avg;
+                if ($result) {
+                    $data[] = round($result->avg_score, 2);
                 } else {
                     $data[] = null;
                 }
@@ -809,7 +853,7 @@ class AnalysisController extends Controller
         $performance = [];
 
         foreach ($examResults as $result) {
-            $analysis = \App\Models\MongoDB\ExamAnalysis::where('student_id', (int) $student->id)
+            $analysis = ExamAnalysis::where('student_id', (int) $student->id)
                 ->where('exam_id', (int) $result->exam_id)
                 ->first();
 

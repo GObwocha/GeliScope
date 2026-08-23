@@ -280,7 +280,7 @@ const removeFile = (index) => {
 </script>
 
 <template>
- <v-container >
+ <v-container fluid >
  <div class="mb-8">
  <v-chip color="accent" size="small" variant="flat" prepend-icon="mdi-camera-iris" class="mb-2 font-weight-bold">
  GELISCOPE VISION & OCR ENGINE

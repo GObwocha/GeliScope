@@ -25,22 +25,22 @@ class DatabaseSeeder extends Seeder
 
         // Seed Users (Students, Teachers, Parents)
         $students = \App\Models\Student::factory(15)->create();
-        $teachers = \App\Models\Teacher::factory(10)->create();
-        $parents = \App\Models\ParentProfile::factory(10)->create();
+        $teachers = \App\Models\Teacher::factory(5)->create();
+        $parents = \App\Models\ParentProfile::factory(5)->create();
 
         // Link Parents to Students
         foreach ($parents as $parent) {
-            $parent->students()->attach($students->random(rand(1, 3))->pluck('id')->toArray());
+            $parent->students()->attach($students->random(5)->pluck('id')->toArray());
         }
 
         // Seed Class Groups
-        $classes = \App\Models\ClassGroup::factory(10)->create();
+        $classes = \App\Models\ClassGroup::factory(5)->create();
 
         // Seed Exam Rounds
         $examRounds = \App\Models\ExamRound::factory(5)->create();
 
         // Seed Exams
-        $exams = \App\Models\Exam::factory(10)->create();
+        $exams = \App\Models\Exam::factory(5)->create();
 
         // Seed Exam Results
         foreach ($exams as $exam) {
@@ -67,7 +67,7 @@ class DatabaseSeeder extends Seeder
 
         // Link Teachers to Classes (teacher_classes)
         foreach ($teachers as $teacher) {
-            $teacherClasses = $classes->random(2);
+            $teacherClasses = $classes->random(5);
             foreach ($teacherClasses as $class) {
                 $teacher->classes()->attach($class->id, [
                     'subject_id' => $subjects->random()->id
@@ -77,15 +77,21 @@ class DatabaseSeeder extends Seeder
         
         // Link Students to Classes (student_classes)
         foreach ($students as $student) {
-            $student->classes()->attach($classes->random()->id, [
-                'academic_year' => '2025'
-            ]);
+            $studentClasses = $classes->random(5);
+            foreach ($studentClasses as $class) {
+                $student->classes()->attach($class->id, [
+                    'academic_year' => '2025'
+                ]);
+            }
         }
 
         // Link Students to Skills (student_skill)
         $skills = \App\Models\Skill::all();
-        foreach ($students as $student) {
-            $student->skills()->attach($skills->random(3)->pluck('id')->toArray());
+        // Ensure there are at least 5 skills to attach
+        if ($skills->count() >= 5) {
+            foreach ($students as $student) {
+                $student->skills()->attach($skills->random(5)->pluck('id')->toArray());
+            }
         }
 
         // Leaderboard entries

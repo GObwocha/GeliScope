@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\AnalysisController;
 use App\Http\Controllers\Api\V1\LeaderboardController;
 use App\Http\Controllers\Api\V1\ParentController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\StudentTodoController;
 
 Route::prefix('v1')->group(function () {
     // Unprotected Routes (Login and Registration)
@@ -27,6 +28,8 @@ Route::prefix('v1')->group(function () {
         Route::get('auth/me', [AuthController::class, 'me']);
         //Users
         Route::apiResource('users', UserController::class)->except(['store']);
+        Route::post('users/{user}/avatar', [UserController::class, 'uploadAvatar']);
+        Route::delete('users/{user}/avatar', [UserController::class, 'removeAvatar']);
         //Subjects
         Route::get('subjects', [\App\Http\Controllers\Api\V1\SubjectController::class, 'index']);
         //Schools
@@ -69,5 +72,11 @@ Route::prefix('v1')->group(function () {
         Route::get('parents/{parentId}/students/{studentId}/report', [ParentController::class, 'studentReport']);
         Route::post('parents/reports', [ParentController::class, 'storeStudentReport']);
         Route::get('parents/{parentId}/students/{studentId}/teachers', [ParentController::class, 'childTeachers']);
+
+        // Student Todos
+        Route::get('students/{studentId}/todos', [StudentTodoController::class, 'index']);
+        Route::post('students/{studentId}/todos', [StudentTodoController::class, 'store']);
+        Route::put('todos/{id}', [StudentTodoController::class, 'update']);
+        Route::delete('todos/{id}', [StudentTodoController::class, 'destroy']);
     });
 });

@@ -37,6 +37,7 @@ class ExamController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'exam_round_id' => 'nullable|exists:exam_rounds,id',
             'exam_code' => 'nullable|string|unique:exams,exam_code|max:100',
             'name' => 'required|string|max:255',
             'subject_id' => 'required|exists:subjects,id',
