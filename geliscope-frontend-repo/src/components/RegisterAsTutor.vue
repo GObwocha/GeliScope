@@ -17,6 +17,7 @@ const form = ref({
  first_name: '',
  last_name: '',
  email: '',
+ phone_number: '',
  password: '',
  employee_number: '',
  school_id: null,
@@ -97,6 +98,14 @@ const submit = async () => {
  density="comfortable"
  :rules="[rules.required, rules.email]"
  required
+ ></v-text-field>
+
+ <v-text-field
+ v-model="form.phone_number"
+ label="Phone Number"
+ variant="outlined"
+ bg-color="surface"
+ density="comfortable"
  ></v-text-field>
 
  <v-text-field
