@@ -25,17 +25,9 @@ const displayData = computed(() => {
  if (activeRole.value === 'parent') {
  return {
  title: "Keep Your Children's Success",
- subtitle: "Grading in education",
- grade: "C,",
- percent: "87%",
- updateDate: "January 29",
+ subtitle: "Grading In Education",
  contactsTitle: "Teacher Contacts",
  contactsSubtitle: "Here you can see teachers and their contacts.",
- contacts: [
- { name: "John Kamau", role: "Mathematics", phone: "+254 712 345 678", avatar: "J" },
- { name: "Mary Wanjiku", role: "Physics", phone: "+254 723 456 789", avatar: "M" },
- { name: "Peter Ochieng", role: "Chemistry", phone: "+254 734 567 890", avatar: "P" }
- ],
  strengths: [
  { title: 'Algebraic Formulation', detail: 'Flawless execution of quadratic equations.' },
  { title: 'Logical Deduction', detail: 'Strong performance in step transformations.' }
@@ -48,8 +40,7 @@ const displayData = computed(() => {
  } else if (activeRole.value === 'student') {
  return {
  title: "Keep Track of Your Success",
- subtitle: "Personal grading overview",
- grade: "A,",
+ subtitle: "Personal Grading Overview",
  strengths: [
  { title: 'Algebraic Formulation', detail: 'Consistent high marks in algebra.' },
  { title: 'Logical Deduction', detail: 'Quickly solves logic puzzles.' }
@@ -63,30 +54,9 @@ const displayData = computed(() => {
  // Teacher
  return {
  title: "Stream Average Success",
- subtitle: "Form 2 East overview",
- grade: "B-,",
- percent: "74%",
- updateDate: "January 29",
+ subtitle: "Classes Overview",
  contactsTitle: "Parent Contacts",
  contactsSubtitle: "Here you can see parents and their contacts.",
- contacts: [
- { name: "David Otieno", role: "Parent (Brian)", phone: "+254 799 999 999", avatar: "D" },
- { name: "Susan Njoroge", role: "Parent (Alice)", phone: "+254 788 888 888", avatar: "S" },
- { name: "Michael Kiprop", role: "Parent (Kevin)", phone: "+254 777 777 777", avatar: "M" }
- ],
- upcomingTests: [
- { day: '22', weekday: 'Monday', active: false },
- { day: '23', weekday: 'Tuesday', active: true, title: 'Marking' },
- { day: '24', weekday: 'Wednesday', active: false, title: 'Dept Mtg' },
- { day: '25', weekday: 'Thursday', active: false },
- { day: '26', weekday: 'Friday', active: false }
- ],
- schedule: [
- { time: "8:00 AM - 9:30 AM", subject: "Staff Briefing" },
- { time: "9:30 AM - 11:00 AM", subject: "F2 East - Math" },
- { time: "11:30 AM - 1:00 PM", subject: "F3 West - Math" },
- { time: "2:00 PM - 3:30 PM", subject: "Lesson Prep" }
- ],
  strengths: [
  { title: 'Stream Algebra Avg', detail: 'Class average is 82% in algebraic formulation.' },
  { title: 'Stream Logic Avg', detail: 'Logical deduction concepts well grasped.' }
