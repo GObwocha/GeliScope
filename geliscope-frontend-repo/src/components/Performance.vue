@@ -231,6 +231,8 @@ onMounted(async () => {
     await loadTodos()
   } else if (activeRole.value === 'teacher') {
     await fetchTeacherClasses()
+  } else if (activeRole.value === 'parent') {
+    await loadTodos()
   }
 })
 
@@ -242,12 +244,21 @@ const newTodoTitle = ref('')
 const loadingTodos = ref(false)
 
 const loadTodos = async () => {
-  const studentId = authStore.currentUser?.student?.id
+  let studentId = null;
+  
+  if (activeRole.value === 'student') {
+    studentId = authStore.currentUser?.student?.id;
+  } else if (activeRole.value === 'parent') {
+    const parentProfile = authStore.currentUser?.parent_profile;
+    if (parentProfile && parentProfile.students && parentProfile.students.length > 0) {
+      studentId = parentProfile.students[0].id;
+    }
+  }
+
   if (!studentId) return
   try {
     loadingTodos.value = true
     todos.value = await StudentTodoService.getTodos(studentId)
-    console.log(todos.value)
   } catch (err) {
     console.error('Failed to load todos', err)
   } finally {
@@ -294,6 +305,8 @@ watch(activeRole, async (newRole) => {
     await loadTodos()
   } else if (newRole === 'teacher') {
     await fetchTeacherClasses()
+  } else if (newRole === 'parent') {
+    await loadTodos()
   }
 })
 
@@ -518,127 +531,126 @@ const getBarColor = (score) => {
  </v-card>
  </v-row>
 
- <!-- Action Items / Contacts List -->
- <v-row class="px-6 d-flex flex-column">
- <v-card class=" pa-5  border h-100 d-flex flex-column">
- 
- <!-- To-Do List for Students -->
- <template v-if="activeRole === 'student'">
- <div class="text-h6 font-weight-regular mb-1">Your To-Do List</div>
- <div class="text-caption text-medium-emphasis mb-6">Action items pulled from your exam analyses.</div>
- 
- <div class="d-flex flex-column gap-2 flex-grow-1" style="max-height: 250px; overflow-y: auto;">
- <v-progress-circular v-if="loadingTodos" indeterminate color="primary" class="align-self-center mt-4"></v-progress-circular>
- <template v-else>
- <div v-if="todos.length === 0" class="text-caption text-medium-emphasis text-center mt-4">
- No to-do items yet. Complete an exam to get AI suggestions!
- </div>
- <div v-for="todo in todos" :key="todo.id" class="d-flex align-center justify-space-between ">
- <v-checkbox-btn :model-value="todo.is_completed" @update:modelValue="toggleTodo(todo)" color="primary" class="flex-grow-0 me-3"></v-checkbox-btn>
- <div class="text-body-2 flex-grow-1" :class="{ 'text-decoration-line-through text-medium-emphasis': todo.is_completed }">
- {{ todo.title }}
- </div>
- <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click="deleteTodo(todo.id)"></v-btn>
- </div>
- </template>
- </div>
- 
- <div class="d-flex align-center mt-4 pt-4 border-t">
- <v-text-field
- v-model="newTodoTitle"
- density="compact"
- variant="outlined"
- hide-details
- placeholder="Add a new task..."
- class="me-2"
- @keyup.enter="addTodo"
- ></v-text-field>
- <v-btn color="primary" icon="mdi-plus" size="small" @click="addTodo"></v-btn>
- </div>
- </template>
-
-  <!-- Contacts List for Teachers/Parents -->
-  <template v-else>
-    <div class="text-h6 font-weight-regular mb-1">{{ displayData.contactsTitle }}</div>
-    <div class="text-caption text-medium-emphasis mb-6">{{ displayData.contactsSubtitle }}</div>
-    
-    <template v-if="activeRole === 'teacher'">
-      <v-autocomplete
-        v-model="selectedStudentForContact"
-        :items="teacherStudents"
-        item-title="user.first_name"
-        item-value="id"
-        label="Select a student"
-        variant="outlined"
-        density="compact"
-        class="mb-4"
-        hide-details
-      >
-        <template v-slot:item="{ props, item }">
-          <v-list-item v-bind="props" :title="item.user.first_name + ' ' + item.user.last_name + ' (' + item.admission_number + ')'"></v-list-item>
-        </template>
-        <template v-slot:selection="{ item }">
-          {{ item.user.first_name }} {{ item.user.last_name }}
-        </template>
-      </v-autocomplete>
-
-      <div class="d-flex flex-column gap-4 flex-grow-1" v-if="selectedStudentForContact">
-        <template v-for="student in teacherStudents" :key="student.id">
-          <template v-if="student.id === selectedStudentForContact">
-            <div v-if="!student.parents || student.parents.length === 0" class="text-caption text-medium-emphasis text-center py-4">
-              No parent contacts found for this student.
+    <!-- Action Items / Contacts List -->
+    <v-row class="px-6 d-flex flex-column gap-4">
+      
+      <!-- To-Do List for Students and Parents -->
+      <v-card v-if="activeRole === 'student' || activeRole === 'parent'" class="pa-5 border d-flex flex-column">
+        <div class="text-h6 font-weight-regular mb-1">{{ activeRole === 'parent' ? "Student's To-Do List" : "Your To-Do List" }}</div>
+        <div class="text-caption text-medium-emphasis mb-6">Action items pulled from exam analyses.</div>
+        
+        <div class="d-flex flex-column gap-2 flex-grow-1" style="max-height: 250px; overflow-y: auto;">
+          <v-progress-circular v-if="loadingTodos" indeterminate color="primary" class="align-self-center mt-4"></v-progress-circular>
+          <template v-else>
+            <div v-if="todos.length === 0" class="text-caption text-medium-emphasis text-center mt-4">
+              No to-do items yet.
             </div>
-            <div v-for="(parent, pIdx) in student.parents" :key="pIdx" class="mb-4 border rounded-lg pa-3">
-              <div class="d-flex align-center justify-space-between mb-3">
-                <div class="d-flex align-center gap-3">
-                  <v-avatar size="36" color="primary" variant="tonal">
-                    <span class="font-weight-bold text-caption">{{ parent.name.charAt(0) }}</span>
-                  </v-avatar>
-                  <div>
-                    <div class="text-body-2 font-weight-medium">{{ parent.name }}</div>
-                    <div class="text-caption text-medium-emphasis">Parent</div>
-                  </div>
-                </div>
-                <div class="text-caption font-weight-medium">{{ parent.phone_number }}</div>
+            <div v-for="todo in todos" :key="todo.id" class="d-flex align-center justify-space-between ">
+              <v-checkbox-btn :model-value="todo.is_completed" :readonly="activeRole === 'parent'" @update:modelValue="activeRole !== 'parent' ? toggleTodo(todo) : null" color="primary" class="flex-grow-0 me-3"></v-checkbox-btn>
+              <div class="text-body-2 flex-grow-1" :class="{ 'text-decoration-line-through text-medium-emphasis': todo.is_completed }">
+                {{ todo.title }}
               </div>
-              <div class="d-flex gap-2">
-                <v-btn color="success" size="small" variant="flat" class="flex-grow-1" prepend-icon="mdi-whatsapp" :href="'https://wa.me/' + (parent.phone_number ? parent.phone_number.replace(/[^0-9]/g, '') : '')" target="_blank">
-                  WhatsApp
-                </v-btn>
-                <v-btn color="primary" size="small" variant="tonal" class="flex-grow-1" prepend-icon="mdi-phone" :href="'tel:' + (parent.phone_number ? parent.phone_number.replace(/[^0-9+]/g, '') : '')">
-                  Call
-                </v-btn>
-              </div>
+              <v-btn v-if="activeRole === 'student'" icon="mdi-delete" variant="text" size="small" color="error" @click="deleteTodo(todo.id)"></v-btn>
             </div>
           </template>
+        </div>
+        
+        <div v-if="activeRole === 'student'" class="d-flex align-center mt-4 pt-4 border-t">
+          <v-text-field
+            v-model="newTodoTitle"
+            density="compact"
+            variant="outlined"
+            hide-details
+            placeholder="Add a new task..."
+            class="me-2"
+            @keyup.enter="addTodo"
+          ></v-text-field>
+          <v-btn color="primary" icon="mdi-plus" size="small" @click="addTodo"></v-btn>
+        </div>
+      </v-card>
+
+      <!-- Contacts List for Teachers/Parents -->
+      <v-card v-if="activeRole === 'teacher' || activeRole === 'parent'" class="pa-5 border d-flex flex-column">
+        <div class="text-h6 font-weight-regular mb-1">{{ displayData.contactsTitle }}</div>
+        <div class="text-caption text-medium-emphasis mb-6">{{ displayData.contactsSubtitle }}</div>
+        
+        <template v-if="activeRole === 'teacher'">
+          <v-autocomplete
+            v-model="selectedStudentForContact"
+            :items="teacherStudents"
+            item-title="user.first_name"
+            item-value="id"
+            label="Select a student"
+            variant="outlined"
+            density="compact"
+            class="mb-4"
+            hide-details
+          >
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :title="item.raw.user.first_name + ' ' + item.raw.user.last_name + ' (' + item.raw.admission_number + ')'"></v-list-item>
+            </template>
+            <template v-slot:selection="{ item }">
+              {{ item.raw.user.first_name }} {{ item.raw.user.last_name }}
+            </template>
+          </v-autocomplete>
+
+          <div class="d-flex flex-column gap-4 flex-grow-1" v-if="selectedStudentForContact">
+            <template v-for="student in teacherStudents" :key="student.id">
+              <template v-if="student.id === selectedStudentForContact">
+                <div v-if="!student.parents || student.parents.length === 0" class="text-caption text-medium-emphasis text-center py-4">
+                  No parent contacts found for this student.
+                </div>
+                <div v-for="(parent, pIdx) in student.parents" :key="pIdx" class="mb-4 border rounded-lg pa-3">
+                  <div class="d-flex align-center justify-space-between mb-3">
+                    <div class="d-flex align-center gap-3">
+                      <v-avatar size="36" color="primary" variant="tonal">
+                        <span class="font-weight-bold text-caption">{{ parent.name.charAt(0) }}</span>
+                      </v-avatar>
+                      <div>
+                        <div class="text-body-2 font-weight-medium">{{ parent.name }}</div>
+                        <div class="text-caption text-medium-emphasis">Parent</div>
+                      </div>
+                    </div>
+                    <div class="text-caption font-weight-medium">{{ parent.phone_number }}</div>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <v-btn color="success" size="small" variant="flat" class="flex-grow-1" prepend-icon="mdi-whatsapp" :href="'https://wa.me/' + (parent.phone_number ? parent.phone_number.replace(/[^0-9]/g, '') : '')" target="_blank">
+                      WhatsApp
+                    </v-btn>
+                    <v-btn color="primary" size="small" variant="tonal" class="flex-grow-1" prepend-icon="mdi-phone" :href="'tel:' + (parent.phone_number ? parent.phone_number.replace(/[^0-9+]/g, '') : '')">
+                      Call
+                    </v-btn>
+                  </div>
+                </div>
+              </template>
+            </template>
+          </div>
+          <div v-else class="text-center text-caption text-medium-emphasis py-6">
+            Select a student to view parent contacts.
+          </div>
         </template>
-      </div>
-      <div v-else class="text-center text-caption text-medium-emphasis py-6">
-        Select a student to view parent contacts.
-      </div>
-    </template>
-    <template v-else>
-      <div class="d-flex flex-column gap-4 flex-grow-1">
-        <div v-for="(contact, i) in displayData.contacts" :key="i" class="d-flex align-center justify-space-between">
-          <div class="d-flex align-center gap-3">
-            <v-avatar size="36" color="primary" variant="tonal">
-              <span class="font-weight-bold text-caption">{{ contact.avatar }}</span>
-            </v-avatar>
-            <div>
-              <div class="text-body-2 font-weight-medium">{{ contact.name }}</div>
-              <div class="text-caption text-medium-emphasis">{{ contact.role }}</div>
+        
+        <template v-else>
+          <div class="d-flex flex-column gap-4 flex-grow-1">
+            <div v-for="(contact, i) in displayData.contacts" :key="i" class="d-flex align-center justify-space-between">
+              <div class="d-flex align-center gap-3">
+                <v-avatar size="36" color="primary" variant="tonal">
+                  <span class="font-weight-bold text-caption">{{ contact.avatar }}</span>
+                </v-avatar>
+                <div>
+                  <div class="text-body-2 font-weight-medium">{{ contact.name }}</div>
+                  <div class="text-caption text-medium-emphasis">{{ contact.role }}</div>
+                </div>
+              </div>
+              <div class="text-caption font-weight-medium">{{ contact.phone }}</div>
             </div>
           </div>
-          <div class="text-caption font-weight-medium">{{ contact.phone }}</div>
-        </div>
-      </div>
-      <v-btn size="small" variant="flat" color="surface" class="mt-6 elevation-1 font-weight-bold rounded-lg px-4 w-100">
-        Show all
-      </v-btn>
-    </template>
-  </template>
- </v-card>
- </v-row>
+          <v-btn size="small" variant="flat" color="surface" class="mt-6 elevation-1 font-weight-bold rounded-lg px-4 w-100">
+            Show all
+          </v-btn>
+        </template>
+      </v-card>
+    </v-row>
  
  </v-container>
 </template>
