@@ -355,7 +355,7 @@ const getBarColor = (score) => {
  <!-- Bar / Line Chart -->
  <v-row class="px-6 d-flex flex-column">
  <v-card class=" pa-5 border d-flex flex-column justify-center">
- <div class="d-flex flex-wrap align-center justify-space-between mb-4 gap-4">
+ <div class="d-flex flex-wrap align-center justify-space-between mb-4">
  <div class="text-h6 font-weight-bold">Average Marks</div>
  <div class="d-flex align-center gap-4">
  <v-select
@@ -575,10 +575,10 @@ const getBarColor = (score) => {
         hide-details
       >
         <template v-slot:item="{ props, item }">
-          <v-list-item v-bind="props" :title="item.raw.user.first_name + ' ' + item.raw.user.last_name + ' (' + item.raw.admission_number + ')'"></v-list-item>
+          <v-list-item v-bind="props" :title="item.user.first_name + ' ' + item.user.last_name + ' (' + item.admission_number + ')'"></v-list-item>
         </template>
         <template v-slot:selection="{ item }">
-          {{ item.raw.user.first_name }} {{ item.raw.user.last_name }}
+          {{ item.user.first_name }} {{ item.user.last_name }}
         </template>
       </v-autocomplete>
 
