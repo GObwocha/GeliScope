@@ -179,11 +179,60 @@ const getProgressColor = (score) => {
   return 'error'
 }
 
-const parentActionSteps = ref([
- { title: 'Trigonometric Sine Rule Practice', priority: 'High Priority', detail: 'Review triangle opposite vs. hypotenuse ratios before Sunday evening.', completed: false },
- { title: 'Quadratic Equation Sign Flips', priority: 'Medium Priority', detail: 'Complete 5 practice questions focusing on negative square roots.', completed: true },
- { title: 'Vector Addition Scalar Multiplication', priority: 'Good Mastery', detail: 'Child scored 90% on recent diagnostics. Keep up consistent review.', completed: true }
-])
+import StudentTodoService from '@/services/StudentTodoService'
+
+const todos = ref([])
+const loadingTodos = ref(false)
+
+const parentStudents = computed(() => {
+  if (activeRole.value !== 'parent') return [];
+  return authStore.currentUser?.parent_profile?.students || [];
+})
+const selectedParentStudent = ref(null)
+
+watch(selectedParentStudent, async (newVal) => {
+  if (newVal) {
+    await loadTodos()
+  }
+})
+
+const loadTodos = async () => {
+  let studentId = null;
+  if (activeRole.value === 'student') {
+    studentId = authStore.currentUser?.student?.id;
+  } else if (activeRole.value === 'parent') {
+    studentId = selectedParentStudent.value;
+  }
+
+  if (!studentId) return
+  try {
+    loadingTodos.value = true
+    todos.value = await StudentTodoService.getTodos(studentId)
+  } catch (err) {
+    console.error('Failed to load todos', err)
+  } finally {
+    loadingTodos.value = false
+  }
+}
+
+const toggleTodo = async (todo) => {
+  try {
+    todo.is_completed = !todo.is_completed
+    await StudentTodoService.updateTodo(todo.id, { is_completed: todo.is_completed })
+  } catch (err) {
+    console.error('Failed to update todo', err)
+    todo.is_completed = !todo.is_completed // revert
+  }
+}
+
+const deleteTodo = async (todoId) => {
+  try {
+    await StudentTodoService.deleteTodo(todoId)
+    todos.value = todos.value.filter(t => t.id !== todoId)
+  } catch (err) {
+    console.error('Failed to delete todo', err)
+  }
+}
 
 const teacherStreamSummary = ref({
  class_name: 'Loading...',
@@ -222,19 +271,35 @@ const fetchTeacherDashboard = async () => {
   }
 }
 
+watch(activeRole, async (newRole) => {
+  if (newRole === 'parent' && parentStudents.value.length > 0 && !selectedParentStudent.value) {
+    selectedParentStudent.value = parentStudents.value[0].id;
+  }
+  if (newRole === 'student' || newRole === 'parent') {
+    await loadTodos()
+  }
+})
+
 // Load active session from local storage or backend API
 onMounted(() => {
- if (!authStore.isAuthenticated) {
- router.push('/login')
- } else {
- loading.value = false
-  fetchSuggestedCareers()
-  fetchCognitiveProfile()
-  fetchTeacherDashboard()
-  if (userProfile.value.student?.id) {
-   examStore.fetchStudentExams(userProfile.value.student.id)
- }
- }
+  if (!authStore.isAuthenticated) {
+    router.push('/login')
+  } else {
+    loading.value = false
+    fetchSuggestedCareers()
+    fetchCognitiveProfile()
+    fetchTeacherDashboard()
+    if (userProfile.value.student?.id) {
+      examStore.fetchStudentExams(userProfile.value.student.id)
+    }
+
+    if (activeRole.value === 'parent' && parentStudents.value.length > 0) {
+      selectedParentStudent.value = parentStudents.value[0].id;
+    }
+    if (activeRole.value === 'student' || activeRole.value === 'parent') {
+      loadTodos()
+    }
+  }
 })
 </script>
 
@@ -565,42 +630,92 @@ onMounted(() => {
  </div>
  </div>
  </v-card>
- </div>
 
- <!-- PARENT DASHBOARD WORKSPACE -->
+      <!-- To-Do List for Students -->
+      <v-card class="pa-6 rounded-3xl border bg-surface mt-8" elevation="4">
+        <div class="d-flex flex-wrap justify-space-between align-center mb-6 gap-3">
+          <div>
+            <h2 class="text-h5 font-weight-black d-flex align-center">
+              <v-icon color="primary" class="mr-2">mdi-checkbox-marked-circle-outline</v-icon>
+              Your To-Do List
+            </h2>
+            <p class="text-caption text-medium-emphasis mb-0">Action items pulled from your exam analyses.</p>
+          </div>
+          <v-btn size="small" color="primary" variant="tonal" to="/dashboard/student-performance">Full Cognitive Profile</v-btn>
+        </div>
+
+        <div v-if="loadingTodos" class="d-flex justify-center pa-6">
+          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+        </div>
+        <div v-else-if="todos.length === 0" class="text-center py-6 text-medium-emphasis">
+          No pending action items. Complete an exam to get AI suggestions!
+        </div>
+        <div v-else v-for="(step, i) in todos" :key="step.id" class="pa-4 rounded-2xl border bg-surface mb-4 d-flex align-center justify-space-between">
+          <div class="d-flex align-center w-100">
+            <v-checkbox-btn :model-value="step.is_completed" @update:modelValue="toggleTodo(step)" color="primary" class="mr-3 flex-shrink-0"></v-checkbox-btn>
+            <div class="flex-grow-1">
+              <div class="font-weight-bold text-body-1" :class="step.is_completed ? 'text-decoration-line-through text-medium-emphasis' : ''">
+                {{ step.title }}
+              </div>
+            </div>
+            <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click="deleteTodo(step.id)"></v-btn>
+          </div>
+        </div>
+      </v-card>
+   </div>
+  
+  <!-- PARENT DASHBOARD WORKSPACE -->
  <div v-else-if="activeRole === 'parent'">
  <v-row>
  <v-col cols="12" lg="8">
  <v-card class="pa-6 rounded-3xl border bg-surface h-100 " elevation="4">
- <div class="d-flex justify-space-between align-center mb-6">
+ <div class="d-flex flex-wrap justify-space-between align-center mb-6 gap-3">
  <div>
  <h2 class="text-h5 font-weight-black d-flex align-center">
  <v-icon color="accent" class="mr-2">mdi-home-heart</v-icon>
- Weekend Home Improvement Steps (ParentReport)
+ Student To-Do List
  </h2>
- <p class="text-caption text-medium-emphasis mb-0">Bridging the diagnostic gap with actionable sub-topic practice</p>
+ <p class="text-caption text-medium-emphasis mb-0">Bridging the diagnostic gap with actionable practice</p>
  </div>
+ 
+ <div class="d-flex gap-3 align-center">
+ <v-select
+ v-if="parentStudents.length > 1"
+ v-model="selectedParentStudent"
+ :items="parentStudents"
+ item-title="user.first_name"
+ item-value="id"
+ density="compact"
+ variant="outlined"
+ hide-details
+ style="max-width: 150px;"
+ >
+ <template v-slot:selection="{ item }">
+ {{ item.user.first_name }}
+ </template>
+ <template v-slot:item="{ props, item }">
+ <v-list-item v-bind="props" :title="item.user.first_name + ' ' + item.user.last_name"></v-list-item>
+ </template>
+ </v-select>
  <v-btn size="small" color="primary" variant="tonal" to="/dashboard/student-profile-parent">Full Parent Portal</v-btn>
  </div>
+ </div>
 
- <div v-for="(step, i) in parentActionSteps" :key="i" class="pa-4 rounded-2xl border bg-surface mb-4 d-flex align-center justify-space-between">
+ <div v-if="loadingTodos" class="d-flex justify-center pa-6">
+ <v-progress-circular indeterminate color="primary"></v-progress-circular>
+ </div>
+ <div v-else-if="todos.length === 0" class="text-center py-6 text-medium-emphasis">
+ No pending action items for this student.
+ </div>
+ <div v-else v-for="(step, i) in todos" :key="step.id" class="pa-4 rounded-2xl border bg-surface mb-4 d-flex align-center justify-space-between">
  <div class="d-flex align-center">
- <v-checkbox-btn v-model="step.completed" color="success" class="mr-3"></v-checkbox-btn>
+ <v-checkbox-btn :model-value="step.is_completed" readonly color="success" class="mr-3"></v-checkbox-btn>
  <div>
- <div class="font-weight-bold text-body-1" :class="step.completed ? 'text-decoration-line-through text-medium-emphasis' : ''">
+ <div class="font-weight-bold text-body-1" :class="step.is_completed ? 'text-decoration-line-through text-medium-emphasis' : ''">
  {{ step.title }}
  </div>
- <div class="text-caption text-medium-emphasis">{{ step.detail }}</div>
  </div>
  </div>
- <v-chip
- :color="step.priority === 'High Priority' ? 'error' : (step.priority === 'Medium Priority' ? 'warning' : 'success')"
- size="small"
- variant="flat"
- class="font-weight-bold"
- >
- {{ step.priority }}
- </v-chip>
  </div>
  </v-card>
  </v-col>
@@ -638,7 +753,7 @@ onMounted(() => {
  <v-icon color="secondary" class="mr-2">mdi-chart-bar</v-icon>
  Stream Bottleneck Overview
  </h2>
- <v-chip color="secondary" variant="flat" size="small" class="font-weight-bold">{{ teacherStreamSummary.class_name }}</v-chip>
+ <v-chip color="secondary" variant="flat" size="  " class="font-weight-bold">{{ teacherStreamSummary.class_name }}</v-chip>
  </div>
  <div class="mb-6">
  <div class="text-h3 font-weight-black text-secondary">{{ teacherStreamSummary.stream_average }}</div>

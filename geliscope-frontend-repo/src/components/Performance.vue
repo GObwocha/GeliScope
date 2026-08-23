@@ -232,7 +232,9 @@ onMounted(async () => {
   } else if (activeRole.value === 'teacher') {
     await fetchTeacherClasses()
   } else if (activeRole.value === 'parent') {
-    await loadTodos()
+    if (parentStudents.value.length > 0) {
+      selectedParentStudent.value = parentStudents.value[0].id;
+    }
   }
 })
 
@@ -243,16 +245,25 @@ const todos = ref([])
 const newTodoTitle = ref('')
 const loadingTodos = ref(false)
 
+const parentStudents = computed(() => {
+  if (activeRole.value !== 'parent') return [];
+  return authStore.currentUser?.parent_profile?.students || [];
+})
+const selectedParentStudent = ref(null)
+
+watch(selectedParentStudent, async (newVal) => {
+  if (newVal) {
+    await loadTodos()
+  }
+})
+
 const loadTodos = async () => {
   let studentId = null;
   
   if (activeRole.value === 'student') {
     studentId = authStore.currentUser?.student?.id;
   } else if (activeRole.value === 'parent') {
-    const parentProfile = authStore.currentUser?.parent_profile;
-    if (parentProfile && parentProfile.students && parentProfile.students.length > 0) {
-      studentId = parentProfile.students[0].id;
-    }
+    studentId = selectedParentStudent.value;
   }
 
   if (!studentId) return
@@ -306,7 +317,9 @@ watch(activeRole, async (newRole) => {
   } else if (newRole === 'teacher') {
     await fetchTeacherClasses()
   } else if (newRole === 'parent') {
-    await loadTodos()
+    if (parentStudents.value.length > 0) {
+      selectedParentStudent.value = parentStudents.value[0].id;
+    }
   }
 })
 
@@ -536,7 +549,28 @@ const getBarColor = (score) => {
       
       <!-- To-Do List for Students and Parents -->
       <v-card v-if="activeRole === 'student' || activeRole === 'parent'" class="pa-5 border d-flex flex-column">
-        <div class="text-h6 font-weight-regular mb-1">{{ activeRole === 'parent' ? "Student's To-Do List" : "Your To-Do List" }}</div>
+        <div class="d-flex align-center justify-space-between mb-1">
+          <div class="text-h6 font-weight-regular">{{ activeRole === 'parent' ? "Student's To-Do List" : "Your To-Do List" }}</div>
+          
+          <v-select
+            v-if="activeRole === 'parent' && parentStudents.length > 1"
+            v-model="selectedParentStudent"
+            :items="parentStudents"
+            item-title="user.first_name"
+            item-value="id"
+            density="compact"
+            variant="outlined"
+            hide-details
+            style="max-width: 150px;"
+          >
+            <template v-slot:selection="{ item }">
+              {{ item.raw.user.first_name }}
+            </template>
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :title="item.raw.user.first_name + ' ' + item.raw.user.last_name"></v-list-item>
+            </template>
+          </v-select>
+        </div>
         <div class="text-caption text-medium-emphasis mb-6">Action items pulled from exam analyses.</div>
         
         <div class="d-flex flex-column gap-2 flex-grow-1" style="max-height: 250px; overflow-y: auto;">
