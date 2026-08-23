@@ -251,9 +251,29 @@ const parentStudents = computed(() => {
 })
 const selectedParentStudent = ref(null)
 
+const childTeachers = ref([])
+const loadingChildTeachers = ref(false)
+
+const fetchChildTeachers = async () => {
+  if (!selectedParentStudent.value || activeRole.value !== 'parent') return;
+  const parentId = authStore.currentUser?.parent_profile?.id;
+  if (!parentId) return;
+  
+  try {
+    loadingChildTeachers.value = true;
+    const response = await axios.get(`/api/v1/parents/${parentId}/students/${selectedParentStudent.value}/teachers`);
+    childTeachers.value = response.data;
+  } catch (err) {
+    console.error('Failed to fetch child teachers', err);
+  } finally {
+    loadingChildTeachers.value = false;
+  }
+}
+
 watch(selectedParentStudent, async (newVal) => {
   if (newVal) {
     await loadTodos()
+    await fetchChildTeachers()
   }
 })
 
@@ -666,22 +686,37 @@ const getBarColor = (score) => {
         
         <template v-else>
           <div class="d-flex flex-column gap-4 flex-grow-1">
-            <div v-for="(contact, i) in displayData.contacts" :key="i" class="d-flex align-center justify-space-between">
-              <div class="d-flex align-center gap-3">
-                <v-avatar size="36" color="primary" variant="tonal">
-                  <span class="font-weight-bold text-caption">{{ contact.avatar }}</span>
-                </v-avatar>
-                <div>
-                  <div class="text-body-2 font-weight-medium">{{ contact.name }}</div>
-                  <div class="text-caption text-medium-emphasis">{{ contact.role }}</div>
+            <div v-if="loadingChildTeachers" class="d-flex justify-center py-4">
+              <v-progress-circular indeterminate color="primary"></v-progress-circular>
+            </div>
+            <div v-else-if="childTeachers.length === 0" class="text-caption text-medium-emphasis text-center py-4">
+              No teacher contacts found for this student.
+            </div>
+            <template v-else>
+              <div v-for="(teacher, i) in childTeachers" :key="teacher.id" class="mb-4 border rounded-lg pa-3">
+                <div class="d-flex align-center justify-space-between mb-3">
+                  <div class="d-flex align-center gap-3">
+                    <v-avatar size="36" color="primary" variant="tonal">
+                      <span class="font-weight-bold text-caption">{{ teacher.user?.first_name?.charAt(0) }}</span>
+                    </v-avatar>
+                    <div>
+                      <div class="text-body-2 font-weight-medium">{{ teacher.user?.first_name }} {{ teacher.user?.last_name }}</div>
+                      <div class="text-caption text-medium-emphasis">Teacher</div>
+                    </div>
+                  </div>
+                  <div class="text-caption font-weight-medium">{{ teacher.user?.phone_number || 'N/A' }}</div>
+                </div>
+                <div class="d-flex gap-2">
+                  <v-btn color="success" size="small" variant="flat" class="flex-grow-1" prepend-icon="mdi-whatsapp" :href="teacher.user?.phone_number ? 'https://wa.me/' + teacher.user.phone_number.replace(/[^0-9]/g, '') : '#'" target="_blank" :disabled="!teacher.user?.phone_number">
+                    WhatsApp
+                  </v-btn>
+                  <v-btn color="primary" size="small" variant="tonal" class="flex-grow-1" prepend-icon="mdi-phone" :href="teacher.user?.phone_number ? 'tel:' + teacher.user.phone_number.replace(/[^0-9+]/g, '') : '#'" :disabled="!teacher.user?.phone_number">
+                    Call
+                  </v-btn>
                 </div>
               </div>
-              <div class="text-caption font-weight-medium">{{ contact.phone }}</div>
-            </div>
+            </template>
           </div>
-          <v-btn size="small" variant="flat" color="surface" class="mt-6 elevation-1 font-weight-bold rounded-lg px-4 w-100">
-            Show all
-          </v-btn>
         </template>
       </v-card>
     </v-row>
