@@ -33,7 +33,7 @@ const publicNavItems = [
 const dashboardNavItems = [
   { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/dashboard' },
   { title: 'Upload Centre', icon: 'mdi-cloud-upload', to: '/dashboard/upload-centre' },
-  { title: 'Performance', icon: 'mdi-speedometer', to: '/dashboard/student-performance' },
+  { title: 'Performance', icon: 'mdi-speedometer', to: '/dashboard/performance' },
   { title: 'Exam Archives', icon: 'mdi-archive', to: '/dashboard/exam-archives' },
   { title: 'Leaderboard', icon: 'mdi-clipboard', to: '/dashboard/leaderboard' },
   { title: 'Settings', icon: 'mdi-cog', to: '/dashboard/settings' },
@@ -42,7 +42,7 @@ const dashboardNavItems = [
 const teacherDashboardNavItems = [
   { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/dashboard' },
   { title: 'Upload Centre', icon: 'mdi-cloud-upload', to: '/dashboard/upload-centre' },
-  { title: 'Performance', icon: 'mdi-speedometer', to: '/dashboard/student-performance' },
+  { title: 'Performance', icon: 'mdi-speedometer', to: '/dashboard/performance' },
   { title: 'Tutor Profile', icon: 'mdi-account-school', to: '/dashboard/student-profile-tutor' },
   { title: 'Exam Archives', icon: 'mdi-archive', to: '/dashboard/exam-archives' },
   { title: 'Settings', icon: 'mdi-cog', to: '/dashboard/settings' },

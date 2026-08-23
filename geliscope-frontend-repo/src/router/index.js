@@ -7,7 +7,7 @@ import Login from '@/components/Login.vue'
 import Pricing from '@/components/Pricing.vue'
 import Register from '@/components/Register.vue'
 import Settings from '@/components/Settings.vue'
-import StudentPerformance from '@/components/StudentPerformance.vue'
+import Performance from '@/components/Performance.vue'
 import StudentProfileP from '@/components/StudentProfileP.vue'
 import StudentProfileS from '@/components/StudentProfileS.vue'
 import StudentProfileT from '@/components/StudentProfileS.vue'
@@ -20,6 +20,7 @@ import UserDashboard from '@/components/UserDashboard.vue'
 import ExamArchives from '@/components/ExamArchives.vue'
 import ClassDiagnosis from '@/components/ClassDiagnosis.vue'
 import AuthCallBack from '@/components/AuthCallback.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -81,8 +82,8 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/dashboard/student-performance',
-      component: StudentPerformance,
+      path: '/dashboard/performance',
+      component: Performance,
       meta: { requiresAuth: true }
     },
     {
