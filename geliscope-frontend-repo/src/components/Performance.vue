@@ -110,16 +110,32 @@ const teacherClasses = ref([])
 const selectedClass = ref(null)
 const classPerformanceData = ref({ rounds: [], subjects: [] })
 
+const teacherStudents = ref([])
+const selectedStudentForContact = ref(null)
+
+const fetchTeacherStudentsForContact = async () => {
+  if (activeRole.value !== 'teacher') return
+  const teacherId = authStore.currentUser?.teacher?.id
+  if (!teacherId) return
+  try {
+    const res = await axios.get(`/api/v1/analysis/teacher/${teacherId}/students`)
+    teacherStudents.value = res.data
+  } catch (err) {
+    console.error('Failed to fetch teacher students for contacts', err)
+  }
+}
+
 const fetchTeacherClasses = async () => {
   if (activeRole.value !== 'teacher') return
   const teacherId = authStore.currentUser?.teacher?.id || authStore.currentUser?.id
   try {
     const res = await axios.get(`/api/v1/analysis/teacher/${teacherId}/classes`)
-    teacherClasses.value = res.data
-    if (res.data.length > 0) {
-      selectedClass.value = res.data[0].id
+    teacherClasses.value = res.data.data || res.data
+    if (teacherClasses.value.length > 0) {
+      selectedClass.value = teacherClasses.value[0].id
       fetchClassPerformance()
     }
+    await fetchTeacherStudentsForContact()
   } catch (err) {
     console.error('Failed to fetch teacher classes', err)
   }
@@ -541,30 +557,86 @@ const getBarColor = (score) => {
  </div>
  </template>
 
- <!-- Contacts List for Teachers/Parents -->
- <template v-else>
- <div class="text-h6 font-weight-regular mb-1">{{ displayData.contactsTitle }}</div>
- <div class="text-caption text-medium-emphasis mb-6">{{ displayData.contactsSubtitle }}</div>
- 
- <div class="d-flex flex-column gap-4 flex-grow-1">
- <div v-for="(contact, i) in displayData.contacts" :key="i" class="d-flex align-center justify-space-between">
- <div class="d-flex align-center gap-3">
- <v-avatar size="36" color="primary" variant="tonal">
- <span class="font-weight-bold text-caption">{{ contact.avatar }}</span>
- </v-avatar>
- <div>
- <div class="text-body-2 font-weight-medium">{{ contact.name }}</div>
- <div class="text-caption text-medium-emphasis">{{ contact.role }}</div>
- </div>
- </div>
- <div class="text-caption font-weight-medium">{{ contact.phone }}</div>
- </div>
- </div>
- 
- <v-btn size="small" variant="flat" color="surface" class="mt-6 elevation-1 font-weight-bold rounded-lg px-4 w-100">
- Show all
- </v-btn>
- </template>
+  <!-- Contacts List for Teachers/Parents -->
+  <template v-else>
+    <div class="text-h6 font-weight-regular mb-1">{{ displayData.contactsTitle }}</div>
+    <div class="text-caption text-medium-emphasis mb-6">{{ displayData.contactsSubtitle }}</div>
+    
+    <template v-if="activeRole === 'teacher'">
+      <v-autocomplete
+        v-model="selectedStudentForContact"
+        :items="teacherStudents"
+        item-title="user.first_name"
+        item-value="id"
+        label="Select a student"
+        variant="outlined"
+        density="compact"
+        class="mb-4"
+        hide-details
+      >
+        <template v-slot:item="{ props, item }">
+          <v-list-item v-bind="props" :title="item.raw.user.first_name + ' ' + item.raw.user.last_name + ' (' + item.raw.admission_number + ')'"></v-list-item>
+        </template>
+        <template v-slot:selection="{ item }">
+          {{ item.raw.user.first_name }} {{ item.raw.user.last_name }}
+        </template>
+      </v-autocomplete>
+
+      <div class="d-flex flex-column gap-4 flex-grow-1" v-if="selectedStudentForContact">
+        <template v-for="student in teacherStudents" :key="student.id">
+          <template v-if="student.id === selectedStudentForContact">
+            <div v-if="!student.parents || student.parents.length === 0" class="text-caption text-medium-emphasis text-center py-4">
+              No parent contacts found for this student.
+            </div>
+            <div v-for="(parent, pIdx) in student.parents" :key="pIdx" class="mb-4 border rounded-lg pa-3">
+              <div class="d-flex align-center justify-space-between mb-3">
+                <div class="d-flex align-center gap-3">
+                  <v-avatar size="36" color="primary" variant="tonal">
+                    <span class="font-weight-bold text-caption">{{ parent.name.charAt(0) }}</span>
+                  </v-avatar>
+                  <div>
+                    <div class="text-body-2 font-weight-medium">{{ parent.name }}</div>
+                    <div class="text-caption text-medium-emphasis">Parent</div>
+                  </div>
+                </div>
+                <div class="text-caption font-weight-medium">{{ parent.phone_number }}</div>
+              </div>
+              <div class="d-flex gap-2">
+                <v-btn color="success" size="small" variant="flat" class="flex-grow-1" prepend-icon="mdi-whatsapp" :href="'https://wa.me/' + (parent.phone_number ? parent.phone_number.replace(/[^0-9]/g, '') : '')" target="_blank">
+                  WhatsApp
+                </v-btn>
+                <v-btn color="primary" size="small" variant="tonal" class="flex-grow-1" prepend-icon="mdi-phone" :href="'tel:' + (parent.phone_number ? parent.phone_number.replace(/[^0-9+]/g, '') : '')">
+                  Call
+                </v-btn>
+              </div>
+            </div>
+          </template>
+        </template>
+      </div>
+      <div v-else class="text-center text-caption text-medium-emphasis py-6">
+        Select a student to view parent contacts.
+      </div>
+    </template>
+    <template v-else>
+      <div class="d-flex flex-column gap-4 flex-grow-1">
+        <div v-for="(contact, i) in displayData.contacts" :key="i" class="d-flex align-center justify-space-between">
+          <div class="d-flex align-center gap-3">
+            <v-avatar size="36" color="primary" variant="tonal">
+              <span class="font-weight-bold text-caption">{{ contact.avatar }}</span>
+            </v-avatar>
+            <div>
+              <div class="text-body-2 font-weight-medium">{{ contact.name }}</div>
+              <div class="text-caption text-medium-emphasis">{{ contact.role }}</div>
+            </div>
+          </div>
+          <div class="text-caption font-weight-medium">{{ contact.phone }}</div>
+        </div>
+      </div>
+      <v-btn size="small" variant="flat" color="surface" class="mt-6 elevation-1 font-weight-bold rounded-lg px-4 w-100">
+        Show all
+      </v-btn>
+    </template>
+  </template>
  </v-card>
  </v-row>
  
