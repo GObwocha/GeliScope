@@ -101,6 +101,12 @@ onMounted(async () => {
           admission_number: currentUser.student.admission_number 
         }]
         selectedStudent.value = currentUser.student.id 
+      } else if (currentUser.role === 'parent') {
+        const parentStudents = currentUser?.parent_profile?.students || []
+        students.value = parentStudents
+        if (parentStudents.length > 0) {
+          selectedStudent.value = parentStudents[0].id
+        }
       } else {
         students.value = [{
           id: currentUser.id,
@@ -467,7 +473,7 @@ const removeFile = (index) => {
                   Mark & Analyze
                 </v-btn>
               </v-col>
-              <v-col cols="{{ currentUser.role == 'teacher' ? 6 : 12 }}" md="6" >
+              <v-col :cols="currentUser.role == 'teacher' ? 6 : 12" md="6" >
                 <v-btn
                   color="primary"
                   size="large"
