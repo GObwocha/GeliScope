@@ -858,7 +858,7 @@ onMounted(() => {
  </h2>
  <p class="text-caption text-medium-emphasis mb-0">Structured ACID grade</p>
  </div>
- <v-btn color="primary" variant="tonal" to="/dashboard/leaderboard" class="align-self-start align-self-md-center">View Academic Leaderboard</v-btn>
+ <v-btn v-if="currentUser.role !== 'parent'" color="primary" variant="tonal" to="/dashboard/leaderboard" class="align-self-start align-self-md-center">View Academic Leaderboard</v-btn>
  </div>
 
  <div class="overflow-x-auto">

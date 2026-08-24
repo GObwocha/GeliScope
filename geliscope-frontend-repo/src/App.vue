@@ -48,15 +48,33 @@ const teacherDashboardNavItems = [
   { title: 'Settings', icon: 'mdi-cog', to: '/dashboard/settings' },
 ]
 
+const parentDashboardNavItems = [
+  { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/dashboard' },
+  { title: 'Upload Centre', icon: 'mdi-cloud-upload', to: '/dashboard/upload-centre' },
+  { title: 'Performance', icon: 'mdi-speedometer', to: '/dashboard/performance' },
+  { title: 'Settings', icon: 'mdi-cog', to: '/dashboard/settings' },
+]
+
 const isDashboard = computed(() => {
   return route.path.startsWith('/dashboard') || route.path === '/admin-dashboard'
 })
 
 const currentMenuTitle = computed(() => {
   if (!isDashboard.value) return 'Dashboard'
-  const navItems = authStore.activeRole === 'teacher' ? teacherDashboardNavItems : dashboardNavItems
+  let navItems = dashboardNavItems;
+  if (authStore.activeRole === 'teacher') {
+    navItems = teacherDashboardNavItems;
+  } else if (authStore.activeRole === 'parent') {
+    navItems = parentDashboardNavItems;
+  }
   const currentItem = navItems.find(item => item.to === route.path)
   return currentItem ? currentItem.title : 'Dashboard'
+})
+
+const currentNavItems = computed(() => {
+  if (authStore.activeRole === 'teacher') return teacherDashboardNavItems;
+  if (authStore.activeRole === 'parent') return parentDashboardNavItems;
+  return dashboardNavItems;
 })
 </script>
 
@@ -140,7 +158,7 @@ const currentMenuTitle = computed(() => {
       
       <v-list density="compact" nav class="px-3">
         <template v-if="isDashboard && authStore.isAuthenticated">
-          <v-list-item v-for="(item, i) in (authStore.activeRole === 'teacher' ? teacherDashboardNavItems : dashboardNavItems)" :key="i" :to="item.to" :prepend-icon="item.icon" :title="item.title" class="mb-2 rounded-lg py-2 transition-all" active-class="bg-primary text-white font-weight-bold "></v-list-item>
+          <v-list-item v-for="(item, i) in currentNavItems" :key="i" :to="item.to" :prepend-icon="item.icon" :title="item.title" class="mb-2 rounded-lg py-2 transition-all" active-class="bg-primary text-white font-weight-bold "></v-list-item>
         </template>
         <template v-else>
           <v-list-item v-for="(item, i) in publicNavItems" :key="i" :to="item.to" :title="item.title" class="mb-2 rounded-lg py-2"></v-list-item>

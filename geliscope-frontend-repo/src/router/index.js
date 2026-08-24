@@ -137,6 +137,8 @@ router.beforeEach((to, from, next) => {
     next('/login')
   } else if ((to.path === '/login' || to.path === '/register') && authStore.isAuthenticated) {
     next('/dashboard')
+  } else if (authStore.isAuthenticated && authStore.activeRole === 'parent' && (to.path === '/dashboard/leaderboard' || to.path === '/dashboard/exam-archives')) {
+    next('/dashboard')
   } else {
     next()
   }
