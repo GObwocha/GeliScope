@@ -6,6 +6,7 @@ import LandingPage from '@/components/LandingPage.vue'
 import Login from '@/components/Login.vue'
 import Pricing from '@/components/Pricing.vue'
 import Register from '@/components/Register.vue'
+import VerifyEmail from '@/components/VerifyEmail.vue'
 import Settings from '@/components/Settings.vue'
 import Performance from '@/components/Performance.vue'
 import StudentProfileP from '@/components/StudentProfileP.vue'
@@ -64,6 +65,11 @@ const router = createRouter({
     {
       path: '/login',
       component: Login,
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/verify-email',
+      component: VerifyEmail,
       meta: { requiresAuth: false }
     },
     {

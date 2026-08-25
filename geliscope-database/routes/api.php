@@ -14,6 +14,8 @@ Route::prefix('v1')->group(function () {
     // Unprotected Routes (Login and Registration)
     Route::post('auth/check-email', [AuthController::class, 'checkEmail']);
     Route::post('auth/login', [AuthController::class, 'login']);
+    Route::post('auth/verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('auth/verify-email', [AuthController::class, 'verifyEmail']);
     //Google OAuth
     Route::get('/auth/google/redirect', [AuthController::class, 'googleRedirect']);
     Route::get('/auth/google/callback', [AuthController::class, 'googleCallback']);

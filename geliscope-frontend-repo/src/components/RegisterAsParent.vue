@@ -34,8 +34,7 @@ const submit = async () => {
  errorMsg.value = ''
  try {
  await axios.post('/api/v1/register-user', form.value)
- await authStore.login(form.value.email, form.value.password)
- router.push('/user-dashboard')
+ router.push('/login?registered=true')
  } catch (error) {
  console.error(error)
  if (error.response?.data?.errors) {

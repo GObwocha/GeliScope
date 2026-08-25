@@ -54,6 +54,8 @@ class UserController extends Controller
         try {
             DB::beginTransaction();
 
+            $token = \Illuminate\Support\Str::random(60);
+
             $user = User::create([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
@@ -62,7 +64,28 @@ class UserController extends Controller
                 'password' => Hash::make($validated['password']),
                 'role' => $validated['role'],
                 'profile_photo_url' => $validated['profile_photo_url'] ?? null,
+                'email_verification_token' => $token,
             ]);
+
+            $verificationLink = config('app.frontend_url') . '/verify-email?token=' . $token;
+
+            if (env('EMAILJS_SERVICE_ID') && env('EMAILJS_TEMPLATE_ID') && env('EMAILJS_PUBLIC_KEY')) {
+                try {
+                    \Illuminate\Support\Facades\Http::post('https://api.emailjs.com/api/v1.0/email/send', [
+                        'service_id' => env('EMAILJS_SERVICE_ID'),
+                        'template_id' => env('EMAILJS_TEMPLATE_ID'),
+                        'user_id' => env('EMAILJS_PUBLIC_KEY'),
+                        'template_params' => [
+                            'to_email' => $user->email,
+                            'message' => "Please verify your GeliScope email by clicking here: {$verificationLink}"
+                        ]
+                    ]);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('EmailJS verification failed: ' . $e->getMessage());
+                }
+            } else {
+                \Illuminate\Support\Facades\Log::info("EmailJS credentials missing. Simulated Verification Email to {$user->email}: {$verificationLink}");
+            }
 
             if ($validated['role'] === 'student') {
                 Student::create([
@@ -89,7 +112,10 @@ class UserController extends Controller
 
             DB::commit();
 
-            return response()->json($user->load(['student.school', 'student.skills', 'teacher.school', 'parentProfile']), 201);
+            return response()->json([
+                'user' => $user->load(['student.school', 'student.skills', 'teacher.school', 'parentProfile']),
+                'message' => 'Registration successful. Please check your email to verify your account.'
+            ], 201);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json(['message' => 'Failed to create user', 'error' => $e->getMessage()], 500);

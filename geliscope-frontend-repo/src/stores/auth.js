@@ -27,6 +27,26 @@ export const useAuthStore = defineStore('auth', {
       try {
         const response = await axios.post('/api/v1/auth/login', { email, password })
         
+        if (response.data.requires_otp) {
+          return response.data; // Return early, don't set tokens yet
+        }
+
+        this.user = response.data.user
+        this.token = response.data.token
+        
+        localStorage.setItem('geliscope_user', JSON.stringify(this.user))
+        localStorage.setItem('geliscope_token', this.token)
+        
+        return response.data
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async verifyOtp(email, password, otp) {
+      try {
+        const response = await axios.post('/api/v1/auth/verify-otp', { email, password, otp })
+        
         this.user = response.data.user
         this.token = response.data.token
         

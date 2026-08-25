@@ -37,7 +37,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Step 2: Login with password
+     * Step 2: Login with password (Sends OTP)
      */
     public function login(Request $request)
     {
@@ -46,7 +46,7 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
-        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile.students.user'])->where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
@@ -54,7 +54,91 @@ class AuthController extends Controller
             ]);
         }
 
-        // Delete all previous tokens (optional, but good for single-device sessions or general cleanup)
+        // Generate 6-digit OTP
+        $otp = sprintf("%06d", mt_rand(1, 999999));
+        $user->otp_code = $otp;
+        $user->otp_expires_at = now()->addMinutes(10);
+        $user->save();
+
+        // 1. Send via EmailJS (or log if credentials missing)
+        if (env('EMAILJS_SERVICE_ID') && env('EMAILJS_TEMPLATE_ID') && env('EMAILJS_PUBLIC_KEY')) {
+            try {
+                \Illuminate\Support\Facades\Http::post('https://api.emailjs.com/api/v1.0/email/send', [
+                    'service_id' => env('EMAILJS_SERVICE_ID'),
+                    'template_id' => env('EMAILJS_TEMPLATE_ID'),
+                    'user_id' => env('EMAILJS_PUBLIC_KEY'),
+                    'template_params' => [
+                        'to_email' => $user->email,
+                        'otp_code' => $otp,
+                        'message' => "Your GeliScope login OTP is: {$otp}"
+                    ]
+                ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('EmailJS failed: ' . $e->getMessage());
+            }
+        } else {
+            \Illuminate\Support\Facades\Log::info("EmailJS credentials not set. Simulated Email to {$user->email}: Your GeliScope login OTP is: {$otp}");
+        }
+
+        // 2. Send via Africa's Talking (SMS)
+        if ($user->phone_number && env('AFRICASTALKING_USERNAME') && env('AFRICASTALKING_API_KEY')) {
+            try {
+                \Illuminate\Support\Facades\Http::asForm()
+                    ->withHeaders([
+                        'Accept' => 'application/json',
+                        'apiKey' => env('AFRICASTALKING_API_KEY'),
+                    ])
+                    ->post('https://api.africastalking.com/version1/messaging', [
+                        'username' => env('AFRICASTALKING_USERNAME'),
+                        'to' => $user->phone_number,
+                        'message' => "Your GeliScope login OTP is: {$otp}",
+                    ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('AfricasTalking SMS failed: ' . $e->getMessage());
+            }
+        } else {
+            \Illuminate\Support\Facades\Log::info("AfricasTalking credentials not set. Simulated SMS to {$user->phone_number}: Your GeliScope login OTP is: {$otp}");
+        }
+
+        return response()->json([
+            'requires_otp' => true,
+            'message' => 'OTP sent to your email and phone number.',
+        ], 200);
+    }
+
+    /**
+     * Step 3: Verify OTP and complete login
+     */
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+            'otp' => 'required|string|size:6'
+        ]);
+
+        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile.students.user'])
+                    ->where('email', $request->email)
+                    ->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        if ($user->otp_code !== $request->otp || now()->greaterThan($user->otp_expires_at)) {
+            throw ValidationException::withMessages([
+                'otp' => ['The OTP is invalid or has expired.'],
+            ]);
+        }
+
+        // Clear OTP
+        $user->otp_code = null;
+        $user->otp_expires_at = null;
+        $user->save();
+
+        // Delete all previous tokens (optional)
         $user->tokens()->delete();
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -107,6 +191,36 @@ class AuthController extends Controller
     {
         $user = $request->user()->load(['student.school', 'student.skills', 'teacher.school', 'parentProfile.students.user']);
         return response()->json($user, 200);
+    }
+
+    /**
+     * Verify User Email
+     */
+    public function verifyEmail(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string'
+        ]);
+
+        $user = User::where('email_verification_token', $request->token)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Invalid or expired verification token.'], 400);
+        }
+
+        $user->email_verified_at = now();
+        $user->email_verification_token = null;
+        $user->save();
+
+        // Optional: auto-login after verification
+        $user->tokens()->delete();
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Email verified successfully.',
+            'user' => $user->load(['student.school', 'student.skills', 'teacher.school', 'parentProfile.students.user']),
+            'token' => $token,
+        ], 200);
     }
 
     /**
