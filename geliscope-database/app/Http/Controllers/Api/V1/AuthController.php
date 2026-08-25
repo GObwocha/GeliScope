@@ -61,12 +61,12 @@ class AuthController extends Controller
         $user->save();
 
         // 1. Send via EmailJS (or log if credentials missing)
-        if (env('EMAILJS_SERVICE_ID') && env('EMAILJS_TEMPLATE_ID') && env('EMAILJS_PUBLIC_KEY')) {
+        if (config('services.emailjs.service_id') && config('services.emailjs.template_id') && config('services.emailjs.public_key')) {
             try {
                 \Illuminate\Support\Facades\Http::post('https://api.emailjs.com/api/v1.0/email/send', [
-                    'service_id' => env('EMAILJS_SERVICE_ID'),
-                    'template_id' => env('EMAILJS_TEMPLATE_ID'),
-                    'user_id' => env('EMAILJS_PUBLIC_KEY'),
+                    'service_id' => config('services.emailjs.service_id'),
+                    'template_id' => config('services.emailjs.template_id'),
+                    'user_id' => config('services.emailjs.public_key'),
                     'template_params' => [
                         'to_email' => $user->email,
                         'otp_code' => $otp,
@@ -81,15 +81,15 @@ class AuthController extends Controller
         }
 
         // 2. Send via Africa's Talking (SMS)
-        if ($user->phone_number && env('AFRICASTALKING_USERNAME') && env('AFRICASTALKING_API_KEY')) {
+        if ($user->phone_number && config('services.africastalking.username') && config('services.africastalking.api_key')) {
             try {
                 \Illuminate\Support\Facades\Http::asForm()
                     ->withHeaders([
                         'Accept' => 'application/json',
-                        'apiKey' => env('AFRICASTALKING_API_KEY'),
+                        'apiKey' => config('services.africastalking.api_key'),
                     ])
                     ->post('https://api.africastalking.com/version1/messaging', [
-                        'username' => env('AFRICASTALKING_USERNAME'),
+                        'username' => config('services.africastalking.username'),
                         'to' => $user->phone_number,
                         'message' => "Your GeliScope login OTP is: {$otp}",
                     ]);

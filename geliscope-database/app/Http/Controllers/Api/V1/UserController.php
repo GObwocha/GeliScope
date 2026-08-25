@@ -69,12 +69,12 @@ class UserController extends Controller
 
             $verificationLink = config('app.frontend_url') . '/verify-email?token=' . $token;
 
-            if (env('EMAILJS_SERVICE_ID') && env('EMAILJS_TEMPLATE_ID') && env('EMAILJS_PUBLIC_KEY')) {
+            if (config('services.emailjs.service_id') && config('services.emailjs.template_id') && config('services.emailjs.public_key')) {
                 try {
                     \Illuminate\Support\Facades\Http::post('https://api.emailjs.com/api/v1.0/email/send', [
-                        'service_id' => env('EMAILJS_SERVICE_ID'),
-                        'template_id' => env('EMAILJS_TEMPLATE_ID'),
-                        'user_id' => env('EMAILJS_PUBLIC_KEY'),
+                        'service_id' => config('services.emailjs.service_id'),
+                        'template_id' => config('services.emailjs.template_id'),
+                        'user_id' => config('services.emailjs.public_key'),
                         'template_params' => [
                             'to_email' => $user->email,
                             'message' => "Please verify your GeliScope email by clicking here: {$verificationLink}"
