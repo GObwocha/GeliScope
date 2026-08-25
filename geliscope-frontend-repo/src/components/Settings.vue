@@ -24,7 +24,6 @@ const currentUser = computed(() => {
  school_id: 1,
  current_class_id: 2,
  date_of_birth: '',
- personal_motto: '',
 
  // Parent specific
  phone_number: '',
@@ -47,22 +46,6 @@ const activeTab = ref(0)
 const snackbar = ref(false)
 const errorMessage = ref('')
 const errorSnackbar = ref(false)
-
-const mottoFontType = ref(localStorage.getItem('motto_font_type') || 'Inter')
-const mottoFontSize = ref(localStorage.getItem('motto_font_size') || '16')
-const mottoFontColor = ref(localStorage.getItem('motto_font_color') || '#000000')
-
-const commonFonts = [
- 'Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 
- 'Poppins', 'Oswald', 'Arial', 'Times New Roman', 
- 'Courier New', 'Comic Sans MS'
-]
-
-const mottoError = computed(() => {
- if (!currentUser.value.personal_motto) return ''
- const words = currentUser.value.personal_motto.trim().split(/\s+/)
- return words.length > 7 ? 'Motto cannot exceed 7 words.' : ''
-})
 
 const teacherExams = ref([])
 const selectedMarkingExam = ref(null)
@@ -109,13 +92,42 @@ onMounted(() => {
 })
 
  const saveChanges = async () => {
-  if (mottoError.value) return
   loading.value = true
   
-  if (currentUser.value.role === 'student') {
-  localStorage.setItem('motto_font_type', mottoFontType.value)
-  localStorage.setItem('motto_font_size', mottoFontSize.value)
-  localStorage.setItem('motto_font_color', mottoFontColor.value)
+  try {
+    const payload = {
+      first_name: currentUser.value.first_name,
+      last_name: currentUser.value.last_name,
+      email: currentUser.value.email
+    }
+
+    if (currentUser.value.role === 'student') {
+      payload.admission_number = currentUser.value.student.admission_number
+      payload.school_id = currentUser.value.student.school_id
+      payload.current_class_id = currentUser.value.student.current_class_id
+      payload.date_of_birth = currentUser.value.student.date_of_birth
+    } else if (currentUser.value.role === 'parent') {
+      payload.phone_number = currentUser.value.phone_number
+      payload.occupation = currentUser.value.occupation
+    } else if (currentUser.value.role === 'teacher') {
+      payload.employee_number = currentUser.value.teacher.employee_number
+      payload.specialization = currentUser.value.teacher.specialization
+      payload.school_id = currentUser.value.teacher.school_id
+    }
+
+    const response = await axios.put(`/api/v1/users/${currentUser.value.id}`, payload, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+    
+    // Update local store
+    authStore.user = response.data
+    localStorage.setItem('geliscope_user', JSON.stringify(response.data))
+    
+    snackbar.value = true
+  } catch (error) {
+    console.error('Error saving user data:', error)
+    errorMessage.value = error.response?.data?.message || 'Failed to save settings'
+    errorSnackbar.value = true
   }
 
   if (currentUser.value.role === 'teacher' && selectedMarkingExam.value) {
@@ -133,9 +145,7 @@ onMounted(() => {
   }
 
   loading.value = false
-  snackbar.value = true
-  console.log('Settings saved:', currentUser.value)
-}
+ }
 
 // Avatar Upload Logic
 const fileInput = ref(null)
@@ -306,56 +316,6 @@ const removeAvatar = async () => {
  bg-color="background"
  density="comfortable"
  ></v-text-field>
-
- <template v-if="currentUser.role === 'student'">
- <v-divider class="my-6"></v-divider>
- <h3 class="text-h6 font-weight-bold mb-4">Personal Motto</h3>
- 
- <v-text-field
- v-model="currentUser.personal_motto"
- label="Your Motto (Max 7 words)"
- variant="outlined"
- bg-color="background"
- density="comfortable"
- :error-messages="mottoError"
- class="mb-4"
- ></v-text-field>
-
- <v-row dense>
- <v-col cols="12" sm="4">
- <v-autocomplete
- v-model="mottoFontType"
- :items="commonFonts"
- label="Font Type"
- variant="outlined"
- bg-color="background"
- density="comfortable"
- ></v-autocomplete>
- </v-col>
- <v-col cols="12" sm="4">
- <v-text-field
- v-model="mottoFontSize"
- label="Font Size (px, max 24)"
- type="number"
- max="24"
- variant="outlined"
- bg-color="background"
- density="comfortable"
- ></v-text-field>
- </v-col>
- <v-col cols="12" sm="4">
- <v-text-field
- v-model="mottoFontColor"
- label="Font Color"
- type="color"
- variant="outlined"
- bg-color="background"
- density="comfortable"
- class="motto-color-picker"
- ></v-text-field>
- </v-col>
- </v-row>
- </template>
 
  </v-window-item>
 
@@ -590,9 +550,5 @@ const removeAvatar = async () => {
 
 .sidebar-nav {
  min-width: 250px;
-}
-
-.motto-color-picker {
- height: 56px;
 }
 </style>
