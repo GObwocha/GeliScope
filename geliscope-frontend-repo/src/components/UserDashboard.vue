@@ -667,7 +667,7 @@ onMounted(() => {
   <!-- PARENT DASHBOARD WORKSPACE -->
  <div v-else-if="activeRole === 'parent'">
  <v-row>
- <v-col cols="12" lg="8">
+ <v-col cols="12">
  <v-card class="pa-6 rounded-3xl border bg-surface h-100 " elevation="4">
  <div class="d-flex flex-wrap justify-space-between align-center mb-6 gap-3">
  <div>
@@ -675,7 +675,7 @@ onMounted(() => {
  <v-icon color="accent" class="mr-2">mdi-home-heart</v-icon>
  Student To-Do List
  </h2>
- <p class="text-caption text-medium-emphasis mb-0">Bridging the diagnostic gap with actionable practice</p>
+ <p class="text-caption text-medium-emphasis mb-0">Pending to-do lists for enrolled student(s)</p>
  </div>
  
  <div class="d-flex gap-3 align-center">
@@ -697,7 +697,7 @@ onMounted(() => {
  <v-list-item v-bind="props" :title="item.user.first_name + ' ' + item.user.last_name"></v-list-item>
  </template>
  </v-select>
- <v-btn size="small" color="primary" variant="tonal" to="/dashboard/student-profile-parent">Full Parent Portal</v-btn>
+ <v-btn size="small" color="primary" variant="tonal" to="/dashboard/student-profile-parent" class="ml-5">Full Parent Portal</v-btn>
  </div>
  </div>
 
@@ -720,26 +720,6 @@ onMounted(() => {
  </v-card>
  </v-col>
 
- <v-col cols="12" lg="4">
- <v-card class="pa-6 rounded-3xl border bg-surface h-100 d-flex flex-column justify-space-between " elevation="4">
- <div>
- <h2 class="text-h5 font-weight-black mb-3 d-flex align-center">
- <v-icon color="success" class="mr-2">mdi-whatsapp</v-icon>
- Direct School Link
- </h2>
- <p class="text-subtitle-2 text-medium-emphasis mb-6">
- Connect instantly with your child's TSC subject teachers (John Kamau - Mathematics) to review recent diagnostic findings.
- </p>
- <div class="pa-4 rounded-2xl bg-surface border mb-4">
- <div class="font-weight-bold text-body-2">Mr. John Kamau (Mathematics)</div>
- <div class="text-caption text-medium-emphasis">Office Hours: Mon - Fri, 4:00 PM - 5:30 PM</div>
- </div>
- </div>
- <v-btn color="success" size="large" block prepend-icon="mdi-message-text" elevation="3" class="py-4 font-weight-bold rounded-xl">
- Message Teacher via WhatsApp
- </v-btn>
- </v-card>
- </v-col>
  </v-row>
  </div>
 
@@ -858,7 +838,7 @@ onMounted(() => {
  </h2>
  <p class="text-caption text-medium-emphasis mb-0">Structured ACID grade</p>
  </div>
- <v-btn v-if="currentUser.role !== 'parent'" color="primary" variant="tonal" to="/dashboard/leaderboard" class="align-self-start align-self-md-center">View Academic Leaderboard</v-btn>
+ <v-btn v-if="activeRole !== 'parent'" color="primary" variant="tonal" to="/dashboard/leaderboard" class="align-self-start align-self-md-center">View Academic Leaderboard</v-btn>
  </div>
 
  <div class="overflow-x-auto">

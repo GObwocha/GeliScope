@@ -384,10 +384,10 @@ const getBarColor = (score) => {
       label="Select Student"
     >
       <template v-slot:selection="{ item }">
-        {{ item.raw.user.first_name }}
+        {{ item.user.first_name }}
       </template>
       <template v-slot:item="{ props, item }">
-        <v-list-item v-bind="props" :title="item.raw.user.first_name + ' ' + item.raw.user.last_name"></v-list-item>
+        <v-list-item v-bind="props" :title="item.user.first_name + ' ' + item.user.last_name"></v-list-item>
       </template>
     </v-select>
   </div>
@@ -617,10 +617,10 @@ const getBarColor = (score) => {
             hide-details
           >
             <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :title="item.raw.user.first_name + ' ' + item.raw.user.last_name + ' (' + item.raw.admission_number + ')'"></v-list-item>
+              <v-list-item v-bind="props" :title="item.user.first_name + ' ' + item.user.last_name + ' (' + item.admission_number + ')'"></v-list-item>
             </template>
             <template v-slot:selection="{ item }">
-              {{ item.raw.user.first_name }} {{ item.raw.user.last_name }}
+              {{ item.user.first_name }} {{ item.user.last_name }}
             </template>
           </v-autocomplete>
 
@@ -674,10 +674,10 @@ const getBarColor = (score) => {
             :loading="loadingChildTeachers"
           >
             <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :title="item.raw.user.first_name + ' ' + item.raw.user.last_name"></v-list-item>
+              <v-list-item v-bind="props" :title="item.user.first_name + ' ' + item.user.last_name"></v-list-item>
             </template>
             <template v-slot:selection="{ item }">
-              {{ item.raw.user.first_name }} {{ item.raw.user.last_name }}
+              {{ item.user.first_name }} {{ item.user.last_name }}
             </template>
           </v-autocomplete>
 
