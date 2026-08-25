@@ -75,6 +75,7 @@ class UserController extends Controller
                         'service_id' => config('services.emailjs.service_id'),
                         'template_id' => config('services.emailjs.template_id'),
                         'user_id' => config('services.emailjs.public_key'),
+                        'accessToken' => config('services.emailjs.private_key'),
                         'template_params' => [
                             'to_email' => $user->email,
                             'message' => "Please verify your GeliScope email by clicking here: {$verificationLink}"
