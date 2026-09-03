@@ -69,7 +69,7 @@ const submit = async () => {
  v-model="form.first_name"
  label="First Name"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  :rules="[rules.required]"
  required
@@ -80,7 +80,7 @@ const submit = async () => {
  v-model="form.last_name"
  label="Last Name"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  :rules="[rules.required]"
  required
@@ -93,7 +93,7 @@ const submit = async () => {
  label="Email Address"
  type="email"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  :rules="[rules.required, rules.email]"
  required
@@ -103,7 +103,7 @@ const submit = async () => {
  v-model="form.phone_number"
  label="Phone Number"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  ></v-text-field>
 
@@ -112,7 +112,7 @@ const submit = async () => {
  label="Password"
  type="password"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  :rules="[rules.required, rules.min]"
  required
@@ -126,7 +126,7 @@ const submit = async () => {
  v-model="form.employee_number"
  label="Employee Number (TSC)"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  :rules="[rules.required]"
  required
@@ -137,7 +137,7 @@ const submit = async () => {
  v-model="form.specialization"
  label="Specialization (e.g., Mathematics)"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  ></v-text-field>
  </v-col>
@@ -150,7 +150,7 @@ const submit = async () => {
  item-value="id"
  label="Assigned School"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  :rules="[rules.required]"
  :loading="schoolStore.loading"

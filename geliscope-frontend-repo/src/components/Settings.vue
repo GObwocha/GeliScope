@@ -293,7 +293,7 @@ const removeAvatar = async () => {
  v-model="currentUser.first_name"
  label="First Name"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-col>
@@ -302,7 +302,7 @@ const removeAvatar = async () => {
  v-model="currentUser.last_name"
  label="Last Name"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-col>
@@ -313,7 +313,7 @@ const removeAvatar = async () => {
  label="Email Address"
  type="email"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
 
@@ -337,7 +337,7 @@ const removeAvatar = async () => {
  v-model="currentUser.student.admission_number"
  label="Admission Number"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  readonly
  hint="Contact admin to change"
@@ -350,7 +350,7 @@ const removeAvatar = async () => {
  label="Date of Birth"
  type="date"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-col>
@@ -364,7 +364,7 @@ const removeAvatar = async () => {
  item-value="id"
  label="School"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-select>
  </v-col>
@@ -376,7 +376,7 @@ const removeAvatar = async () => {
  item-value="id"
  label="Current Class"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-select>
  </v-col>
@@ -391,7 +391,7 @@ const removeAvatar = async () => {
  v-model="currentUser.teacher.employee_number"
  label="Employee Number (TSC)"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  readonly
  ></v-text-field>
@@ -401,7 +401,7 @@ const removeAvatar = async () => {
  v-model="currentUser.teacher.specialization"
  label="Specialization"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-col>
@@ -413,7 +413,7 @@ const removeAvatar = async () => {
  item-value="id"
  label="Assigned School"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  class="mt-4"
  ></v-select>
@@ -427,7 +427,7 @@ const removeAvatar = async () => {
  v-model="currentUser.phone_number"
  label="Phone Number"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-col>
@@ -436,7 +436,7 @@ const removeAvatar = async () => {
  v-model="currentUser.occupation"
  label="Occupation"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-col>
@@ -454,7 +454,7 @@ const removeAvatar = async () => {
  label="Current Password"
  type="password"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
 
@@ -462,7 +462,7 @@ const removeAvatar = async () => {
  label="New Password"
  type="password"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
 
@@ -470,7 +470,7 @@ const removeAvatar = async () => {
  label="Confirm New Password"
  type="password"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-window-item>
@@ -487,7 +487,7 @@ const removeAvatar = async () => {
  item-value="id"
  label="Select Exam"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  @update:modelValue="fetchMarkingConfig"
  ></v-select>
@@ -497,7 +497,7 @@ const removeAvatar = async () => {
  v-model="markingInstructionsText"
  label="Marking Instructions (Keywords, rules, expectations)"
  variant="outlined"
- bg-color="background"
+ 
  rows="6"
  hint="Example: Look out for formula derivation. Award partial marks for substitution."
  persistent-hint

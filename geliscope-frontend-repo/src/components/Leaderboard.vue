@@ -146,7 +146,7 @@ onMounted(async () => {
  item-value="id"
  variant="outlined"
  density="compact"
- bg-color="surface"
+
  hide-details
  @update:modelValue="fetchLeaderboard"
  >
