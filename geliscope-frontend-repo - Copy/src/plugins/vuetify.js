@@ -40,7 +40,7 @@ export default createVuetify({
       }
     }
   },
-  defaults: {
+    defaults: {
     VCard: {
       elevation: 4,
       rounded: 'xl'
@@ -52,12 +52,14 @@ export default createVuetify({
     VTextField: {
       variant: 'outlined',
       density: 'comfortable',
-      rounded: 'lg'
+      rounded: 'lg',
+      bgColor: 'transparent' // <-- Add this
     },
     VSelect: {
       variant: 'outlined',
       density: 'comfortable',
-      rounded: 'lg'
+      rounded: 'lg',
+      bgColor: 'transparent' // <-- Add this
     }
   }
 })

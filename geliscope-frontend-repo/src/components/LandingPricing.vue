@@ -1,141 +1,179 @@
+<script setup>
+import { ref } from 'vue'
+
+const plans = ref([
+  {
+    name: "Starter",
+    description: "The essential companion for individual scholars.",
+    price: "$9",
+    period: "/ per month",
+    features: [
+      "1 Student Account",
+      "Up to 1,000 AI tutoring prompts / mo",
+      "Text-only knowledge base exploration",
+      "Basic weekly parent digest",
+      "Standard email support"
+    ],
+    buttonText: "Get Started",
+    buttonVariant: "outlined",
+    featured: false
+  },
+  {
+    name: "Most Popular",
+    badge: "Recommended",
+    description: "The optimal plan for accelerated student excellence & parents.",
+    price: "$29",
+    period: "/ per month",
+    features: [
+      "Up to 3 Student Accounts + 2 Parent Seats",
+      "Unlimited conversational tutoring",
+      "Voice input & spoken feedback",
+      "Real-Time Emotional & Mastery Radar",
+      "Multi-language instant translation",
+      "24/7 Priority tutoring engine access"
+    ],
+    buttonText: "Try Most Popular",
+    buttonVariant: "elevated",
+    featured: true
+  },
+  {
+    name: "Enterprise / School",
+    description: "Full-scale intelligence for schools and districts.",
+    price: "Custom",
+    period: "/ billed yearly",
+    features: [
+      "Unlimited Student, Parent & Teacher Seats",
+      "Autonomous grading & curriculum alignment",
+      "District-wide security compliance (FERPA & GDPR)",
+      "Dedicated Success Manager & API Integration",
+      "Custom fine-tuned pedagogical models"
+    ],
+    buttonText: "Talk to Sales",
+    buttonVariant: "outlined",
+    featured: false
+  }
+])
+</script>
+
 <template>
-<!-- BEGIN: PricingSection -->
-<section class="py-24 px-4 sm:px-6 max-w-7xl mx-auto relative" id="pricing">
-<!-- Pricing Header mirroring IMAGE_4 -->
-<div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-<div>
-<span class="text-xs uppercase tracking-widest text-brand-cyan font-semibold block mb-2">Transparent Plans</span>
-<h2 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            Select a plan that suits <br class="hidden sm:inline"/> your learning journey.
-          </h2>
-</div>
-<p class="text-brand-muted text-sm sm:text-base max-w-md">
-          Simple, transparent pricing built for individual students, families, or full educational districts.
-        </p>
-</div>
-<!-- 3 Tier Cards matching IMAGE_4 -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
-<!-- Card 1: Starter -->
-<div class="glass-panel rounded-3xl p-8 flex flex-col justify-between hover:border-white/20 transition-all duration-300">
-<div>
-<span class="text-xs font-semibold uppercase tracking-wider text-brand-muted block">Starter</span>
-<p class="text-xs text-brand-muted mt-1">The essential companion for individual scholars.</p>
-<div class="mt-6 mb-6 flex items-baseline gap-1">
-<span class="text-4xl font-extrabold text-white font-heading">$9</span>
-<span class="text-xs text-brand-muted">/ per month</span>
-</div>
-<a class="w-full block text-center py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-semibold tracking-wider uppercase text-white transition-colors" href="#demo">
-              Get Started
-            </a>
-<!-- Checklist -->
-<ul class="mt-8 space-y-3.5 text-xs text-brand-muted border-t border-white/5 pt-6">
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>1 Student Account</span>
-</li>
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>Up to 1,000 AI tutoring prompts / mo</span>
-</li>
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>Text-only knowledge base exploration</span>
-</li>
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>Basic weekly parent digest</span>
-</li>
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>Standard email support</span>
-</li>
-</ul>
-</div>
-</div>
-<!-- Card 2: Most Popular (Featured with glowing background matching IMAGE_4) -->
-<div class="glass-panel-glow rounded-3xl p-8 flex flex-col justify-between relative transform lg:-translate-y-2">
-<!-- Aurora vertical beam pattern inside the featured card -->
-<div class="absolute inset-0 bg-gradient-to-b from-brand-cyan/15 via-brand-purple/10 to-transparent rounded-3xl pointer-events-none"></div>
-<div class="relative z-10">
-<div class="flex justify-between items-center">
-<span class="text-xs font-semibold uppercase tracking-wider text-brand-cyan">Most Popular</span>
-<span class="px-2.5 py-0.5 rounded-full bg-brand-cyan/20 border border-brand-cyan/40 text-[10px] uppercase font-bold text-brand-cyan tracking-wider">Recommended</span>
-</div>
-<p class="text-xs text-brand-muted mt-1">The optimal plan for accelerated student excellence &amp; parents.</p>
-<div class="mt-6 mb-6 flex items-baseline gap-1">
-<span class="text-4xl font-extrabold text-white font-heading">$29</span>
-<span class="text-xs text-brand-muted">/ per month</span>
-</div>
-<a class="w-full block text-center py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-brand-cyan hover:from-blue-500 hover:to-cyan-300 text-xs font-semibold tracking-wider uppercase text-white shadow-lg shadow-cyan-500/25 transition-all" href="#demo">
-              Try Most Popular
-            </a>
-<!-- Checklist -->
-<ul class="mt-8 space-y-3.5 text-xs text-slate-300 border-t border-white/10 pt-6">
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>Up to 3 Student Accounts + 2 Parent Seats</span>
-</li>
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>Unlimited conversational tutoring</span>
-</li>
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>Voice input &amp; spoken feedback</span>
-</li>
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>Real-Time Emotional &amp; Mastery Radar</span>
-</li>
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>Multi-language instant translation</span>
-</li>
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>24/7 Priority tutoring engine access</span>
-</li>
-</ul>
-</div>
-</div>
-<!-- Card 3: Enterprise / District -->
-<div class="glass-panel rounded-3xl p-8 flex flex-col justify-between hover:border-white/20 transition-all duration-300">
-<div>
-<span class="text-xs font-semibold uppercase tracking-wider text-brand-muted block">Enterprise / School</span>
-<p class="text-xs text-brand-muted mt-1">Full-scale intelligence for schools and districts.</p>
-<div class="mt-6 mb-6 flex items-baseline gap-1">
-<span class="text-4xl font-extrabold text-white font-heading">Custom</span>
-<span class="text-xs text-brand-muted">/ billed yearly</span>
-</div>
-<a class="w-full block text-center py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-semibold tracking-wider uppercase text-white transition-colors" href="#demo">
-              Talk to Sales
-            </a>
-<!-- Checklist -->
-<ul class="mt-8 space-y-3.5 text-xs text-brand-muted border-t border-white/5 pt-6">
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>Unlimited Student, Parent &amp; Teacher Seats</span>
-</li>
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>Autonomous grading &amp; curriculum alignment</span>
-</li>
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>District-wide security compliance (FERPA &amp; GDPR)</span>
-</li>
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>Dedicated Success Manager &amp; API Integration</span>
-</li>
-<li class="flex items-center gap-2.5">
-<svg class="w-4 h-4 text-brand-cyan shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<span>Custom fine-tuned pedagogical models</span>
-</li>
-</ul>
-</div>
-</div>
-</div>
-</section>
-<!-- END: PricingSection -->
+  <v-container class="py-16 max-w-7xl mx-auto" id="pricing">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <h2 class="text-h3 font-weight-black text-white font-heading">
+        Straightforward, transparent pricing
+      </h2>
+    </div>
+    
+    <v-row class="align-stretch">
+      <v-col 
+        cols="12" 
+        md="4" 
+        v-for="(plan, index) in plans" 
+        :key="index"
+        :class="plan.featured ? 'mt-md-n4' : ''"
+      >
+        <v-card 
+          class="h-100 d-flex flex-column rounded-xl pa-8 transition-all"
+          :class="plan.featured ? 'glass-panel-glow border-primary' : 'glass-panel border'"
+          elevation="0"
+        >
+          <!-- Aurora background for featured -->
+          <div v-if="plan.featured" class="featured-bg"></div>
+
+          <div class="position-relative z-10 flex-grow-1">
+            <div class="d-flex justify-space-between align-center mb-1">
+              <span class="text-caption font-weight-bold text-uppercase tracking-wider" :class="plan.featured ? 'text-secondary' : 'text-medium-emphasis'">
+                {{ plan.name }}
+              </span>
+              <v-chip 
+                v-if="plan.badge" 
+                color="secondary" 
+                variant="outlined" 
+                size="x-small" 
+                class="font-weight-bold text-uppercase"
+              >
+                {{ plan.badge }}
+              </v-chip>
+            </div>
+            
+            <p class="text-caption text-medium-emphasis mb-6 lh-relaxed">
+              {{ plan.description }}
+            </p>
+            
+            <div class="d-flex align-baseline gap-1 mb-8">
+              <span class="text-h3 font-weight-black text-white font-heading">{{ plan.price }}</span>
+              <span class="text-caption text-medium-emphasis">{{ plan.period }}</span>
+            </div>
+            
+            <v-btn 
+              block 
+              :color="plan.featured ? 'secondary' : 'white'" 
+              :variant="plan.buttonVariant"
+              class="rounded-lg text-uppercase font-weight-bold tracking-wider mb-8"
+              :class="plan.featured ? 'featured-btn' : 'opacity-80'"
+              href="#demo"
+            >
+              {{ plan.buttonText }}
+            </v-btn>
+            
+            <div class="border-t pt-6">
+              <ul class="list-unstyled space-y-4 text-caption text-medium-emphasis">
+                <li class="d-flex align-start gap-3" v-for="(feat, fIndex) in plan.features" :key="fIndex">
+                  <v-icon color="secondary" size="small" class="mt-1">mdi-check</v-icon>
+                  <span>{{ feat }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
+
+<style scoped>
+.border-t { border-top: 1px solid rgba(255, 255, 255, 0.05) !important; }
+.border { border: 1px solid rgba(255, 255, 255, 0.05) !important; }
+.border-primary { border: 1px solid rgba(34, 211, 238, 0.35) !important; }
+.max-w-7xl { max-width: 1280px; }
+.max-w-2xl { max-width: 672px; }
+.lh-relaxed { line-height: 1.5; }
+.tracking-wider { letter-spacing: 0.05em; }
+.gap-1 { gap: 4px; }
+.gap-3 { gap: 12px; }
+.space-y-4 > li { margin-bottom: 16px; }
+.list-unstyled { list-style-type: none; padding-left: 0; }
+.opacity-80 { opacity: 0.8; }
+.z-10 { z-index: 10; }
+
+.glass-panel {
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.6) 0%, rgba(17, 24, 39, 0.8) 100%) !important;
+  backdrop-filter: blur(16px);
+}
+.glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.glass-panel-glow {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+  box-shadow: 0 0 35px -5px rgba(34, 211, 238, 0.25);
+}
+
+.featured-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to bottom, rgba(34, 211, 238, 0.15), rgba(139, 92, 246, 0.1), transparent);
+  border-radius: 24px;
+  pointer-events: none;
+}
+
+.featured-btn {
+  background: linear-gradient(to right, #2563EB, #22D3EE) !important;
+  color: white !important;
+  border: none !important;
+  transition: all 0.3s ease;
+}
+.featured-btn:hover {
+  box-shadow: 0 10px 15px -3px rgba(34, 211, 238, 0.3);
+  opacity: 0.9;
+}
+</style>

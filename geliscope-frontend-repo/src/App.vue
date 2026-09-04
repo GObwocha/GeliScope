@@ -82,7 +82,7 @@ const currentNavItems = computed(() => {
   <v-app class="app-container">
     
     <!-- Public App Bar (Modern Floating Pill) -->
-    <v-app-bar v-if="!isDashboard" color="transparent" elevation="0" height="100">
+    <v-app-bar v-if="!isDashboard" color="transparent" elevation="0" height="100" class="aurora-bg ">
       <v-card class="mx-auto rounded-pill d-flex align-center px-4 px-md-8 w-100 border-opacity-10" max-width="1100" height="70"  elevation="8">
         <v-app-bar-nav-icon @click="drawer = !drawer" class="hidden-md-and-up"></v-app-bar-nav-icon>
         
@@ -201,8 +201,6 @@ const currentNavItems = computed(() => {
 
     <!-- Main Content Area -->
     <v-main class="bg-background position-relative w-100">
-      <div class="glow-blur-purple" style="top: -100px; left: -100px;"></div>
-      <div class="glow-blur-green" style="top: 40%; right: -150px;"></div>
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
@@ -211,7 +209,7 @@ const currentNavItems = computed(() => {
     </v-main>
 
     <!-- Footer -->
-    <v-footer v-if="!isDashboard" border="top" class="bg-background d-flex flex-column align-center text-center py-8 mt-16 border-opacity-10">
+    <!-- <v-footer v-if="!isDashboard" border="top" class="bg-background d-flex flex-column align-center text-center py-8 mt-16 border-opacity-10">
       <div class="d-flex align-center mb-4">
         <v-avatar color="secondary" size="24" class="mr-2" rounded="sm">
           <v-icon color="background" size="x-small">mdi-shield-check</v-icon>
@@ -224,7 +222,7 @@ const currentNavItems = computed(() => {
       <div class="text-caption text-muted mt-2">
         &copy; {{ new Date().getFullYear() }} GeliScope &mdash; All Rights Reserved
       </div>
-    </v-footer>
+    </v-footer> -->
   </v-app>
 </template>
 
@@ -249,5 +247,10 @@ const currentNavItems = computed(() => {
 }
 .tracking-widest {
   letter-spacing: 0.1em;
+}
+.aurora-bg {
+  background: 
+    radial-gradient(ellipse 65% 55% at 50% -10%, rgba(34, 211, 238, 0.22) 0%, rgba(139, 92, 246, 0.28) 45%, rgba(11, 17, 32, 0) 100%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 2px, transparent 2px, transparent 64px);
 }
 </style>

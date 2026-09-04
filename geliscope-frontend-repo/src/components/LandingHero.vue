@@ -1,109 +1,235 @@
 <template>
-<!-- BEGIN: HeroSection -->
-<section class="relative min-h-screen pt-36 pb-24 aurora-bg flex flex-col justify-center items-center px-4 sm:px-6 overflow-hidden" id="hero">
-<!-- Glow ambient light bar atop the section -->
-<div class="absolute top-20 left-1/2 -translate-x-1/2 w-3/4 max-w-4xl h-72 bg-gradient-to-b from-brand-cyan/25 via-brand-purple/20 to-transparent blur-3xl pointer-events-none -z-10"></div>
-<!-- Hero Header & Tag -->
-<div class="max-w-4xl mx-auto text-center space-y-6">
-<!-- Floating Pill Badge -->
-<div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md shadow-inner text-xs uppercase tracking-widest text-brand-lavender font-medium animate-pulse">
-<span class="w-2 h-2 rounded-full bg-brand-cyan animate-ping"></span>
-          Next-Gen Educational AI
-        </div>
-<!-- Main Headline -->
-<h1 class="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white leading-[1.12]">
-          AI Educational Intelligence <br class="hidden sm:inline"/>
-<span class="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-brand-cyan">That Never Sleeps</span>
-</h1>
-<!-- Subheadline text -->
-<p class="text-brand-muted text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-normal">
-          Empowering students with 24/7 personalized tutoring, keeping parents seamlessly informed, and liberating teachers with autonomous grading &amp; curriculum insights.
-        </p>
-<!-- CTA Trigger Button (IMAGE_6 Style) -->
-<div class="pt-2 flex justify-center">
-<a class="px-8 py-3.5 bg-white text-brand-dark rounded-full font-semibold text-sm tracking-wider uppercase shadow-[0_0_30px_rgba(255,255,255,0.35)] hover:shadow-[0_0_40px_rgba(34,211,238,0.5)] transition-all duration-300 hover:scale-105 active:scale-95" href="#demo">
-            Book a Demo
-          </a>
-</div>
-</div>
-<!-- Interactive AI Chat Interface Preview Window (Faithful to IMAGE_6) -->
-<div class="w-full max-w-3xl mt-14 px-2">
-<div class="relative rounded-2xl p-[1.5px] bg-gradient-to-r from-brand-cyan/70 via-brand-purple/50 to-brand-cyan/60 shadow-[0_10px_60px_rgba(34,211,238,0.18)]">
-<div class="bg-[#0e1628] rounded-[15px] p-5 sm:p-7 space-y-5">
-<!-- Window Title bar / Status -->
-<div class="flex items-center justify-between border-b border-white/5 pb-3">
-<div class="flex items-center space-x-2">
-<span class="h-2.5 w-2.5 rounded-full bg-brand-cyan animate-pulse"></span>
-<span class="text-xs font-mono tracking-wider text-brand-muted uppercase">AI Learning Session • Live 24/7</span>
-</div>
-<div class="flex space-x-1.5">
-<span class="w-2.5 h-2.5 rounded-full bg-white/10"></span>
-<span class="w-2.5 h-2.5 rounded-full bg-white/10"></span>
-<span class="w-2.5 h-2.5 rounded-full bg-white/10"></span>
-</div>
-</div>
-<!-- Greeting Prompt Message Display -->
-<div class="min-h-[110px] flex items-start space-x-3 text-left">
-<div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-tr from-brand-purple to-brand-cyan flex items-center justify-center text-xs font-bold text-white shadow-md shadow-brand-purple/30">
-                G
-              </div>
-<div class="bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm px-4 py-3 text-sm sm:text-base text-slate-100 max-w-xl shadow-sm">
-<p class="font-medium">
-                  Hi 👋 How can <span class="text-brand-cyan font-semibold">GeliScope</span> assist your learning today?
-                </p>
-<p class="text-xs text-brand-muted mt-1.5">
-                  Suggested: Explain Quantum Physics basics, review my calculus proof, or summarize AP History Chapter 4.
-                </p>
-</div>
-</div>
-<!-- Chat Mock Console Input Field -->
-<div class="relative flex items-center rounded-xl bg-slate-900/90 border border-white/10 px-4 py-3 text-brand-muted focus-within:border-brand-cyan/60 transition-colors">
-<button aria-label="Add attachment" class="text-brand-muted hover:text-white transition-colors pr-3" type="button">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-</svg>
-</button>
-<input class="w-full bg-transparent border-0 p-0 text-sm text-white placeholder:text-slate-500 focus:ring-0 focus:outline-none" placeholder="Ask any question, paste homework problems, or request a syllabus rubric..." type="text"/>
-<!-- Input Action icons: Microphone and Send spark -->
-<div class="flex items-center space-x-3 pl-3 border-l border-white/10 text-brand-muted">
-<button aria-label="Voice input" class="hover:text-brand-cyan transition-colors" type="button">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-<path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-</svg>
-</button>
-<button aria-label="Submit prompt" class="text-brand-cyan hover:scale-110 transition-transform" type="button">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-</svg>
-</button>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Partner Logo Grid (From IMAGE_6) -->
-<div class="w-full max-w-5xl mt-20 pt-8 border-t border-white/5 flex flex-wrap items-center justify-around gap-6 text-slate-500 opacity-70">
-<div class="flex items-center space-x-2 font-mono text-xs tracking-wider">
-<span class="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block"></span>
-<span>OXFORD STEM</span>
-</div>
-<div class="flex items-center space-x-2 font-mono text-xs tracking-wider">
-<span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
-<span>CAMBRIDGE AI</span>
-</div>
-<div class="flex items-center space-x-2 font-mono text-xs tracking-wider">
-<span class="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block"></span>
-<span>HARVARD EDTECH</span>
-</div>
-<div class="flex items-center space-x-2 font-mono text-xs tracking-wider">
-<span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-<span>STANFORD LABS</span>
-</div>
-<div class="flex items-center space-x-2 font-mono text-xs tracking-wider">
-<span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
-<span>MIT HORIZON</span>
-</div>
-</div>
-</section>
-<!-- END: HeroSection -->
+  <v-sheet class="position-relative d-flex flex-column justify-center align-center min-h-screen px-4 px-sm-6 overflow-hidden aurora-bg " id="hero">
+    <!-- Glow ambient light bar atop the v-sheet -->
+    <div class="ambient-glow"></div>
+    
+    <!-- Hero Header & Tag -->
+    <div class="max-w-4xl mx-auto text-center mt-12 mb-12">
+      <!-- Floating Pill Badge -->
+      <div class="pill-badge d-inline-flex align-center gap-2 px-4 py-2 rounded-pill border shadow-inner mb-6">
+        <span class="dot bg-secondary animate-ping"></span>
+        <span class="text-caption text-uppercase font-weight-bold text-accent tracking-widest">Next-Gen Educational AI</span>
+      </div>
+      
+      <!-- Main Headline -->
+      <h1 class="text-h3 sm-text-h2 md-text-h1 font-weight-black text-white lh-tight mb-6 tracking-tight">
+        AI Educational Intelligence <br class="d-none d-sm-inline"/>
+        <span class="text-gradient">That Never Sleeps</span>
+      </h1>
+      
+      <!-- Subheadline text -->
+      <p class="text-body-1 text-medium-emphasis max-w-2xl mx-auto lh-relaxed mb-8">
+        Empowering students with 24/7 personalized tutoring, keeping parents seamlessly informed, and liberating teachers with autonomous grading & curriculum insights.
+      </p>
+      
+      <!-- CTA Trigger Button -->
+      <v-btn 
+        color="white" 
+        variant="flat" 
+        class="rounded-pill text-uppercase font-weight-bold demo-btn" 
+        size="x-large"
+        to="/register"
+      >
+        Get Started
+      </v-btn>
+    </div>
+
+    <!-- Interactive AI Chat Interface Preview Window -->
+    <div class="w-100 max-w-3xl mt-12 px-2">
+      <div class="chat-wrapper rounded-xl p-0.5 shadow-xl">
+        <v-card class="chat-inner rounded-lg pa-5 pa-sm-7 bg-surface" elevation="0">
+          
+          <!-- Window Title bar / Status -->
+          <div class="d-flex align-center justify-space-between border-b pb-3 mb-5">
+            <div class="d-flex align-center gap-2">
+              <span class="dot-sm bg-secondary animate-pulse"></span>
+              <span class="text-caption font-mono tracking-wider text-medium-emphasis text-uppercase">AI Learning Session • Live 24/7</span>
+            </div>
+            <div class="d-flex gap-1">
+              <span class="dot-sm bg-white opacity-10"></span>
+              <span class="dot-sm bg-white opacity-10"></span>
+              <span class="dot-sm bg-white opacity-10"></span>
+            </div>
+          </div>
+          
+          <!-- Greeting Prompt Message Display -->
+          <div class="d-flex align-start gap-3 text-left mb-6 min-h-msg">
+            <v-avatar class="avatar-gradient shadow-md" size="32">
+              <span class="text-caption font-weight-bold text-white">G</span>
+            </v-avatar>
+            <div class="msg-bubble rounded-xl rounded-ts-sm px-4 py-3">
+              <p class="text-body-2 sm-text-body-1 text-white font-weight-medium mb-1">
+                Hi 👋 How can <span class="text-secondary font-weight-bold">GeliScope</span> assist your learning today?
+              </p>
+              <p class="text-caption text-medium-emphasis">
+                Suggested: Explain Quantum Physics basics, review my calculus proof, or summarize AP History Chapter 4.
+              </p>
+            </div>
+          </div>
+          
+          <!-- Chat Mock Console Input Field -->
+          <div class="input-console d-flex align-center rounded-xl border px-4 py-3 transition-colors">
+            <v-btn icon variant="text" density="comfortable" class="text-medium-emphasis mr-2">
+              <v-icon>mdi-paperclip</v-icon>
+            </v-btn>
+            <input 
+              type="text" 
+              class="flex-grow-1 bg-transparent border-0 text-white text-body-2 outline-none" 
+              placeholder="Ask any question, paste homework problems, or request a syllabus rubric..." 
+            />
+            <div class="d-flex align-center gap-2 pl-3 border-l text-medium-emphasis">
+              <v-btn icon variant="text" density="comfortable" color="secondary" class="opacity-80">
+                <v-icon>mdi-microphone</v-icon>
+              </v-btn>
+              <v-btn icon variant="text" density="comfortable" color="secondary">
+                <v-icon class="hover-scale">mdi-send</v-icon>
+              </v-btn>
+            </div>
+          </div>
+          
+        </v-card>
+      </div>
+    </div>
+
+    <!-- Partner Logo Grid -->
+    <div class="w-100 max-w-5xl mt-16 pt-8 border-t d-flex flex-wrap align-center justify-space-around gap-6 text-medium-emphasis opacity-70">
+      <div class="d-flex align-center gap-2 font-mono text-caption tracking-wider">
+        <span class="dot-sm bg-primary"></span>
+        <span>OXFORD STEM</span>
+      </div>
+      <div class="d-flex align-center gap-2 font-mono text-caption tracking-wider">
+        <span class="dot-sm bg-error"></span>
+        <span>CAMBRIDGE AI</span>
+      </div>
+      <div class="d-flex align-center gap-2 font-mono text-caption tracking-wider">
+        <span class="dot-sm bg-secondary"></span>
+        <span>HARVARD EDTECH</span>
+      </div>
+      <div class="d-flex align-center gap-2 font-mono text-caption tracking-wider">
+        <span class="dot-sm bg-warning"></span>
+        <span>STANFORD LABS</span>
+      </div>
+      <div class="d-flex align-center gap-2 font-mono text-caption tracking-wider">
+        <span class="dot-sm bg-info"></span>
+        <span>MIT HORIZON</span>
+      </div>
+    </div>
+  </v-sheet>
 </template>
+
+<style scoped>
+.min-h-screen { min-height: 100vh; }
+.max-w-5xl { max-width: 1024px; }
+.max-w-4xl { max-width: 896px; }
+.max-w-3xl { max-width: 768px; }
+.max-w-2xl { max-width: 672px; }
+.w-100 { width: 100%; }
+
+.gap-1 { gap: 4px; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-6 { gap: 24px; }
+
+.lh-tight { line-height: 1.12; }
+.lh-relaxed { line-height: 1.625; }
+.tracking-widest { letter-spacing: 0.1em; }
+.tracking-tight { letter-spacing: -0.025em; }
+
+.border { border: 1px solid rgba(255, 255, 255, 0.1); }
+.border-b { border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+.border-t { border-top: 1px solid rgba(255, 255, 255, 0.05); }
+.border-l { border-left: 1px solid rgba(255, 255, 255, 0.1); }
+.opacity-10 { opacity: 0.1; }
+
+.ambient-glow {
+  position: absolute;
+  top: 80px; left: 50%;
+  transform: translateX(-50%);
+  width: 75%; max-width: 896px; height: 288px;
+  background: linear-gradient(to bottom, rgba(34, 211, 238, 0.25), rgba(139, 92, 246, 0.2), transparent);
+  filter: blur(64px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pill-badge {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot-sm { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+.animate-ping { animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; }
+@keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+.animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+@keyframes pulse { 50% { opacity: .5; } }
+
+.text-gradient {
+  background: linear-gradient(to right, #ffffff, #f1f5f9, #22D3EE);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.demo-btn {
+  letter-spacing: 1px;
+  color: #0B1120 !important;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.35);
+  transition: all 0.3s ease;
+}
+.demo-btn:hover {
+  box-shadow: 0 0 40px rgba(34, 211, 238, 0.5);
+  transform: scale(1.05);
+}
+
+.chat-wrapper {
+  background: linear-gradient(to right, rgba(34, 211, 238, 0.7), rgba(139, 92, 246, 0.5), rgba(34, 211, 238, 0.6));
+  box-shadow: 0 10px 60px rgba(34, 211, 238, 0.18);
+  padding: 1.5px;
+}
+.chat-inner {
+  background-color: #0e1628 !important;
+}
+
+.avatar-gradient {
+  background: linear-gradient(to top right, #8B5CF6, #22D3EE);
+  box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.3);
+}
+
+.msg-bubble {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 36rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+.rounded-ts-sm {
+  border-top-left-radius: 4px !important;
+}
+.min-h-msg {
+  min-height: 110px;
+}
+
+.input-console {
+  background-color: rgba(15, 23, 42, 0.9);
+}
+.input-console:focus-within {
+  border-color: rgba(34, 211, 238, 0.6) !important;
+}
+.outline-none:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+.hover-scale {
+  transition: transform 0.2s;
+}
+.hover-scale:hover {
+  transform: scale(1.1);
+}
+.aurora-bg {
+  background: 
+    radial-gradient(ellipse 65% 55% at 50% -10%, rgba(34, 211, 238, 0.22) 0%, rgba(139, 92, 246, 0.28) 45%, rgba(11, 17, 32, 0) 100%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 2px, transparent 2px, transparent 64px);
+}
+</style>

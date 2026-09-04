@@ -1,118 +1,146 @@
 <template>
-<!-- BEGIN: FooterCallToAction -->
-<!-- Faithfully reproduces IMAGE_2: Floating sphere, vertical light curtain, clean typography, large watermark -->
-<section class="relative pt-24 pb-16 aurora-footer border-t border-white/10 overflow-hidden" id="demo">
-<!-- Center Glowing Sphere (IMAGE_2 Style) -->
-<div class="flex flex-col items-center justify-center text-center px-4 max-w-3xl mx-auto relative z-10">
-<div class="w-14 h-14 rounded-full glow-orb mb-8 animate-bounce transition-transform duration-700"></div>
-<h2 class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight font-heading mb-4">
+  <v-footer class="aurora-footer text-white d-flex flex-column pb-0 px-0 mt-16 position-relative overflow-hidden border-t" color="transparent" id="demo">
+    
+    <!-- Center Glowing Sphere CTA -->
+    <v-container class="pt-16 pb-12 text-center position-relative z-10 max-w-3xl">
+      <div class="d-flex flex-column align-center justify-center">
+        <div class="glow-orb mb-8 animate-bounce transition-transform"></div>
+        <h2 class="text-h2 font-weight-black text-white font-heading mb-4 tracking-tight">
           Let's talk
         </h2>
-<p class="text-brand-muted text-sm sm:text-base max-w-md mx-auto mb-8 font-normal leading-relaxed">
+        <p class="text-medium-emphasis text-body-1 max-w-md mx-auto mb-8 lh-relaxed">
           Launch your AI educational intelligence assistant and elevate the modern classroom today.
         </p>
-<!-- CTA Pill Button -->
-<a class="px-8 py-3 bg-white text-brand-dark rounded-full font-semibold text-xs uppercase tracking-wider shadow-[0_0_35px_rgba(255,255,255,0.4)] hover:shadow-[0_0_50px_rgba(34,211,238,0.6)] hover:scale-105 transition-all" href="#demo">
+        <v-btn 
+          color="white" 
+          variant="flat" 
+          class="rounded-pill text-uppercase font-weight-bold demo-btn" 
+          size="x-large"
+          href="#demo"
+        >
           Book a Demo
-        </a>
-</div>
-<!-- Links Grid mirroring IMAGE_2 layout -->
-<div class="max-w-7xl mx-auto px-6 mt-24 pt-12 border-t border-white/10 grid grid-cols-1 md:grid-cols-12 gap-8 text-xs relative z-10">
-<!-- Left Brand Description -->
-<div class="md:col-span-6 space-y-4">
-<div class="flex items-center gap-2">
-<span class="font-heading font-extrabold text-lg text-white">Geli<span class="text-brand-cyan">Scope</span></span>
-</div>
-<p class="text-brand-muted max-w-sm leading-relaxed">
+        </v-btn>
+      </div>
+    </v-container>
+
+    <!-- Links Grid -->
+    <v-container class="mt-8 pt-12 border-t max-w-7xl position-relative z-10">
+      <v-row>
+        <!-- Left Brand Description -->
+        <v-col cols="12" md="6" class="mb-8 mb-md-0">
+          <div class="d-flex align-center gap-2 mb-4">
+            <span class="text-h6 font-weight-black text-white font-heading">
+              Geli<span class="text-secondary">Scope</span>
+            </span>
+          </div>
+          <p class="text-medium-emphasis text-body-2 max-w-sm lh-relaxed">
             Your 24/7 educational intelligence platform — ready to empower students, inform parents, and elevate teachers.
           </p>
-</div>
-<!-- Links Column 1 -->
-<div class="md:col-span-3 space-y-2.5">
-<h4 class="font-semibold text-white uppercase tracking-wider text-[11px]">Company</h4>
-<ul class="space-y-2 text-brand-muted">
-<li><a class="hover:text-white transition-colors" href="#hero">Home</a></li>
-<li><a class="hover:text-white transition-colors" href="#features">About</a></li>
-<li><a class="hover:text-white transition-colors" href="#features">Product</a></li>
-<li><a class="hover:text-white transition-colors" href="#pricing">Pricing</a></li>
-<li><a class="hover:text-white transition-colors" href="#demo">Contact</a></li>
-</ul>
-</div>
-<!-- Links Column 2 -->
-<div class="md:col-span-3 space-y-2.5">
-<h4 class="font-semibold text-white uppercase tracking-wider text-[11px]">Legal &amp; Docs</h4>
-<ul class="space-y-2 text-brand-muted">
-<li><a class="hover:text-white transition-colors" href="#">FERPA &amp; COPPA</a></li>
-<li><a class="hover:text-white transition-colors" href="#">Privacy Policy</a></li>
-<li><a class="hover:text-white transition-colors" href="#">Terms of Service</a></li>
-<li><a class="hover:text-white transition-colors" href="#">Security Center</a></li>
-</ul>
-</div>
-</div>
-<!-- Bottom Copyright & Policies -->
-<div class="max-w-7xl mx-auto px-6 mt-12 pt-6 flex flex-col sm:flex-row justify-between items-center text-[11px] text-brand-muted border-t border-white/5 relative z-10">
-<div>© 2025 GeliScope Inc. All rights reserved.</div>
-<div class="flex space-x-6 mt-4 sm:mt-0">
-<a class="hover:text-white transition-colors" href="#">Terms &amp; Conditions</a>
-<a class="hover:text-white transition-colors" href="#">Privacy Policy</a>
-<a class="hover:text-white transition-colors" href="#">Cookie Policy</a>
-</div>
-</div>
-<!-- Large Watermarked Brand Name across bottom background (IMAGE_2 Style) -->
-<div class="w-full text-center pointer-events-none select-none -mt-8 overflow-hidden opacity-[0.035] leading-none font-heading font-extrabold text-[18vw] text-white">
-        GeliScope
+        </v-col>
+
+        <!-- Links Column 1 -->
+        <v-col cols="6" md="3">
+          <div class="text-caption font-weight-bold text-white text-uppercase tracking-wider mb-4">Company</div>
+          <ul class="list-unstyled text-medium-emphasis text-body-2 space-y-2">
+            <li><a class="footer-link" href="#hero">Home</a></li>
+            <li><a class="footer-link" href="#features">About</a></li>
+            <li><a class="footer-link" href="#features">Product</a></li>
+            <li><a class="footer-link" href="#pricing">Pricing</a></li>
+            <li><a class="footer-link" href="#demo">Contact</a></li>
+          </ul>
+        </v-col>
+
+        <!-- Links Column 2 -->
+        <v-col cols="6" md="3">
+          <div class="text-caption font-weight-bold text-white text-uppercase tracking-wider mb-4">Legal & Docs</div>
+          <ul class="list-unstyled text-medium-emphasis text-body-2 space-y-2">
+            <li><a class="footer-link" href="#">FERPA & COPPA</a></li>
+            <li><a class="footer-link" href="#">Privacy Policy</a></li>
+            <li><a class="footer-link" href="#">Terms of Service</a></li>
+            <li><a class="footer-link" href="#">Security Center</a></li>
+          </ul>
+        </v-col>
+      </v-row>
+    </v-container>
+
+    <!-- Bottom Copyright & Policies -->
+    <v-container class="pt-6 pb-6 mt-4 border-t max-w-7xl position-relative z-10 text-caption text-medium-emphasis d-flex flex-column flex-sm-row justify-space-between align-center">
+      <div>&copy; 2025 GeliScope Inc. All rights reserved.</div>
+      <div class="d-flex gap-6 mt-4 mt-sm-0">
+        <a class="footer-link" href="#">Terms & Conditions</a>
+        <a class="footer-link" href="#">Privacy Policy</a>
+        <a class="footer-link" href="#">Cookie Policy</a>
       </div>
-</section>
-<!-- END: FooterCallToAction -->
+    </v-container>
+
+    <!-- Large Watermarked Brand Name -->
+    <div class="watermark-text font-heading font-weight-black text-center text-white">
+      GeliScope
+    </div>
+  </v-footer>
 </template>
 
-<style>
-body {
-  background-color: #0B1120;
-  color: #F8FAFC;
-  font-family: 'Spline Sans', sans-serif;
-  overflow-x: hidden;
+<style scoped>
+.border-t { border-top: 1px solid rgba(255, 255, 255, 0.05) !important; }
+.max-w-7xl { max-width: 1280px; margin: 0 auto; }
+.max-w-3xl { max-width: 768px; margin: 0 auto; }
+.max-w-md { max-width: 448px; }
+.max-w-sm { max-width: 384px; }
+.lh-relaxed { line-height: 1.625; }
+.tracking-wider { letter-spacing: 0.05em; }
+.tracking-tight { letter-spacing: -0.025em; }
+.gap-2 { gap: 8px; }
+.gap-6 { gap: 24px; }
+.space-y-2 > li { margin-bottom: 8px; }
+.list-unstyled { list-style-type: none; padding-left: 0; }
+
+.footer-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.footer-link:hover {
+  color: white;
 }
 
-h1, h2, h3, h4, .font-heading {
-  font-family: 'Outfit', sans-serif;
+.demo-btn {
+  letter-spacing: 1px;
+  color: #0B1120 !important;
+  transition: all 0.3s ease;
 }
-
-/* Vertical Light Curtain / Aurora Backdrop Effect matching IMAGE_6 & IMAGE_2 */
-.aurora-bg {
-  background: 
-    radial-gradient(ellipse 65% 55% at 50% -10%, rgba(34, 211, 238, 0.22) 0%, rgba(139, 92, 246, 0.28) 45%, rgba(11, 17, 32, 0) 100%),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 2px, transparent 2px, transparent 64px);
+.demo-btn:hover {
+  background-color: #f1f5f9 !important;
+  box-shadow: 0 10px 15px -3px rgba(34, 211, 238, 0.2);
+  transform: scale(1.05);
 }
 
 .aurora-footer {
-  background: 
-    radial-gradient(circle at 50% 25%, rgba(34, 211, 238, 0.25) 0%, rgba(139, 92, 246, 0.35) 30%, rgba(11, 17, 32, 0.95) 75%);
+  background: radial-gradient(circle at 50% 25%, rgba(34, 211, 238, 0.25) 0%, rgba(139, 92, 246, 0.35) 30%, rgba(11, 17, 32, 0.95) 75%) !important;
 }
 
-/* Subtle Glassmorphism Card Style */
-.glass-panel {
-  background: linear-gradient(135deg, rgba(31, 41, 55, 0.6) 0%, rgba(17, 24, 39, 0.8) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
-}
-
-.glass-panel-glow {
-  position: relative;
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
-  border: 1px solid rgba(34, 211, 238, 0.35);
-  box-shadow: 0 0 35px -5px rgba(34, 211, 238, 0.25);
-}
-
-/* Glow Orb Utility */
 .glow-orb {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #67e8f9 0%, #818cf8 50%, #4338ca 100%);
   box-shadow: 0 0 45px rgba(34, 211, 238, 0.55), inset 0 0 15px rgba(255, 255, 255, 0.6);
 }
 
-/* Card Radial Shimmer Effect */
-.card-radial-highlight {
-  background: radial-gradient(circle at 50% 0%, rgba(34, 211, 238, 0.15) 0%, rgba(17, 24, 39, 0) 70%);
+.animate-bounce {
+  animation: bounce 2s infinite;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1); }
+  50% { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); }
+}
+
+.watermark-text {
+  pointer-events: none;
+  user-select: none;
+  margin-top: -32px;
+  opacity: 0.035;
+  line-height: 1;
+  font-size: 18vw;
+  width: 100%;
 }
 </style>
