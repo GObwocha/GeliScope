@@ -11,12 +11,12 @@ const faqs = ref([
     answer: "No technical expertise is required. Teachers and parents can customize rubrics, generate interactive practice sets, and review student progress in an intuitive, zero-code visual interface."
   },
   {
-    question: "How does the AI adapt to specific curriculum standards?",
-    answer: "GeliScope supports Common Core, International Baccalaureate (IB), AP, Cambridge, and custom school district syllabi. Teachers simply upload curriculum documents to align answers automatically."
+    question: "How does autonomous grading work for teachers?",
+    answer: "Teachers simply upload assignments or exams to our dedicated Upload Centre. The system automatically grades the submissions, securely logs the results in the Exam Archives, and instantly gives you detailed class performance analytics without hours of manual marking."
   },
   {
-    question: "Does it support multiple spoken languages?",
-    answer: "Yes, GeliScope natively supports over 95 languages for both text interaction and spoken voice conversations, making it ideal for bilingual households and international schools."
+    question: "How do parents stay informed about their child's progress?",
+    answer: "We ensure parents are always in the loop without having to ask. GeliScope provides a real-time Parent Dashboard and can securely send SMS and Email notifications so you instantly know when your child takes an exam, struggles, or excels."
   },
   {
     question: "How are student privacy and data protected?",

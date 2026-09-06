@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import Features from '@/components/Features.vue'
 import HowItWorks from '@/components/HowItWorks.vue'
 import LandingPage from '@/components/LandingPage.vue'
 import Login from '@/components/Login.vue'
@@ -36,11 +35,6 @@ const router = createRouter({
     path: '/google-callback',
     name: 'google-callback',
     component: AuthCallBack
-    },
-    {
-      path: '/features',
-      component: Features,
-      meta: { requiresAuth: false }
     },
     {
       path: '/how-it-works',

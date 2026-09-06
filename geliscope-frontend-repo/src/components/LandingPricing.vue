@@ -3,50 +3,48 @@ import { ref } from 'vue'
 
 const plans = ref([
   {
-    name: "Starter",
+    name: "Student",
     description: "The essential companion for individual scholars.",
-    price: "$9",
-    period: "/ per month",
+    price: "Free",
+    period: "forever",
     features: [
       "1 Student Account",
-      "Up to 1,000 AI tutoring prompts / mo",
-      "Text-only knowledge base exploration",
-      "Basic weekly parent digest",
+      "Access to exam archives & revision materials",
+      "Track progress on class leaderboards",
       "Standard email support"
     ],
-    buttonText: "Get Started",
+    buttonText: "Sign Up Free",
     buttonVariant: "outlined",
     featured: false
   },
   {
-    name: "Most Popular",
-    badge: "Recommended",
-    description: "The optimal plan for accelerated student excellence & parents.",
-    price: "$29",
+    name: "Family",
+    badge: "Most Popular",
+    description: "The optimal plan for keeping parents seamlessly informed.",
+    price: "Ksh 500",
     period: "/ per month",
     features: [
-      "Up to 3 Student Accounts + 2 Parent Seats",
-      "Unlimited conversational tutoring",
-      "Voice input & spoken feedback",
-      "Real-Time Emotional & Mastery Radar",
-      "Multi-language instant translation",
-      "24/7 Priority tutoring engine access"
+      "Everything in the Student plan",
+      "Up to 3 Student Accounts + 2 Parent Accounts",
+      "Real-time Parent Radar & Performance digests",
+      "Instantly see where your child is struggling",
+      "Automated SMS & Email notifications on exam scores"
     ],
-    buttonText: "Try Most Popular",
+    buttonText: "Start Free Trial",
     buttonVariant: "elevated",
     featured: true
   },
   {
-    name: "Enterprise / School",
-    description: "Full-scale intelligence for schools and districts.",
+    name: "Educators & Schools",
+    description: "Full-scale intelligence for teachers and schools.",
     price: "Custom",
     period: "/ billed yearly",
     features: [
       "Unlimited Student, Parent & Teacher Seats",
-      "Autonomous grading & curriculum alignment",
-      "District-wide security compliance (FERPA & GDPR)",
-      "Dedicated Success Manager & API Integration",
-      "Custom fine-tuned pedagogical models"
+      "Autonomous grading via the Upload Centre",
+      "Actionable curriculum insights & class analytics",
+      "Automate report cards and save hours of marking",
+      "Dedicated Success Manager & School Integration"
     ],
     buttonText: "Talk to Sales",
     buttonVariant: "outlined",
@@ -105,11 +103,23 @@ const plans = ref([
             </div>
             
             <v-btn 
+            v-if="plan.name == 'Student' || plan.name == 'Family'"
               block 
               :color="plan.featured ? 'secondary' : 'white'" 
               :variant="plan.buttonVariant"
               class="rounded-lg text-uppercase font-weight-bold tracking-wider mb-8"
               :class="plan.featured ? 'featured-btn' : 'opacity-80'"
+              to="/register"
+            >
+              {{ plan.buttonText }}
+            </v-btn>
+
+            <v-btn 
+            v-else
+              block 
+              color="white" 
+              :variant="plan.buttonVariant"
+              class="rounded-lg text-uppercase font-weight-bold tracking-wider mb-8 opacity-80"
               href="#demo"
             >
               {{ plan.buttonText }}

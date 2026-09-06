@@ -1,3 +1,13 @@
+<script setup>
+const currentYear = new Date().getFullYear();
+const scrollToSection = (hash) => {
+  const el = document.querySelector(hash)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth' })
+  }
+}
+</script>
+
 <template>
   <v-footer class="aurora-footer text-white d-flex flex-column pb-0 px-0 mt-16 position-relative overflow-hidden border-t" color="transparent" id="demo">
     
@@ -42,11 +52,11 @@
         <v-col cols="6" md="3">
           <div class="text-caption font-weight-bold text-white text-uppercase tracking-wider mb-4">Company</div>
           <ul class="list-unstyled text-medium-emphasis text-body-2 space-y-2">
-            <li><a class="footer-link" href="#hero">Home</a></li>
-            <li><a class="footer-link" href="#features">About</a></li>
-            <li><a class="footer-link" href="#features">Product</a></li>
-            <li><a class="footer-link" href="#pricing">Pricing</a></li>
-            <li><a class="footer-link" href="#demo">Contact</a></li>
+            <li><a class="footer-link" @click.prevent="scrollToSection('#hero')">Home</a></li>
+            <li><a class="footer-link" @click.prevent="scrollToSection('#features')">About</a></li>
+            <li><a class="footer-link" @click.prevent="scrollToSection('#features')">Product</a></li>
+            <li><a class="footer-link " @click.prevent="scrollToSection('#pricing')">Pricing</a></li>
+            <li><a class="footer-link" @click.prevent="scrollToSection('#demo')">Contact</a></li>
           </ul>
         </v-col>
 
@@ -65,7 +75,7 @@
 
     <!-- Bottom Copyright & Policies -->
     <v-container class="pt-6 pb-6 mt-4 border-t max-w-7xl position-relative z-10 text-caption text-medium-emphasis d-flex flex-column flex-sm-row justify-space-between align-center">
-      <div>&copy; 2025 GeliScope Inc. All rights reserved.</div>
+      <div>&copy; {{ currentYear }} GeliScope Inc. All rights reserved.</div>
       <div class="d-flex gap-6 mt-4 mt-sm-0">
         <a class="footer-link" href="#">Terms & Conditions</a>
         <a class="footer-link" href="#">Privacy Policy</a>
@@ -98,6 +108,7 @@
   color: inherit;
   text-decoration: none;
   transition: color 0.2s ease;
+  cursor: pointer;
 }
 .footer-link:hover {
   color: white;

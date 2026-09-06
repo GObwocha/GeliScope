@@ -172,28 +172,27 @@ const sendMessage = () => {
     <div class="w-100 max-w-5xl mt-16 pt-8 border-t d-flex flex-wrap align-center justify-space-around gap-6 text-medium-emphasis opacity-70">
       <div class="d-flex align-center gap-2 font-mono text-caption tracking-wider">
         <span class="dot-sm bg-primary"></span>
-        <span>OXFORD STEM</span>
+        <span>Alliance High School</span>
       </div>
       <div class="d-flex align-center gap-2 font-mono text-caption tracking-wider">
         <span class="dot-sm bg-error"></span>
-        <span>CAMBRIDGE AI</span>
+        <span>Alliance Girls High School</span>
       </div>
       <div class="d-flex align-center gap-2 font-mono text-caption tracking-wider">
         <span class="dot-sm bg-secondary"></span>
-        <span>HARVARD EDTECH</span>
+        <span>Mangu High School</span>
       </div>
       <div class="d-flex align-center gap-2 font-mono text-caption tracking-wider">
         <span class="dot-sm bg-warning"></span>
-        <span>STANFORD LABS</span>
+        <span>Maryhill Girls High School</span>
       </div>
       <div class="d-flex align-center gap-2 font-mono text-caption tracking-wider">
         <span class="dot-sm bg-info"></span>
-        <span>MIT HORIZON</span>
+        <span>Maseno School</span>
       </div>
     </div>
   </v-sheet>
 </template>
-
 <style scoped>
 .min-h-screen { min-height: 100vh; }
 .max-w-5xl { max-width: 1024px; }

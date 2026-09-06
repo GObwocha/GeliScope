@@ -3,24 +3,24 @@ import { ref } from 'vue'
 
 const testimonials = ref([
   {
-    quote: "GeliScope feels like having an MIT professor sitting next to me at 2 AM. It doesn't just give answers; it actually helps me grasp why formulas work.",
-    author: "Sophia Kwan",
-    title: "AP Physics Student",
-    avatarText: "SK",
+    quote: "I used to get so frustrated when I hit a wall with my homework late at night and had no one to ask for help. GeliScope’s 24/7 AI tutor changed everything for me. It doesn't just give me the answers; it patiently walks me through the concepts step-by-step until I actually understand them. Watching my name climb up the class leaderboard has been incredibly motivating!",
+    author: "Liam T.",
+    title: "High School Senior",
+    avatarText: "LT",
     color: "secondary"
   },
   {
-    quote: "The Parent Radar is extraordinary. I receive concise weekly digests showing where my daughter excels and where she feels frustrated before report cards come.",
-    author: "Marcus Ramirez",
-    title: "Father of Two, Austin TX",
-    avatarText: "MR",
+    quote: "Staying involved in my daughter's academic life used to mean waiting months for a parent-teacher conference or constantly nagging her about assignments. With GeliScope, I am seamlessly informed. I get real-time insights into her performance, can see exactly where she's excelling, and know exactly when she might need a little extra support. It has brought so much peace of mind to our family.",
+    author: "Elena R.",
+    title: "Parent",
+    avatarText: "ER",
     color: "primary"
   },
   {
-    quote: "Autonomous rubric generation and automated essay diagnostics save me 12 hours every week. I can finally focus on 1-on-1 human mentorship in my classroom.",
-    author: "Dr. Elena Hayes",
-    title: "High School STEM Lead",
-    avatarText: "EH",
+    quote: "GeliScope has completely modernized my classroom. The Upload Centre and autonomous grading have liberated me from spending countless hours marking papers every weekend. More importantly, the system’s curriculum insights instantly highlight the exact topics my students are struggling with, allowing me to tailor my lesson plans with precision. I finally have the time to actually teach again.",
+    author: "Marcus J.",
+    title: "AP Science Teacher",
+    avatarText: "MJ",
     color: "info"
   }
 ])
@@ -33,7 +33,7 @@ const testimonials = ref([
         Proven Results
       </span>
       <h2 class="text-h3 font-weight-bold text-white">
-        Trusted by Educators & Learners Worldwide
+        Trusted by Educators & Learners Countrywide
       </h2>
     </div>
 
@@ -72,7 +72,7 @@ const testimonials = ref([
 </template>
 
 <style scoped>
-.border-t {
+ .border-t {
   border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
 .max-w-7xl {

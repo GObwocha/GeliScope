@@ -3,24 +3,24 @@ import { ref } from 'vue'
 
 const features = ref([
   {
-    title: "Seamless Educational Integrations",
-    description: "Plug GeliScope directly into existing learning management systems, Student Information Portals, and digital classroom workspaces effortlessly.",
-    icon: "mdi-lightning-bolt",
+    title: "AI Past Paper Analysis",
+    description: "Accepts pictures of past papers as input and highlights failure points according to Bloom's Taxonomy and suggests migitation measures. These analysis are stored and retrieved in the system.",
+    icon: "mdi-creation",
     type: "integration"
   },
   {
-    title: "AI-Powered Socratic Dialogues",
-    description: "Rather than just dispensing answers, our conversational engine guides students through deep critical thinking with personalized Socratic steps.",
+    title: "Record Keeping",
+    description: "The system stores the uploaded pictures of the past papers which can be retieved by the student.",
     type: "socratic"
   },
   {
-    title: "Global Multi-Language Support",
-    description: "Communicate seamlessly across 95+ dialects in real-time, bridging the gap for bilingual students and international classrooms.",
+    title: "Career Suggestions",
+    description: "The app suggests possibly careers for a student based on the skills exhibited from the AI analysis of their past papers.",
     type: "translation"
   },
   {
-    title: "Parental Insights Radar",
-    description: "Deliver instant, digestible summaries directly to parents, ensuring they stay informed without being overwhelmed by data.",
+    title: "Global Leaderboard",
+    description: "The leaderboard shows the student's position relative to the rest of the students onboarded on the applicaiti. The ranking can be based on all the exams the student has done, or on specific exams.",
     type: "radar"
   }
 ])
@@ -51,13 +51,13 @@ const features = ref([
             <template v-if="feature.type === 'integration'">
               <div class="glow-sphere rounded-pill transition-transform"></div>
               <div class="position-relative z-10 d-flex align-center gap-6 text-medium-emphasis">
-                <v-chip variant="outlined" class="text-caption font-mono" color="white">Canvas LMS</v-chip>
+                <v-chip variant="outlined" class="text-caption font-mono" color="white">Gemini API</v-chip>
                 <div class="icon-box d-flex align-center justify-center p-0.5 shadow-xl">
                   <div class="icon-inner d-flex align-center justify-center text-secondary">
                     <v-icon size="x-large">{{ feature.icon }}</v-icon>
                   </div>
                 </div>
-                <v-chip variant="outlined" class="text-caption font-mono" color="white">Google Clrm</v-chip>
+                <v-chip variant="outlined" class="text-caption font-mono" color="white">Google Gemini</v-chip>
               </div>
             </template>
 
@@ -65,7 +65,7 @@ const features = ref([
               <div class="w-100 max-w-sm px-6">
                 <div class="pill-bar rounded-pill border d-flex align-center px-4 gap-3 mb-3">
                   <div class="dot bg-error"></div>
-                  <span class="text-caption text-white font-mono opacity-80">AI Tutor Voice Active • Math</span>
+                  <span class="text-caption text-white font-mono opacity-80">Automatic Records • All Subjects</span>
                 </div>
                 <div class="pill-bar-sm mx-auto rounded-pill border d-flex align-center px-4">
                   <div class="pulse-bar rounded-pill"></div>
@@ -74,24 +74,24 @@ const features = ref([
             </template>
 
             <template v-else-if="feature.type === 'translation'">
-              <div class="w-100 mx-6 rounded-lg border-white p-4">
+              <div class="w-100 mx-6 rounded-lg border-white pa-4">
                 <div class="d-flex align-center gap-2 text-caption text-accent font-mono mb-2">
                   <div class="dot bg-success"></div>
-                  <span>Real-time Translation • 95+ Dialects</span>
+                  <span>Real-time Career Suggestions • Top 5 </span>
                 </div>
                 <div class="w-100 h-2 bg-white-10 rounded mb-2"></div>
                 <div class="w-66 h-2 bg-white-10 rounded mb-4"></div>
                 <div class="d-flex gap-2">
-                  <v-chip size="x-small" color="secondary" variant="outlined" class="font-mono">Spanish</v-chip>
-                  <v-chip size="x-small" color="primary" variant="outlined" class="font-mono">Mandarin</v-chip>
-                  <v-chip size="x-small" color="white" variant="outlined" class="font-mono opacity-60">German</v-chip>
+                  <v-chip size="x-small" color="warning" variant="outlined" class="font-mono">Medicine</v-chip>
+                  <v-chip size="x-small" color="success" variant="outlined" class="font-mono">Engineering</v-chip>
+                  <v-chip size="x-small" color="secondary" variant="outlined" class="font-mono opacity-60">Law</v-chip>
                 </div>
               </div>
             </template>
 
             <template v-else>
                <div class="glow-sphere-green rounded-pill transition-transform"></div>
-               <v-icon color="secondary" size="100" class="opacity-50">mdi-radar</v-icon>
+               <v-icon color="secondary" size="100" class="opacity-50">mdi-web</v-icon>
             </template>
           </div>
 
