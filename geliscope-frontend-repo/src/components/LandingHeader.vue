@@ -37,21 +37,21 @@ const scrollToSection = (hash) => {
 
 <template>
   <!-- Public App Bar (Modern Floating Pill from App.vue) -->
-  <v-app-bar color="transparent" elevation="0" height="100" style="position: fixed;" scroll-behavior="collapse">
+  <v-app-bar color="transparent" elevation="0" height="100" style="position: fixed;" scroll-behavior="fully-hide">
     <v-card class="mx-auto rounded-pill d-flex align-center px-4 px-md-8 w-100 border-opacity-10" max-width="1100" height="70" elevation="8">
       
       <!-- Mobile menu toggle -->
       <v-app-bar-nav-icon @click="drawer = !drawer" class="hidden-md-and-up"></v-app-bar-nav-icon>
       
       <!-- Logo Area -->
-      <div class="d-flex align-center cursor-pointer" @click="scrollToSection('#hero')">
-        <v-avatar color="secondary" size="40" class="mr-3" rounded="lg">
-          <v-icon color="background">mdi-shield-check</v-icon>
-        </v-avatar>
-        <div class="text-h6 font-weight-bold d-flex align-center">
+      <v-app-bar-title >
+        <a href="#hero" @click.prevent="scrollToSection('#hero')">
+        <v-img src="/IconOnly_Transparent.png" height="12%"></v-img>
+      </a> 
+       </v-app-bar-title>
+      <div class="text-h6 font-weight-bold d-flex align-center ml-4 cursor-pointer"  @click="scrollToSection('#hero')">
           GeliScope 
         </div>
-      </div>
 
       <v-spacer></v-spacer>
 
@@ -87,7 +87,7 @@ const scrollToSection = (hash) => {
             <v-icon>{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
           </v-btn>
           <v-btn variant="outlined" color="muted" class="pill-btn px-6 border-opacity-50 mx-2" to="/login">Log In</v-btn>
-          <v-btn color="secondary" variant="flat" class="pill-btn px-6 font-weight-bold" to="/register">Get Started</v-btn>
+          <v-btn color="primary" variant="flat" class="pill-btn px-6 font-weight-bold" to="/register">Get Started</v-btn>
         </div>
       </template>
     </v-card>
