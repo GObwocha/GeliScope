@@ -81,53 +81,7 @@ const currentNavItems = computed(() => {
 <template>
   <v-app class="app-container">
     
-    <!-- Public App Bar (Modern Floating Pill) -->
-    <v-app-bar v-if="!isDashboard" color="transparent" elevation="0" height="100" class="aurora-bg ">
-      <v-card class="mx-auto rounded-pill d-flex align-center px-4 px-md-8 w-100 border-opacity-10" max-width="1100" height="70"  elevation="8">
-        <v-app-bar-nav-icon @click="drawer = !drawer" class="hidden-md-and-up"></v-app-bar-nav-icon>
-        
-        <!-- Logo Area -->
-        <div class="d-flex align-center cursor-pointer" @click="router.push('/')">
-          <v-avatar color="secondary" size="40" class="mr-3 " rounded="lg">
-            <v-icon color="background">mdi-shield-check</v-icon>
-          </v-avatar>
-          <div class="text-h6 font-weight-bold d-flex align-center">
-            GeliScope 
-          </div>
-        </div>
-
-        <v-spacer></v-spacer>
-
-        <!-- Centered Links (Public only) -->
-        <div class="hidden-sm-and-down d-flex gap-6">
-          <router-link v-for="item in publicNavItems" :key="item.title" :to="item.to" class="text-decoration-none text-muted font-weight-medium px-4 py-2 transition-fast-in-fast-out hover:text-primary" style="transition: color 0.3s;" active-class="text-primary font-weight-bold">
-            {{ item.title }}
-          </router-link>
-        </div>
-
-        <v-spacer class="hidden-sm-and-down"></v-spacer>
-
-        <!-- Right Side Auth Actions -->
-        <template v-if="authStore.isAuthenticated">
-          <div class="hidden-sm-and-down d-flex align-center gap-2">
-            <v-btn color="secondary" variant="flat" to="/dashboard" class="pill-btn px-6 mx-2">Dashboard</v-btn>
-            <v-btn icon @click="toggleTheme" variant="text" class="ml-2">
-              <v-icon>{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
-            </v-btn>
-            <v-btn color="error" variant="flat" @click="handleLogout" class="pill-btn ml-2">Log Out</v-btn>
-          </div>
-        </template>
-        <template v-else>
-          <div class="hidden-sm-and-down d-flex align-center">
-            <v-btn icon @click="toggleTheme" variant="text" class="mx-2">
-              <v-icon>{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
-            </v-btn>
-            <v-btn variant="outlined" color="muted" class="pill-btn px-6 border-opacity-50 mx-2" to="/login">Log In</v-btn>
-            <v-btn color="secondary" variant="flat" class="pill-btn px-6 font-weight-bold" to="/register">Get Started</v-btn>
-          </div>
-        </template>
-      </v-card>
-    </v-app-bar>
+    <!-- Public App Bar removed: Landing pages now provide their own specific header -->
 
     <!-- Dashboard Top Bar (Mobile Only) -->
     <v-app-bar v-if="isDashboard" class="d-lg-none bg-surface border-b border-opacity-10" elevation="0" height="70">

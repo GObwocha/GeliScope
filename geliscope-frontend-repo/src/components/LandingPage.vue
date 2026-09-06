@@ -1,4 +1,5 @@
 <script setup>
+import LandingHeader from './LandingHeader.vue'
 import LandingHero from './LandingHero.vue'
 import LandingFeatures from './LandingFeatures.vue'
 import LandingTestimonials from './LandingTestimonials.vue'
@@ -7,13 +8,18 @@ import LandingFAQ from './LandingFAQ.vue'
 import LandingFooter from './LandingFooter.vue'
 </script>
 
-<template class="landing-page position-relative overflow-hidden ">
-    <LandingHero />
-    <LandingFeatures />
-    <LandingTestimonials />
-    <LandingPricing />
-    <LandingFAQ />
-    <LandingFooter />
+<template>
+  <v-layout class="landing-page position-relative overflow-hidden w-100 bg-background">
+    <LandingHeader />
+    <v-main class="pt-0">
+      <LandingHero />
+      <LandingFeatures />
+      <LandingTestimonials />
+      <LandingPricing />
+      <LandingFAQ />
+      <LandingFooter />
+    </v-main>
+  </v-layout>
 </template>
 
 <style>

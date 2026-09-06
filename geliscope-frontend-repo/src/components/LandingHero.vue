@@ -1,5 +1,5 @@
 <template>
-  <v-sheet class="position-relative d-flex flex-column justify-center align-center min-h-screen px-4 px-sm-6 overflow-hidden aurora-bg " id="hero">
+  <v-sheet class="position-relative d-flex flex-column justify-center align-center min-h-screen px-4 px-sm-6 overflow-hidden aurora-bg pt-16  " id="hero">
     <!-- Glow ambient light bar atop the v-sheet -->
     <div class="ambient-glow"></div>
     
