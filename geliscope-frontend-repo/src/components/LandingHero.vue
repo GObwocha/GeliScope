@@ -1,3 +1,50 @@
+<script setup>
+import { ref, nextTick, onMounted } from 'vue'
+
+const userInput = ref('')
+const isTyping = ref(false)
+const chatContainer = ref(null)
+
+const messages = ref([
+  {
+    role: 'ai',
+    text: 'Hi 👋 How can <span class="text-secondary font-weight-bold">GeliScope</span> assist your learning today?',
+    subtext: 'Suggested: Explain Quantum Physics basics, review my calculus proof, or summarize AP History Chapter 4.'
+  }
+])
+
+const scrollToBottom = async () => {
+  await nextTick()
+  if (chatContainer.value) {
+    chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+  }
+}
+
+const sendMessage = () => {
+  if (!userInput.value.trim()) return;
+  
+  messages.value.push({
+    role: 'user',
+    text: userInput.value,
+    subtext: ''
+  })
+  
+  userInput.value = ''
+  isTyping.value = true
+  scrollToBottom()
+  
+  setTimeout(() => {
+    isTyping.value = false
+    messages.value.push({
+      role: 'ai',
+      text: 'This is a live preview! To receive a real pedagogical response from GeliScope\'s AI, please <a href="/register" style="color: #22D3EE; text-decoration: none; font-weight: bold;">sign up</a> or <a href="/login" style="color: #22D3EE; text-decoration: none; font-weight: bold;">log in</a>.',
+      subtext: ''
+    })
+    scrollToBottom()
+  }, 1500)
+}
+</script>
+
 <template>
   <v-sheet class="position-relative d-flex flex-column justify-center align-center min-h-screen px-4 px-sm-6 overflow-hidden aurora-bg pt-16  " id="hero">
     <!-- Glow ambient light bar atop the v-sheet -->
@@ -52,18 +99,46 @@
             </div>
           </div>
           
-          <!-- Greeting Prompt Message Display -->
-          <div class="d-flex align-start gap-3 text-left mb-6 min-h-msg">
-            <v-avatar class="avatar-gradient shadow-md" size="32">
-              <span class="text-caption font-weight-bold text-white">G</span>
-            </v-avatar>
-            <div class="msg-bubble rounded-xl rounded-ts-sm px-4 py-3">
-              <p class="text-body-2 sm-text-body-1 text-white font-weight-medium mb-1">
-                Hi 👋 How can <span class="text-secondary font-weight-bold">GeliScope</span> assist your learning today?
-              </p>
-              <p class="text-caption text-medium-emphasis">
-                Suggested: Explain Quantum Physics basics, review my calculus proof, or summarize AP History Chapter 4.
-              </p>
+          <!-- Message Display Area -->
+          <div 
+            ref="chatContainer" 
+            class="d-flex flex-column gap-4 mb-6 min-h-msg custom-scrollbar" 
+            style="max-height: 280px; overflow-y: auto; overflow-x: hidden; padding-right: 8px;"
+          >
+            <div 
+              v-for="(msg, index) in messages" 
+              :key="index"
+              class="d-flex text-left"
+              :class="msg.role === 'ai' ? 'align-start gap-3' : 'justify-end'"
+            >
+              <v-avatar v-if="msg.role === 'ai'" class="avatar-gradient shadow-md" size="32">
+                <span class="text-caption font-weight-bold text-white">G</span>
+              </v-avatar>
+              
+              <div 
+                class="msg-bubble rounded-xl px-4 py-3 ma-2"
+                :class="msg.role === 'ai' ? 'rounded-ts-sm' : 'rounded-te-sm bg-secondary-glow'"
+              >
+                <p 
+                  class="text-body-2 sm-text-body-1 text-white font-weight-medium mb-1"
+                  v-html="msg.text"
+                ></p>
+                <p v-if="msg.subtext" class="text-caption text-medium-emphasis">
+                  {{ msg.subtext }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Typing indicator -->
+            <div v-if="isTyping" class="d-flex align-start gap-3 text-left">
+              <v-avatar class="avatar-gradient shadow-md" size="32">
+                <span class="text-caption font-weight-bold text-white">G</span>
+              </v-avatar>
+              <div class="msg-bubble rounded-xl rounded-ts-sm px-4 py-3 d-flex align-center gap-1">
+                <span class="dot bg-secondary animate-pulse"></span>
+                <span class="dot bg-secondary animate-pulse" style="animation-delay: 0.2s"></span>
+                <span class="dot bg-secondary animate-pulse" style="animation-delay: 0.4s"></span>
+              </div>
             </div>
           </div>
           
@@ -74,6 +149,8 @@
             </v-btn>
             <input 
               type="text" 
+              v-model="userInput"
+              @keyup.enter="sendMessage"
               class="flex-grow-1 bg-transparent border-0 text-white text-body-2 outline-none" 
               placeholder="Ask any question, paste homework problems, or request a syllabus rubric..." 
             />
@@ -81,7 +158,7 @@
               <v-btn icon variant="text" density="comfortable" color="secondary" class="opacity-80">
                 <v-icon>mdi-microphone</v-icon>
               </v-btn>
-              <v-btn icon variant="text" density="comfortable" color="secondary">
+              <v-btn icon variant="text" density="comfortable" color="secondary" @click="sendMessage">
                 <v-icon class="hover-scale">mdi-send</v-icon>
               </v-btn>
             </div>
@@ -231,5 +308,24 @@
   background: 
     radial-gradient(ellipse 65% 55% at 50% -10%, rgba(34, 211, 238, 0.22) 0%, rgba(139, 92, 246, 0.28) 45%, rgba(11, 17, 32, 0) 100%),
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 2px, transparent 2px, transparent 64px);
+}
+
+.bg-secondary-glow {
+  background: rgba(34, 211, 238, 0.15);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
 }
 </style>
