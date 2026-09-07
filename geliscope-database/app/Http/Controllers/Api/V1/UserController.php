@@ -47,6 +47,8 @@ class UserController extends Controller
             'date_of_birth' => 'nullable|date',
             'employee_number' => 'required_if:role,teacher|string|unique:teachers,employee_number',
             'specialization' => 'nullable|string',
+            'assigned_class_id' => 'nullable|exists:classes,id',
+            'assigned_subject_id' => 'nullable|exists:subjects,id',
             'phone_number' => 'nullable|string',
             'occupation' => 'nullable|string',
         ]);
@@ -97,12 +99,18 @@ class UserController extends Controller
                     'date_of_birth' => $validated['date_of_birth'] ?? null,
                 ]);
             } elseif ($validated['role'] === 'teacher') {
-                Teacher::create([
+                $teacher = Teacher::create([
                     'user_id' => $user->id,
                     'employee_number' => $validated['employee_number'],
                     'school_id' => $validated['school_id'],
                     'specialization' => $validated['specialization'] ?? null,
                 ]);
+
+                if (!empty($validated['assigned_class_id']) && !empty($validated['assigned_subject_id'])) {
+                    $teacher->classes()->attach($validated['assigned_class_id'], [
+                        'subject_id' => $validated['assigned_subject_id']
+                    ]);
+                }
             } elseif ($validated['role'] === 'parent') {
                 ParentProfile::create([
                     'user_id' => $user->id,
@@ -145,10 +153,20 @@ class UserController extends Controller
             'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
             'profile_photo_url' => 'nullable|string|url',
+            
+            // Student
             'admission_number' => 'sometimes|required|string|unique:students,admission_number,' . optional($user->student)->id,
             'school_id' => 'sometimes|required|exists:schools,id',
             'current_class_id' => 'nullable|exists:classes,id',
             'date_of_birth' => 'nullable|date',
+            
+            // Parent
+            'phone_number' => 'nullable|string|max:20',
+            'occupation' => 'nullable|string|max:255',
+            
+            // Teacher
+            'employee_number' => 'sometimes|required|string|unique:teachers,employee_number,' . optional($user->teacher)->id,
+            'specialization' => 'nullable|string|max:255',
         ]);
 
         if (isset($validated['password'])) {
@@ -161,6 +179,16 @@ class UserController extends Controller
             $studentData = $request->only(['admission_number', 'school_id', 'current_class_id', 'date_of_birth']);
             if (!empty($studentData)) {
                 $user->student->update($studentData);
+            }
+        } elseif ($user->role === 'parent' && $user->parentProfile) {
+            $parentData = $request->only(['phone_number', 'occupation']);
+            if (!empty($parentData)) {
+                $user->parentProfile->update($parentData);
+            }
+        } elseif ($user->role === 'teacher' && $user->teacher) {
+            $teacherData = $request->only(['employee_number', 'specialization', 'school_id']);
+            if (!empty($teacherData)) {
+                $user->teacher->update($teacherData);
             }
         }
 
