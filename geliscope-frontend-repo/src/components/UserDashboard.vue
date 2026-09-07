@@ -733,7 +733,7 @@ onMounted(() => {
  <v-icon color="secondary" class="mr-2">mdi-chart-bar</v-icon>
  Stream Bottleneck Overview
  </h2>
- <v-chip color="secondary" variant="flat" size="  " class="font-weight-bold">{{ teacherStreamSummary.class_name }}</v-chip>
+ <v-chip color="secondary" variant="flat" size="small" class="font-weight-bold ">{{ teacherStreamSummary.class_name }}</v-chip>
  </div>
  <div class="mb-6">
  <div class="text-h3 font-weight-black text-secondary">{{ teacherStreamSummary.stream_average }}</div>
