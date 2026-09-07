@@ -23,6 +23,8 @@ Route::prefix('v1')->group(function () {
     Route::post('register-user', [UserController::class, 'store']); // Registration
     Route::get('schools', [SchoolController::class, 'index']); // For registration
     Route::get('schools/{id}/classes', [SchoolController::class, 'classes']); // For registration
+    //Subjects
+    Route::get('subjects', [\App\Http\Controllers\Api\V1\SubjectController::class, 'index']);
 
     // Protected Routes
     Route::middleware('auth:sanctum')->group(function () {
@@ -32,13 +34,12 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('users', UserController::class)->except(['store']);
         Route::post('users/{user}/avatar', [UserController::class, 'uploadAvatar']);
         Route::delete('users/{user}/avatar', [UserController::class, 'removeAvatar']);
-        //Subjects
-        Route::get('subjects', [\App\Http\Controllers\Api\V1\SubjectController::class, 'index']);
         //Schools
         Route::apiResource('schools', SchoolController::class)->except(['index']);
         Route::post('schools/{id}/classes', [SchoolController::class, 'storeClass']);
         //Exam Rounds
         Route::get('exam-rounds', [\App\Http\Controllers\Api\V1\ExamRoundController::class, 'index']);
+        Route::post('exam-rounds', [\App\Http\Controllers\Api\V1\ExamRoundController::class, 'store']);
         //Exams
         Route::apiResource('exams', ExamController::class);
         Route::post('exams/{examId}/results', [ExamController::class, 'storeResult']);
