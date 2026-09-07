@@ -1,10 +1,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
 import { useExamStore } from '@/stores/exams'
 import { useSchoolStore } from '@/stores/schools'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const schoolStore = useSchoolStore()
 const loading = ref(false)
@@ -20,18 +22,25 @@ const currentUser = computed(() => {
  profile_photo_url: null,
  
  // Student specific
- admission_number: '',
- school_id: 1,
- current_class_id: 2,
- date_of_birth: '',
+ student: {
+   admission_number: '',
+   school_id: 1,
+   current_class_id: 2,
+   date_of_birth: '',
+ },
 
  // Parent specific
- phone_number: '',
- occupation: '',
+ parent_profile: {
+   phone_number: '',
+   occupation: '',
+ },
 
  // Teacher specific
- employee_number: '',
- specialization: ''
+ teacher: {
+   employee_number: '',
+   specialization: '',
+   school_id: 1
+ }
  }
 })
 
@@ -107,8 +116,8 @@ onMounted(() => {
       payload.current_class_id = currentUser.value.student.current_class_id
       payload.date_of_birth = currentUser.value.student.date_of_birth
     } else if (currentUser.value.role === 'parent') {
-      payload.phone_number = currentUser.value.phone_number
-      payload.occupation = currentUser.value.occupation
+      payload.phone_number = currentUser.value.parent_profile.phone_number
+      payload.occupation = currentUser.value.parent_profile.occupation
     } else if (currentUser.value.role === 'teacher') {
       payload.employee_number = currentUser.value.teacher.employee_number
       payload.specialization = currentUser.value.teacher.specialization
@@ -225,7 +234,28 @@ const removeAvatar = async () => {
   } finally {
     removingAvatar.value = false
   }
-}
+  }
+  
+  const deleteAccountDialog = ref(false)
+  const deletingAccount = ref(false)
+
+  const deleteAccount = async () => {
+    deletingAccount.value = true
+    try {
+      await axios.delete(`/api/v1/users/${currentUser.value.id}`, {
+        headers: { Authorization: `Bearer ${authStore.token}` }
+      })
+      authStore.logout()
+      router.push('/')
+    } catch (err) {
+      console.error('Account deletion failed', err)
+      errorMessage.value = 'Failed to delete account. Please try again.'
+      errorSnackbar.value = true
+    } finally {
+      deletingAccount.value = false
+      deleteAccountDialog.value = false
+    }
+  }
 </script>
 
 <template>
@@ -317,6 +347,10 @@ const removeAvatar = async () => {
  density="comfortable"
  ></v-text-field>
 
+ <v-divider class="my-6"></v-divider>
+ <h4 class="text-h6 font-weight-bold text-error mb-2">Danger Zone</h4>
+ <p class="text-body-2 text-medium-emphasis mb-4">Deleting your account is permanent and will erase all data, including your exam archives, class analysis, and leaderboard progress.</p>
+ <v-btn color="error" variant="flat" prepend-icon="mdi-delete" @click="deleteAccountDialog = true">Delete Account</v-btn>
  </v-window-item>
 
  <!-- 2. Academic/Role Details Tab -->
@@ -424,7 +458,7 @@ const removeAvatar = async () => {
  <v-row dense>
  <v-col cols="12" sm="6">
  <v-text-field
- v-model="currentUser.phone_number"
+ v-model="currentUser.parent_profile.phone_number"
  label="Phone Number"
  variant="outlined"
  
@@ -433,7 +467,7 @@ const removeAvatar = async () => {
  </v-col>
  <v-col cols="12" sm="6">
  <v-text-field
- v-model="currentUser.occupation"
+ v-model="currentUser.parent_profile.occupation"
  label="Occupation"
  variant="outlined"
  
@@ -528,6 +562,23 @@ const removeAvatar = async () => {
  <v-snackbar v-model="snackbar" color="success" variant="flat" location="bottom right">
  Settings successfully updated!
  </v-snackbar>
+
+ <!-- Delete Account Dialog -->
+ <v-dialog v-model="deleteAccountDialog" max-width="500">
+ <v-card class="rounded-xl pa-4">
+ <v-card-title class="text-h6 font-weight-bold d-flex align-center text-error">
+ <v-icon color="error" class="mr-2">mdi-alert-octagon</v-icon> Delete Account
+ </v-card-title>
+ <v-card-text class="pt-2 text-body-1">
+ Are you completely sure? This action is irreversible and will permanently wipe out all your personal data, exam records, leaderboards, and settings from our servers.
+ </v-card-text>
+ <v-card-actions>
+ <v-spacer></v-spacer>
+ <v-btn variant="text" color="medium-emphasis" @click="deleteAccountDialog = false">Cancel</v-btn>
+ <v-btn color="error" variant="flat" :loading="deletingAccount" @click="deleteAccount">Yes, Delete Everything</v-btn>
+ </v-card-actions>
+ </v-card>
+ </v-dialog>
  </v-container>
 </template>
 
