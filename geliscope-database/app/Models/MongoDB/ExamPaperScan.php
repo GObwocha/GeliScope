@@ -56,8 +56,8 @@ class ExamPaperScan extends Model
     protected function casts(): array
     {
         return [
-            'original_image_urls' => 'array',
-            'scan_metadata' => 'array',
+            'original_image_urls' => ,
+            'scan_metadata' => ,
         ];
     }
 }

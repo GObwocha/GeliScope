@@ -122,7 +122,7 @@ class UserController extends Controller
             DB::commit();
 
             return response()->json([
-                'user' => $user->load(['student.school', 'student.skills', 'teacher.school', 'parentProfile']),
+                'user' => $user->load(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'parentProfile']),
                 'message' => 'Registration successful. Please check your email to verify your account.'
             ], 201);
         } catch (\Throwable $e) {
@@ -136,7 +136,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])->findOrFail($id);
+        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'parentProfile'])->findOrFail($id);
         return response()->json($user);
     }
 
@@ -167,6 +167,8 @@ class UserController extends Controller
             // Teacher
             'employee_number' => 'sometimes|required|string|unique:teachers,employee_number,' . optional($user->teacher)->id,
             'specialization' => 'nullable|string|max:255',
+            'assigned_class_id' => 'nullable|exists:classes,id',
+            'assigned_subject_id' => 'nullable|exists:subjects,id',
         ]);
 
         if (isset($validated['password'])) {
@@ -190,9 +192,16 @@ class UserController extends Controller
             if (!empty($teacherData)) {
                 $user->teacher->update($teacherData);
             }
+            if ($request->has('assigned_class_id') && $request->has('assigned_subject_id') && $request->assigned_class_id) {
+                $user->teacher->classes()->sync([
+                    $request->assigned_class_id => ['subject_id' => $request->assigned_subject_id]
+                ]);
+            } elseif ($request->has('assigned_class_id') && !$request->assigned_class_id) {
+                $user->teacher->classes()->detach();
+            }
         }
 
-        return response()->json($user->fresh(['student.school', 'student.skills', 'teacher.school', 'parentProfile']));
+        return response()->json($user->fresh(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'teacher.classes', 'parentProfile']));
     }
 
     /**
@@ -241,7 +250,7 @@ class UserController extends Controller
             return response()->json([
                 'message' => 'Avatar uploaded successfully',
                 'profile_photo_url' => $url,
-                'user' => $user->fresh(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])
+                'user' => $user->fresh(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'parentProfile'])
             ], 200);
         }
 
@@ -268,7 +277,7 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'Avatar removed successfully',
-            'user' => $user->fresh(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])
+            'user' => $user->fresh(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'parentProfile'])
         ], 200);
     }
 }

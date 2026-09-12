@@ -54,6 +54,12 @@ class AuthController extends Controller
             ]);
         }
 
+        if (is_null($user->email_verified_at)) {
+            throw ValidationException::withMessages([
+                'email' => ['Your email address is not verified. Please check your inbox.'],
+            ]);
+        }
+
         // Generate 6-digit OTP
         $otp = sprintf("%06d", mt_rand(1, 999999));
         $user->otp_code = $otp;
@@ -118,7 +124,7 @@ class AuthController extends Controller
             'otp' => 'required|string|size:6'
         ]);
 
-        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile.students.user'])
+        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'parentProfile.students.user'])
                     ->where('email', $request->email)
                     ->first();
 
@@ -163,7 +169,7 @@ class AuthController extends Controller
     {
         // 1. Get the user data from Google
         $googleUser = Socialite::driver('google')->stateless()->user();
-        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile.students.user'])->where('email', $googleUser->email)->first();
+        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'parentProfile.students.user'])->where('email', $googleUser->email)->first();
 
         if (!$user ){
             return redirect()->away(config('app.frontend_url') . '/login?error=user_not_found');
@@ -171,6 +177,11 @@ class AuthController extends Controller
 
         if (!$user->profile_photo_url && $googleUser->avatar) {
             $user->profile_photo_url = $googleUser->avatar;
+            $user->save();
+        }
+
+        if (is_null($user->email_verified_at)) {
+            $user->email_verified_at = now();
             $user->save();
         }
 
@@ -190,7 +201,7 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        $user = $request->user()->load(['student.school', 'student.skills', 'teacher.school', 'parentProfile.students.user']);
+        $user = $request->user()->load(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'parentProfile.students.user']);
         return response()->json($user, 200);
     }
 
@@ -219,7 +230,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Email verified successfully.',
-            'user' => $user->load(['student.school', 'student.skills', 'teacher.school', 'parentProfile.students.user']),
+            'user' => $user->load(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'parentProfile.students.user']),
             'token' => $token,
         ], 200);
     }

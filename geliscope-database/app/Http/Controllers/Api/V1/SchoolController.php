@@ -13,7 +13,7 @@ class SchoolController extends Controller
      */
     public function index()
     {
-        $schools = School::with(['subcounty.county'])->withCount(['classes', 'students', 'teachers'])->get();
+        $schools = School::with(['subcounty.county'])->withCount(['classes', 'currentStudents', 'teachers'])->get();
         return response()->json($schools);
     }
 
@@ -77,7 +77,7 @@ class SchoolController extends Controller
     public function classes($id)
     {
         $school = School::findOrFail($id);
-        $classes = $school->classes()->withCount(['students', 'teachers'])->get();
+        $classes = $school->classes()->withCount(['currentStudents', 'teachers'])->get();
 
         return response()->json($classes);
     }

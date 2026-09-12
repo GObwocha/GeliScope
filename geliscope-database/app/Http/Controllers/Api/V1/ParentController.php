@@ -12,6 +12,23 @@ use Carbon\Carbon;
 class ParentController extends Controller
 {
     /**
+     * Search students for linking.
+     */
+    public function searchStudents(Request $request)
+    {
+        $query = Student::with('user');
+        if ($request->has('q') && !empty($request->q)) {
+            $q = $request->q;
+            $query->where('admission_number', 'LIKE', "%{$q}%")
+                  ->orWhereHas('user', function($u) use ($q) {
+                      $u->where('first_name', 'LIKE', "%{$q}%")
+                        ->orWhere('last_name', 'LIKE', "%{$q}%");
+                  });
+        }
+        return response()->json($query->take(20)->get());
+    }
+
+    /**
      * Display the specified parent profile with linked students.
      */
     public function show($parentId)
@@ -81,6 +98,9 @@ class ParentController extends Controller
             'performance_summary' => 'nullable|array',
             'improvement_steps' => 'nullable|array',
         ]);
+
+        $validated['parent_id'] = (int) $validated['parent_id'];
+        $validated['student_id'] = (int) $validated['student_id'];
 
         $validated['generated_at'] = Carbon::now();
 

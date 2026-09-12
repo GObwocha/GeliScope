@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
@@ -39,17 +39,14 @@ const currentUser = computed(() => {
  teacher: {
    employee_number: '',
    specialization: '',
-   school_id: 1
+   school_id: 1,
+   assigned_class_id: null,
+   assigned_subject_id: null
  }
  }
 })
 
-const classes = ref([
- { id: 1, name: 'Form 1' },
- { id: 2, name: 'Form 2' },
- { id: 3, name: 'Form 3' },
- { id: 4, name: 'Form 4' }
-])
+const classes = ref([])
 
 const activeTab = ref(0)
 const snackbar = ref(false)
@@ -95,10 +92,66 @@ const fetchMarkingConfig = async (examId) => {
   }
 }
 
-onMounted(() => {
+const subjects = ref([])
+const teacherClassesList = ref([])
+
+onMounted(async () => {
   fetchTeacherData()
   schoolStore.fetchSchools()
+
+  if (currentUser.value.role === 'teacher') {
+    try {
+      const { data } = await axios.get('/api/v1/subjects')
+      subjects.value = data.data || data
+    } catch(e) {}
+
+    if (currentUser.value.teacher) {
+      if (currentUser.value.teacher.classes && currentUser.value.teacher.classes.length > 0) {
+        if (!currentUser.value.teacher.assigned_class_id) {
+          currentUser.value.teacher.assigned_class_id = currentUser.value.teacher.classes[0].id
+        }
+        if (!currentUser.value.teacher.assigned_subject_id) {
+          currentUser.value.teacher.assigned_subject_id = currentUser.value.teacher.classes[0].pivot.subject_id
+        }
+      }
+
+      if (currentUser.value.teacher.school_id) {
+        try {
+          const { data } = await axios.get(`/api/v1/schools/${currentUser.value.teacher.school_id}/classes`)
+          teacherClassesList.value = data.data || data
+        } catch(e) {}
+      }
+    }
+  }
 })
+
+watch(() => currentUser.value.teacher?.school_id, async (newSchoolId) => {
+  if (currentUser.value.role !== 'teacher') return
+  if (newSchoolId) {
+    try {
+      const { data } = await axios.get(`/api/v1/schools/${newSchoolId}/classes`)
+      teacherClassesList.value = data.data || data
+    } catch(e) {
+      teacherClassesList.value = []
+    }
+  } else {
+    teacherClassesList.value = []
+  }
+})
+
+watch(() => currentUser.value.student?.school_id, async (newSchoolId) => {
+  if (currentUser.value.role !== 'student') return
+  if (newSchoolId) {
+    try {
+      const { data } = await axios.get(`/api/v1/schools/${newSchoolId}/classes`)
+      classes.value = data.data || data
+    } catch(e) {
+      classes.value = []
+    }
+  } else {
+    classes.value = []
+  }
+}, { immediate: true })
 
  const saveChanges = async () => {
   loading.value = true
@@ -119,10 +172,16 @@ onMounted(() => {
       payload.phone_number = currentUser.value.parent_profile.phone_number
       payload.occupation = currentUser.value.parent_profile.occupation
     } else if (currentUser.value.role === 'teacher') {
-      payload.employee_number = currentUser.value.teacher.employee_number
-      payload.specialization = currentUser.value.teacher.specialization
-      payload.school_id = currentUser.value.teacher.school_id
-    }
+        payload.employee_number = currentUser.value.teacher.employee_number
+        payload.specialization = currentUser.value.teacher.specialization
+        payload.school_id = currentUser.value.teacher.school_id
+        if (currentUser.value.teacher.assigned_class_id) {
+            payload.assigned_class_id = currentUser.value.teacher.assigned_class_id
+        }
+        if (currentUser.value.teacher.assigned_subject_id) {
+            payload.assigned_subject_id = currentUser.value.teacher.assigned_subject_id
+        }
+      }
 
     const response = await axios.put(`/api/v1/users/${currentUser.value.id}`, payload, {
       headers: { Authorization: `Bearer ${authStore.token}` }
@@ -451,6 +510,32 @@ const removeAvatar = async () => {
  density="comfortable"
  class="mt-4"
  ></v-select>
+
+ <v-row dense class="mt-4">
+   <v-col cols="12" sm="6">
+     <v-select
+       v-model="currentUser.teacher.assigned_class_id"
+       :items="teacherClassesList"
+       item-title="name"
+       item-value="id"
+       label="Assigned Class (Optional)"
+       variant="outlined"
+       density="comfortable"
+       :disabled="!currentUser.teacher.school_id"
+     ></v-select>
+   </v-col>
+   <v-col cols="12" sm="6">
+     <v-select
+       v-model="currentUser.teacher.assigned_subject_id"
+       :items="subjects"
+       item-title="name"
+       item-value="id"
+       label="Teaching Subject (Optional)"
+       variant="outlined"
+       density="comfortable"
+     ></v-select>
+   </v-col>
+ </v-row>
  </template>
 
  <!-- Parent Specific -->

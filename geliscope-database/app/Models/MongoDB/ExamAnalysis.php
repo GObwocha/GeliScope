@@ -63,8 +63,8 @@ class ExamAnalysis extends Model
             'student_id' => 'integer',
             'exam_id' => 'integer',
             'exam_result_id' => 'integer',
-            'blooms_taxonomy' => 'array',
-            'suggestions' => 'array',
+            'blooms_taxonomy' => ,
+            'suggestions' => ,
             'generated_at' => 'datetime',
         ];
     }

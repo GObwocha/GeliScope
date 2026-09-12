@@ -497,7 +497,7 @@ const getBarColor = (score) => {
  :class="[getBarColor(exam.score).split(' ')[0]]"
  :style="`height: ${exam.score}%; max-width: 36px;`"></div>
  
- <div class="text-caption text-medium-emphasis font-weight-bold mt-2">{{ exam.id }}</div>
+ <div class="text-caption text-medium-emphasis font-weight-bold mt-2">{{ exam.name }}</div>
  </div>
  </div>
  
@@ -548,7 +548,7 @@ const getBarColor = (score) => {
  fill="currentColor" 
  class="text-medium-emphasis"
  >
- {{ p.id }}
+ {{ p.name }}
  </text>
  </g>
  </svg>

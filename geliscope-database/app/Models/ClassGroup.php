@@ -53,6 +53,14 @@ class ClassGroup extends Model
     }
 
     /**
+     * Get the students currently assigned to this class.
+     */
+    public function currentStudents(): HasMany
+    {
+        return $this->hasMany(Student::class, 'current_class_id');
+    }
+
+    /**
      * Get the students enrolled in this class.
      */
     public function students(): BelongsToMany

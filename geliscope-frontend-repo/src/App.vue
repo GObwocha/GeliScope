@@ -100,9 +100,7 @@ const currentNavItems = computed(() => {
       style="height: 100vh; position: fixed; top: 0; left: 0;"
     >
       <div class="pa-4 d-flex align-center border-b border-opacity-10 cursor-pointer" @click="router.push('/')">
-        <v-avatar color="secondary" size="36" class="mr-3 " rounded="lg">
-          <v-icon color="background" size="small">mdi-shield-check</v-icon>
-        </v-avatar>
+        <v-img src="/IconOnly_Transparent.png" height="72px" width="12%"></v-img>
         <span class="font-weight-black text-h5 tracking-tight">GeliScope</span>
       </div>
       

@@ -52,7 +52,7 @@ class TeacherMarkingConfig extends Model
     protected function casts(): array
     {
         return [
-            'instructions' => 'array',
+            'instructions' => ,
         ];
     }
 }

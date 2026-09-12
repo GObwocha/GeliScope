@@ -180,6 +180,7 @@ const getProgressColor = (score) => {
 }
 
 import StudentTodoService from '@/services/StudentTodoService'
+import StudentProfileP from './StudentProfileP.vue'
 
 const todos = ref([])
 const loadingTodos = ref(false)
@@ -279,6 +280,74 @@ watch(activeRole, async (newRole) => {
     await loadTodos()
   }
 })
+
+  const manageChildrenDialog = ref(false)
+  const searchQuery = ref('')
+  const searchResults = ref([])
+  const isSearching = ref(false)
+  const isLinking = ref(false)
+  const isUnlinking = ref(false)
+
+  const searchStudents = async () => {
+    if (!searchQuery.value) return
+    isSearching.value = true
+    try {
+      const res = await axios.get(`/api/v1/parents/students/search?q=${searchQuery.value}`, {
+        headers: { Authorization: `Bearer ${authStore.token}` }
+      })
+      searchResults.value = res.data
+    } catch (err) {
+      console.error(err)
+    } finally {
+      isSearching.value = false
+    }
+  }
+
+  const linkStudent = async (studentId) => {
+    const parentId = authStore.currentUser?.parent_profile?.id
+    if (!parentId) return
+    
+    isLinking.value = true
+    try {
+      await axios.post(`/api/v1/parents/${parentId}/students`, { student_id: studentId }, {
+        headers: { Authorization: `Bearer ${authStore.token}` }
+      })
+      searchQuery.value = ''
+      searchResults.value = []
+      await authStore.fetchUser(authStore.token) // Refresh parent students
+      if (parentStudents.value.length === 1) {
+          selectedParentStudent.value = parentStudents.value[0].id
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      isLinking.value = false
+    }
+  }
+
+  const unlinkStudent = async (studentId) => {
+    const parentId = authStore.currentUser?.parent_profile?.id
+    if (!parentId) return
+    if (!confirm('Are you sure you want to unlink this student?')) return
+    
+    isUnlinking.value = true
+    try {
+      await axios.delete(`/api/v1/parents/${parentId}/students/${studentId}`, {
+        headers: { Authorization: `Bearer ${authStore.token}` }
+      })
+      if (selectedParentStudent.value === studentId) {
+        selectedParentStudent.value = null
+      }
+      await authStore.fetchUser(authStore.token)
+      if (parentStudents.value.length > 0 && !selectedParentStudent.value) {
+          selectedParentStudent.value = parentStudents.value[0].id
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      isUnlinking.value = false
+    }
+  }
 
 // Load active session from local storage or backend API
 onMounted(() => {
@@ -697,7 +766,8 @@ onMounted(() => {
  <v-list-item v-bind="props" :title="item.user.first_name + ' ' + item.user.last_name"></v-list-item>
  </template>
  </v-select>
- <v-btn size="small" color="primary" variant="tonal" to="/dashboard/student-profile-parent" class="ml-5">Full Parent Portal</v-btn>
+ <v-btn size="small" color="primary" variant="outlined" @click="manageChildrenDialog = true" class="ml-2">Manage Children</v-btn>
+ <v-btn size="small" color="primary" variant="tonal" to="/dashboard/student-profile-parent" class="ml-2">Full Parent Portal</v-btn>
  </div>
  </div>
 
@@ -719,7 +789,6 @@ onMounted(() => {
  </div>
  </v-card>
  </v-col>
-
  </v-row>
  </div>
 
@@ -879,5 +948,82 @@ onMounted(() => {
  </v-table>
  </div>
  </v-card>
+
+   <!-- Manage Children Dialog -->
+   <v-dialog v-model="manageChildrenDialog" max-width="600">
+     <v-card class="rounded-xl border bg-surface">
+       <v-card-title class="font-weight-bold d-flex align-center justify-space-between pt-6 px-6">
+         Manage Linked Children
+         <v-btn icon="mdi-close" variant="text" size="small" @click="manageChildrenDialog = false"></v-btn>
+       </v-card-title>
+       <v-card-text class="px-6 pb-6">
+         
+         <div class="mb-6">
+           <h4 class="text-subtitle-2 font-weight-bold mb-3 text-medium-emphasis uppercase">Currently Linked Children</h4>
+           <div v-if="parentStudents.length === 0" class="text-caption text-medium-emphasis">No children linked to your profile yet.</div>
+           <v-list v-else class="bg-transparent pa-0 border rounded-lg">
+             <v-list-item v-for="student in parentStudents" :key="student.id" class="border-b py-3">
+               <template v-slot:prepend>
+                 <v-avatar color="accent" size="36" class="mr-3 text-caption">
+                   {{ student.user?.first_name[0] || 'S' }}
+                 </v-avatar>
+               </template>
+               <v-list-item-title class="font-weight-bold">
+                 {{ student.user?.first_name }} {{ student.user?.last_name }}
+               </v-list-item-title>
+               <v-list-item-subtitle class="text-caption font-mono">
+                 ADM: {{ student.admission_number }}
+               </v-list-item-subtitle>
+               <template v-slot:append>
+                 <v-btn icon="mdi-delete" color="error" variant="text" size="small" :loading="isUnlinking" @click="unlinkStudent(student.id)"></v-btn>
+               </template>
+             </v-list-item>
+           </v-list>
+         </div>
+
+         <v-divider class="mb-6"></v-divider>
+
+         <h4 class="text-subtitle-2 font-weight-bold mb-3 text-medium-emphasis uppercase">Link a New Child</h4>
+         <div class="d-flex align-center mb-4">
+           <v-text-field
+             v-model="searchQuery"
+             label="Search by Name or Admission No."
+             variant="outlined"
+             density="comfortable"
+             hide-details
+             class="mr-3"
+             @keyup.enter="searchStudents"
+           ></v-text-field>
+           <v-btn color="primary" @click="searchStudents" :loading="isSearching">Search</v-btn>
+         </div>
+         
+         <div v-if="searchResults.length === 0 && searchQuery && !isSearching" class="text-caption text-error text-center py-4">
+           No students found matching your query.
+         </div>
+         
+         <v-list v-else-if="searchResults.length > 0" class="bg-transparent pa-0 border rounded-lg">
+           <v-list-item v-for="student in searchResults" :key="student.id" class="border-b py-3">
+             <template v-slot:prepend>
+               <v-avatar color="secondary" size="36" class="mr-3 text-caption">
+                 {{ student.user?.first_name[0] || 'S' }}
+               </v-avatar>
+             </template>
+             <v-list-item-title class="font-weight-bold">
+               {{ student.user?.first_name }} {{ student.user?.last_name }}
+             </v-list-item-title>
+             <v-list-item-subtitle class="text-caption font-mono">
+               ADM: {{ student.admission_number }}
+             </v-list-item-subtitle>
+             <template v-slot:append>
+               <v-btn size="small" color="primary" variant="flat" :loading="isLinking" @click="linkStudent(student.id)" :disabled="parentStudents.some(s => s.id === student.id)">
+                 {{ parentStudents.some(s => s.id === student.id) ? 'Linked' : 'Link' }}
+               </v-btn>
+             </template>
+           </v-list-item>
+         </v-list>
+       </v-card-text>
+     </v-card>
+   </v-dialog>
+
  </v-container>
 </template>

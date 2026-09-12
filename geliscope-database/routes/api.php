@@ -69,6 +69,7 @@ Route::prefix('v1')->group(function () {
         //Leaderboard
         Route::get('leaderboard', [LeaderboardController::class, 'index']);
         //Parents
+        Route::get('parents/students/search', [ParentController::class, 'searchStudents']);
         Route::get('parents/{parentId}', [ParentController::class, 'show']);
         Route::post('parents/{parentId}/students', [ParentController::class, 'linkStudent']);
         Route::delete('parents/{parentId}/students/{studentId}', [ParentController::class, 'unlinkStudent']);
