@@ -15,7 +15,16 @@ const roleComponents = {
 </script>
 
 <template>
- <v-container fluid class="pa-0 min-vh-100 font-family-sans bg-background">
+<div class="register-page-wrapper w-100 h-100 position-relative">
+  <v-btn 
+    prepend-icon="mdi-arrow-left" 
+    variant="text" 
+    color="medium-emphasis" 
+    to="/" 
+    class="position-absolute text-none font-weight-medium" 
+    style="top: 24px; left: 24px; z-index: 10;"
+  >Back to website</v-btn>
+   <v-container fluid class="pa-0 min-vh-100 font-family-sans bg-background">
  <v-row no-gutters class="min-vh-100">
  
  <!-- Left Side Branding (Hidden on mobile) -->
@@ -97,6 +106,7 @@ const roleComponents = {
 
  </v-row>
  </v-container>
+ </div>
 </template>
 
 <style scoped>

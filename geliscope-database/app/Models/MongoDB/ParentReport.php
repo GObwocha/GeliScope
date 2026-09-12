@@ -58,9 +58,9 @@ class ParentReport extends Model
     protected function casts(): array
     {
         return [
-            'report_period' => 'array',
-            'performance_summary' => 'array',
-            'improvement_steps' => 'array',
+            'report_period' => ,
+            'performance_summary' => ,
+            'improvement_steps' => ,
             'generated_at' => 'datetime',
         ];
     }

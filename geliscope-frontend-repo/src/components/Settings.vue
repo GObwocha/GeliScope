@@ -1,10 +1,12 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
 import { useExamStore } from '@/stores/exams'
 import { useSchoolStore } from '@/stores/schools'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const schoolStore = useSchoolStore()
 const loading = ref(false)
@@ -20,49 +22,36 @@ const currentUser = computed(() => {
  profile_photo_url: null,
  
  // Student specific
- admission_number: '',
- school_id: 1,
- current_class_id: 2,
- date_of_birth: '',
- personal_motto: '',
+ student: {
+   admission_number: '',
+   school_id: 1,
+   current_class_id: 2,
+   date_of_birth: '',
+ },
 
  // Parent specific
- phone_number: '',
- occupation: '',
+ parent_profile: {
+   phone_number: '',
+   occupation: '',
+ },
 
  // Teacher specific
- employee_number: '',
- specialization: ''
+ teacher: {
+   employee_number: '',
+   specialization: '',
+   school_id: 1,
+   assigned_class_id: null,
+   assigned_subject_id: null
+ }
  }
 })
 
-const classes = ref([
- { id: 1, name: 'Form 1' },
- { id: 2, name: 'Form 2' },
- { id: 3, name: 'Form 3' },
- { id: 4, name: 'Form 4' }
-])
+const classes = ref([])
 
 const activeTab = ref(0)
 const snackbar = ref(false)
 const errorMessage = ref('')
 const errorSnackbar = ref(false)
-
-const mottoFontType = ref(localStorage.getItem('motto_font_type') || 'Inter')
-const mottoFontSize = ref(localStorage.getItem('motto_font_size') || '16')
-const mottoFontColor = ref(localStorage.getItem('motto_font_color') || '#000000')
-
-const commonFonts = [
- 'Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 
- 'Poppins', 'Oswald', 'Arial', 'Times New Roman', 
- 'Courier New', 'Comic Sans MS'
-]
-
-const mottoError = computed(() => {
- if (!currentUser.value.personal_motto) return ''
- const words = currentUser.value.personal_motto.trim().split(/\s+/)
- return words.length > 7 ? 'Motto cannot exceed 7 words.' : ''
-})
 
 const teacherExams = ref([])
 const selectedMarkingExam = ref(null)
@@ -103,19 +92,110 @@ const fetchMarkingConfig = async (examId) => {
   }
 }
 
-onMounted(() => {
+const subjects = ref([])
+const teacherClassesList = ref([])
+
+onMounted(async () => {
   fetchTeacherData()
   schoolStore.fetchSchools()
+
+  if (currentUser.value.role === 'teacher') {
+    try {
+      const { data } = await axios.get('/api/v1/subjects')
+      subjects.value = data.data || data
+    } catch(e) {}
+
+    if (currentUser.value.teacher) {
+      if (currentUser.value.teacher.classes && currentUser.value.teacher.classes.length > 0) {
+        if (!currentUser.value.teacher.assigned_class_id) {
+          currentUser.value.teacher.assigned_class_id = currentUser.value.teacher.classes[0].id
+        }
+        if (!currentUser.value.teacher.assigned_subject_id) {
+          currentUser.value.teacher.assigned_subject_id = currentUser.value.teacher.classes[0].pivot.subject_id
+        }
+      }
+
+      if (currentUser.value.teacher.school_id) {
+        try {
+          const { data } = await axios.get(`/api/v1/schools/${currentUser.value.teacher.school_id}/classes`)
+          teacherClassesList.value = data.data || data
+        } catch(e) {}
+      }
+    }
+  }
 })
 
+watch(() => currentUser.value.teacher?.school_id, async (newSchoolId) => {
+  if (currentUser.value.role !== 'teacher') return
+  if (newSchoolId) {
+    try {
+      const { data } = await axios.get(`/api/v1/schools/${newSchoolId}/classes`)
+      teacherClassesList.value = data.data || data
+    } catch(e) {
+      teacherClassesList.value = []
+    }
+  } else {
+    teacherClassesList.value = []
+  }
+})
+
+watch(() => currentUser.value.student?.school_id, async (newSchoolId) => {
+  if (currentUser.value.role !== 'student') return
+  if (newSchoolId) {
+    try {
+      const { data } = await axios.get(`/api/v1/schools/${newSchoolId}/classes`)
+      classes.value = data.data || data
+    } catch(e) {
+      classes.value = []
+    }
+  } else {
+    classes.value = []
+  }
+}, { immediate: true })
+
  const saveChanges = async () => {
-  if (mottoError.value) return
   loading.value = true
   
-  if (currentUser.value.role === 'student') {
-  localStorage.setItem('motto_font_type', mottoFontType.value)
-  localStorage.setItem('motto_font_size', mottoFontSize.value)
-  localStorage.setItem('motto_font_color', mottoFontColor.value)
+  try {
+    const payload = {
+      first_name: currentUser.value.first_name,
+      last_name: currentUser.value.last_name,
+      email: currentUser.value.email
+    }
+
+    if (currentUser.value.role === 'student') {
+      payload.admission_number = currentUser.value.student.admission_number
+      payload.school_id = currentUser.value.student.school_id
+      payload.current_class_id = currentUser.value.student.current_class_id
+      payload.date_of_birth = currentUser.value.student.date_of_birth
+    } else if (currentUser.value.role === 'parent') {
+      payload.phone_number = currentUser.value.parent_profile.phone_number
+      payload.occupation = currentUser.value.parent_profile.occupation
+    } else if (currentUser.value.role === 'teacher') {
+        payload.employee_number = currentUser.value.teacher.employee_number
+        payload.specialization = currentUser.value.teacher.specialization
+        payload.school_id = currentUser.value.teacher.school_id
+        if (currentUser.value.teacher.assigned_class_id) {
+            payload.assigned_class_id = currentUser.value.teacher.assigned_class_id
+        }
+        if (currentUser.value.teacher.assigned_subject_id) {
+            payload.assigned_subject_id = currentUser.value.teacher.assigned_subject_id
+        }
+      }
+
+    const response = await axios.put(`/api/v1/users/${currentUser.value.id}`, payload, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+    
+    // Update local store
+    authStore.user = response.data
+    localStorage.setItem('geliscope_user', JSON.stringify(response.data))
+    
+    snackbar.value = true
+  } catch (error) {
+    console.error('Error saving user data:', error)
+    errorMessage.value = error.response?.data?.message || 'Failed to save settings'
+    errorSnackbar.value = true
   }
 
   if (currentUser.value.role === 'teacher' && selectedMarkingExam.value) {
@@ -133,9 +213,7 @@ onMounted(() => {
   }
 
   loading.value = false
-  snackbar.value = true
-  console.log('Settings saved:', currentUser.value)
-}
+ }
 
 // Avatar Upload Logic
 const fileInput = ref(null)
@@ -215,7 +293,28 @@ const removeAvatar = async () => {
   } finally {
     removingAvatar.value = false
   }
-}
+  }
+  
+  const deleteAccountDialog = ref(false)
+  const deletingAccount = ref(false)
+
+  const deleteAccount = async () => {
+    deletingAccount.value = true
+    try {
+      await axios.delete(`/api/v1/users/${currentUser.value.id}`, {
+        headers: { Authorization: `Bearer ${authStore.token}` }
+      })
+      authStore.logout()
+      router.push('/')
+    } catch (err) {
+      console.error('Account deletion failed', err)
+      errorMessage.value = 'Failed to delete account. Please try again.'
+      errorSnackbar.value = true
+    } finally {
+      deletingAccount.value = false
+      deleteAccountDialog.value = false
+    }
+  }
 </script>
 
 <template>
@@ -283,7 +382,7 @@ const removeAvatar = async () => {
  v-model="currentUser.first_name"
  label="First Name"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-col>
@@ -292,7 +391,7 @@ const removeAvatar = async () => {
  v-model="currentUser.last_name"
  label="Last Name"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-col>
@@ -303,60 +402,14 @@ const removeAvatar = async () => {
  label="Email Address"
  type="email"
  variant="outlined"
- bg-color="background"
- density="comfortable"
- ></v-text-field>
-
- <template v-if="currentUser.role === 'student'">
- <v-divider class="my-6"></v-divider>
- <h3 class="text-h6 font-weight-bold mb-4">Personal Motto</h3>
  
- <v-text-field
- v-model="currentUser.personal_motto"
- label="Your Motto (Max 7 words)"
- variant="outlined"
- bg-color="background"
  density="comfortable"
- :error-messages="mottoError"
- class="mb-4"
  ></v-text-field>
 
- <v-row dense>
- <v-col cols="12" sm="4">
- <v-autocomplete
- v-model="mottoFontType"
- :items="commonFonts"
- label="Font Type"
- variant="outlined"
- bg-color="background"
- density="comfortable"
- ></v-autocomplete>
- </v-col>
- <v-col cols="12" sm="4">
- <v-text-field
- v-model="mottoFontSize"
- label="Font Size (px, max 24)"
- type="number"
- max="24"
- variant="outlined"
- bg-color="background"
- density="comfortable"
- ></v-text-field>
- </v-col>
- <v-col cols="12" sm="4">
- <v-text-field
- v-model="mottoFontColor"
- label="Font Color"
- type="color"
- variant="outlined"
- bg-color="background"
- density="comfortable"
- class="motto-color-picker"
- ></v-text-field>
- </v-col>
- </v-row>
- </template>
-
+ <v-divider class="my-6"></v-divider>
+ <h4 class="text-h6 font-weight-bold text-error mb-2">Danger Zone</h4>
+ <p class="text-body-2 text-medium-emphasis mb-4">Deleting your account is permanent and will erase all data, including your exam archives, class analysis, and leaderboard progress.</p>
+ <v-btn color="error" variant="flat" prepend-icon="mdi-delete" @click="deleteAccountDialog = true">Delete Account</v-btn>
  </v-window-item>
 
  <!-- 2. Academic/Role Details Tab -->
@@ -377,7 +430,7 @@ const removeAvatar = async () => {
  v-model="currentUser.student.admission_number"
  label="Admission Number"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  readonly
  hint="Contact admin to change"
@@ -390,7 +443,7 @@ const removeAvatar = async () => {
  label="Date of Birth"
  type="date"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-col>
@@ -404,7 +457,7 @@ const removeAvatar = async () => {
  item-value="id"
  label="School"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-select>
  </v-col>
@@ -416,7 +469,7 @@ const removeAvatar = async () => {
  item-value="id"
  label="Current Class"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-select>
  </v-col>
@@ -431,7 +484,7 @@ const removeAvatar = async () => {
  v-model="currentUser.teacher.employee_number"
  label="Employee Number (TSC)"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  readonly
  ></v-text-field>
@@ -441,7 +494,7 @@ const removeAvatar = async () => {
  v-model="currentUser.teacher.specialization"
  label="Specialization"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-col>
@@ -453,10 +506,36 @@ const removeAvatar = async () => {
  item-value="id"
  label="Assigned School"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  class="mt-4"
  ></v-select>
+
+ <v-row dense class="mt-4">
+   <v-col cols="12" sm="6">
+     <v-select
+       v-model="currentUser.teacher.assigned_class_id"
+       :items="teacherClassesList"
+       item-title="name"
+       item-value="id"
+       label="Assigned Class (Optional)"
+       variant="outlined"
+       density="comfortable"
+       :disabled="!currentUser.teacher.school_id"
+     ></v-select>
+   </v-col>
+   <v-col cols="12" sm="6">
+     <v-select
+       v-model="currentUser.teacher.assigned_subject_id"
+       :items="subjects"
+       item-title="name"
+       item-value="id"
+       label="Teaching Subject (Optional)"
+       variant="outlined"
+       density="comfortable"
+     ></v-select>
+   </v-col>
+ </v-row>
  </template>
 
  <!-- Parent Specific -->
@@ -464,19 +543,19 @@ const removeAvatar = async () => {
  <v-row dense>
  <v-col cols="12" sm="6">
  <v-text-field
- v-model="currentUser.phone_number"
+ v-model="currentUser.parent_profile.phone_number"
  label="Phone Number"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-col>
  <v-col cols="12" sm="6">
  <v-text-field
- v-model="currentUser.occupation"
+ v-model="currentUser.parent_profile.occupation"
  label="Occupation"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-col>
@@ -494,7 +573,7 @@ const removeAvatar = async () => {
  label="Current Password"
  type="password"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
 
@@ -502,7 +581,7 @@ const removeAvatar = async () => {
  label="New Password"
  type="password"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
 
@@ -510,7 +589,7 @@ const removeAvatar = async () => {
  label="Confirm New Password"
  type="password"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  ></v-text-field>
  </v-window-item>
@@ -527,7 +606,7 @@ const removeAvatar = async () => {
  item-value="id"
  label="Select Exam"
  variant="outlined"
- bg-color="background"
+ 
  density="comfortable"
  @update:modelValue="fetchMarkingConfig"
  ></v-select>
@@ -537,7 +616,7 @@ const removeAvatar = async () => {
  v-model="markingInstructionsText"
  label="Marking Instructions (Keywords, rules, expectations)"
  variant="outlined"
- bg-color="background"
+ 
  rows="6"
  hint="Example: Look out for formula derivation. Award partial marks for substitution."
  persistent-hint
@@ -568,6 +647,23 @@ const removeAvatar = async () => {
  <v-snackbar v-model="snackbar" color="success" variant="flat" location="bottom right">
  Settings successfully updated!
  </v-snackbar>
+
+ <!-- Delete Account Dialog -->
+ <v-dialog v-model="deleteAccountDialog" max-width="500">
+ <v-card class="rounded-xl pa-4">
+ <v-card-title class="text-h6 font-weight-bold d-flex align-center text-error">
+ <v-icon color="error" class="mr-2">mdi-alert-octagon</v-icon> Delete Account
+ </v-card-title>
+ <v-card-text class="pt-2 text-body-1">
+ Are you completely sure? This action is irreversible and will permanently wipe out all your personal data, exam records, leaderboards, and settings from our servers.
+ </v-card-text>
+ <v-card-actions>
+ <v-spacer></v-spacer>
+ <v-btn variant="text" color="medium-emphasis" @click="deleteAccountDialog = false">Cancel</v-btn>
+ <v-btn color="error" variant="flat" :loading="deletingAccount" @click="deleteAccount">Yes, Delete Everything</v-btn>
+ </v-card-actions>
+ </v-card>
+ </v-dialog>
  </v-container>
 </template>
 
@@ -590,9 +686,5 @@ const removeAvatar = async () => {
 
 .sidebar-nav {
  min-width: 250px;
-}
-
-.motto-color-picker {
- height: 56px;
 }
 </style>

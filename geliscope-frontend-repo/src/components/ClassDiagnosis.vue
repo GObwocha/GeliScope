@@ -92,7 +92,7 @@ const generateDiagnosis = async () => {
             return-object
             label="Select Class"
             variant="outlined"
-            bg-color="background"
+
             :loading="loadingClasses"
             @update:modelValue="selectedExamId = null"
           >
@@ -113,7 +113,7 @@ const generateDiagnosis = async () => {
             item-value="id"
             label="Select Exam"
             variant="outlined"
-            bg-color="background"
+
             :disabled="!selectedClass"
           ></v-select>
         </v-col>

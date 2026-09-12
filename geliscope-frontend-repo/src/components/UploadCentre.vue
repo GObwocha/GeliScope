@@ -67,6 +67,41 @@ const examForm = ref({
   academic_year: '2025'
 })
 
+const createExamRoundDialog = ref(false)
+const creatingExamRound = ref(false)
+const examRoundFormRef = ref(null)
+const examRoundForm = ref({
+  name: '',
+  term: 1,
+  academic_year: '2025',
+  start_date: '',
+  end_date: ''
+})
+
+const submitCreateExamRound = async () => {
+  if (examRoundFormRef.value) {
+    const { valid } = await examRoundFormRef.value.validate()
+    if (!valid) return
+  }
+  
+  creatingExamRound.value = true
+  try {
+    const response = await axios.post('/api/v1/exam-rounds', examRoundForm.value)
+    examRounds.value.unshift(response.data.data) // Add to the dropdown options
+    examForm.value.exam_round_id = response.data.data.id // Auto-select it
+    createExamRoundDialog.value = false
+    alert('Exam Round created successfully!')
+    
+    // Reset form
+    examRoundForm.value = { name: '', term: 1, academic_year: '2025', start_date: '', end_date: '' }
+  } catch (e) {
+    console.error(e)
+    alert('Failed to create Exam Round.')
+  } finally {
+    creatingExamRound.value = false
+  }
+}
+
 const isDragging = ref(false);
 
 onMounted(async () => {
@@ -101,6 +136,12 @@ onMounted(async () => {
           admission_number: currentUser.student.admission_number 
         }]
         selectedStudent.value = currentUser.student.id 
+      } else if (currentUser.role === 'parent') {
+        const parentStudents = currentUser?.parent_profile?.students || []
+        students.value = parentStudents
+        if (parentStudents.length > 0) {
+          selectedStudent.value = parentStudents[0].id
+        }
       } else {
         students.value = [{
           id: currentUser.id,
@@ -390,7 +431,10 @@ const removeFile = (index) => {
                 <v-form ref="createExamFormRef" @submit.prevent="submitCreateExam">
                   <v-text-field v-model="examForm.name" label="Exam Name" variant="outlined" class="mb-4" :rules="requiredRule" required />
                   <v-text-field v-model="examForm.exam_code" label="Exam Code" variant="outlined" class="mb-4" :rules="requiredRule" required />
-                  <v-select v-model="examForm.exam_round_id" :items="examRounds" item-title="name" item-value="id" label="Exam Round (Optional)" variant="outlined" class="mb-4" clearable />
+                  <div class="d-flex align-start gap-3">
+                    <v-select v-model="examForm.exam_round_id" :items="examRounds" item-title="name" item-value="id" label="Exam Round (Optional)" variant="outlined" class="mb-4 flex-grow-1" clearable />
+                    <v-btn icon="mdi-plus" color="secondary" variant="tonal" class="mt-1 ml-3" @click="createExamRoundDialog = true" size="small" title="Add new Exam Round" />
+                  </div>
                   <v-select v-model="examForm.class_id" :items="classesList" item-title="name" item-value="id" label="Class & Subject" variant="outlined" class="mb-4" :rules="requiredRule" required>
                     <template v-slot:selection="{ item }">
                       {{ item.name }} ({{ item.subject_name }})
@@ -467,7 +511,7 @@ const removeFile = (index) => {
                   Mark & Analyze
                 </v-btn>
               </v-col>
-              <v-col cols="{{ currentUser.role == 'teacher' ? 6 : 12 }}" md="6" >
+              <v-col :cols="currentUser.role == 'teacher' ? 6 : 12" md="6" >
                 <v-btn
                   color="primary"
                   size="large"
@@ -585,7 +629,34 @@ const removeFile = (index) => {
  </v-list-item>
  </v-list>
  </v-card>
- </v-col>
- </v-row>
- </v-container>
+      </v-col>
+    </v-row>
+
+    <!-- Create Exam Round Dialog -->
+    <v-dialog v-model="createExamRoundDialog" max-width="500">
+      <v-card class="rounded-xl pa-4">
+        <v-card-title class="text-h6 font-weight-bold d-flex align-center">
+          <v-icon color="secondary" class="mr-2">mdi-folder-plus-outline</v-icon> Create Exam Round
+        </v-card-title>
+        <v-card-text>
+          <v-form ref="examRoundFormRef" @submit.prevent="submitCreateExamRound">
+            <v-text-field v-model="examRoundForm.name" label="Round Name (e.g. End of Term 1 Exams)" variant="outlined" class="mb-4" :rules="requiredRule" required />
+            <v-row>
+              <v-col cols="6"><v-text-field v-model.number="examRoundForm.term" type="number" label="Term" variant="outlined" :rules="requiredRule" required /></v-col>
+              <v-col cols="6"><v-text-field v-model="examRoundForm.academic_year" label="Academic Year" variant="outlined" :rules="requiredRule" required /></v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="6"><v-text-field v-model="examRoundForm.start_date" type="date" label="Start Date" variant="outlined" /></v-col>
+              <v-col cols="6"><v-text-field v-model="examRoundForm.end_date" type="date" label="End Date" variant="outlined" /></v-col>
+            </v-row>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" color="medium-emphasis" @click="createExamRoundDialog = false">Cancel</v-btn>
+          <v-btn color="secondary" variant="flat" :loading="creatingExamRound" @click="submitCreateExamRound">Save Exam Round</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-container>
 </template>

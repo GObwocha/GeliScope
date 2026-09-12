@@ -16,48 +16,80 @@ const showPassword = ref(false);
 const loading = ref(false);
 const loadingGoogle = ref(false);
 const errorMsg = ref('');
+const otp = ref('');
 const userData = ref(null);
 
 const rules = {
- required: value => !!value || 'Required.',
- min: v => v.length >= 8 || 'Min 8 characters',
+  required: value => !!value || 'Required.',
+  email: value => {
+    const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    return pattern.test(value) || 'Invalid e-mail.'
+  },
 }
 
 const handleCheckEmail = async () => {
- if (!email.value) return;
- 
- loading.value = true;
- errorMsg.value = '';
- try {
- const data = await authStore.checkEmail(email.value);
- userData.value = data;
- step.value = 2;
- } catch (error) {
- errorMsg.value = error.response?.data?.message || 'User not found.';
- } finally {
- loading.value = false;
- }
+  if (!email.value || rules.email(email.value) !== true) return;
+  
+  loading.value = true;
+  errorMsg.value = '';
+  try {
+    const data = await authStore.checkEmail(email.value);
+    userData.value = data;
+    step.value = 2; // Move to password step
+  } catch (error) {
+    if (error.response?.status === 404) {
+      errorMsg.value = "Couldn't find your account";
+    } else {
+      errorMsg.value = "An error occurred. Please try again.";
+    }
+  } finally {
+    loading.value = false;
+  }
 }
 
 const handleLogin = async () => {
- if (!password.value) return;
- 
- loading.value = true;
- errorMsg.value = '';
- try {
- await authStore.login(email.value, password.value);
- router.push('/dashboard'); // Or the active role dashboard
- } catch (error) {
- errorMsg.value = error.response?.data?.message || 'Incorrect password.';
- } finally {
- loading.value = false;
- }
+  if (!password.value) return;
+  
+  loading.value = true;
+  errorMsg.value = '';
+  try {
+    const res = await authStore.login(email.value, password.value);
+    if (res && res.requires_otp) {
+        step.value = 3;
+    } else {
+        router.push('/dashboard');
+    }
+  } catch (error) {
+    errorMsg.value = error.response?.data?.message || 'Incorrect password.';
+  } finally {
+    loading.value = false;
+  }
+}
+
+const handleVerifyOtp = async () => {
+  if (!otp.value || otp.value.length !== 6) return;
+  
+  loading.value = true;
+  errorMsg.value = '';
+  try {
+    await authStore.verifyOtp(email.value, password.value, otp.value);
+    router.push('/dashboard');
+  } catch (error) {
+    errorMsg.value = error.response?.data?.message || 'Invalid OTP.';
+  } finally {
+    loading.value = false;
+  }
 }
 
 const goBack = () => {
- step.value = 1;
- password.value = '';
- errorMsg.value = '';
+  if (step.value === 3) {
+      step.value = 2;
+      otp.value = '';
+  } else if (step.value === 2) {
+      step.value = 1;
+      password.value = '';
+  }
+  errorMsg.value = '';
 }
 
 const googleLogin = async () => {
@@ -66,19 +98,34 @@ const googleLogin = async () => {
     loadingGoogle.value = false
 }
 
+const successMsg = ref('');
+
 onMounted(() => {
     if (route.query.error === 'user_not_found') {
         errorMsg.value = 'User not found. Please ensure you are registered.';
-        
-        // Remove the error query parameter from the URL so it doesn't persist on refresh
         const query = { ...route.query };
         delete query.error;
+        router.replace({ path: route.path, query });
+    } else if (route.query.registered === 'true') {
+        successMsg.value = 'Registration successful! Please check your email to verify your account.';
+        const query = { ...route.query };
+        delete query.registered;
         router.replace({ path: route.path, query });
     }
 });
 </script>
 
 <template>
+<div class="login-page-wrapper w-100 h-100 position-relative">
+  <v-btn 
+    prepend-icon="mdi-arrow-left" 
+    variant="text" 
+    color="medium-emphasis" 
+    to="/" 
+    class="position-absolute text-none font-weight-medium" 
+    style="top: 24px; left: 24px; z-index: 10;"
+  >Back to website</v-btn>
+
  <v-container class="fill-height d-flex align-center justify-center">
  <v-card 
  :color="theme.global.current.value.dark ? 'surface': 'transparent'" 
@@ -88,12 +135,13 @@ onMounted(() => {
  >
  <!--Header-->
  <div class="d-flex align-center justify-center mb-4">
- <v-btn v-if="step === 2" icon="mdi-arrow-left" variant="text" size="small" class="position-absolute " @click="goBack"></v-btn>
+ <v-btn v-if="step > 1" icon="mdi-arrow-left" variant="text" size="small" class="position-absolute " @click="goBack"></v-btn>
  <h1 class="mb-0">{{ step === 1 ? 'Login' : 'Welcome back' }}</h1>
  </div>
 
  <!-- Error Message -->
  <v-alert v-if="errorMsg" type="error" variant="tonal" class="mb-4 text-caption" density="compact">{{ errorMsg }}</v-alert>
+ <v-alert v-if="successMsg" type="success" variant="tonal" class="mb-4 text-caption" density="compact">{{ successMsg }}</v-alert>
 
  <!--Form Step 1: Email-->
  <template v-if="step === 1">
@@ -152,6 +200,33 @@ onMounted(() => {
  >Sign In</v-btn>
  </template>
 
+  <!--Form Step 3: OTP-->
+  <template v-if="step === 3">
+    <div class="text-body-2 mb-4 text-medium-emphasis">
+      We've sent a 6-digit verification code to your email and phone number.
+    </div>
+    
+    <v-text-field 
+      variant="outlined"
+      density="comfortable"
+      class="mb-4"
+      placeholder="Enter 6-digit code"
+      v-model="otp"
+      :rules="[rules.required]"
+      @keyup.enter="handleVerifyOtp"
+      maxlength="6"
+    ></v-text-field>
+   
+    <v-btn
+      size="large"
+      block 
+      color="primary"
+      class="text-none mb-6"
+      :loading="loading"
+      @click="handleVerifyOtp"
+    >Verify & Login</v-btn>
+  </template>
+
  <template v-if="step === 1">
  <!-- Divider -->
  <v-divider>or continue with</v-divider>
@@ -186,6 +261,7 @@ onMounted(() => {
 
  </v-card> 
  </v-container>
+ </div>
 </template>
 
 <style scoped>

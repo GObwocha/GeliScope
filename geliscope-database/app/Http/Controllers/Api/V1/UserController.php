@@ -47,6 +47,8 @@ class UserController extends Controller
             'date_of_birth' => 'nullable|date',
             'employee_number' => 'required_if:role,teacher|string|unique:teachers,employee_number',
             'specialization' => 'nullable|string',
+            'assigned_class_id' => 'nullable|exists:classes,id',
+            'assigned_subject_id' => 'nullable|exists:subjects,id',
             'phone_number' => 'nullable|string',
             'occupation' => 'nullable|string',
         ]);
@@ -54,14 +56,39 @@ class UserController extends Controller
         try {
             DB::beginTransaction();
 
+            $token = \Illuminate\Support\Str::random(60);
+
             $user = User::create([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
                 'email' => $validated['email'],
+                'phone_number' => $validated['phone_number'] ?? null,
                 'password' => Hash::make($validated['password']),
                 'role' => $validated['role'],
                 'profile_photo_url' => $validated['profile_photo_url'] ?? null,
+                'email_verification_token' => $token,
             ]);
+
+            $verificationLink = config('app.frontend_url') . '/verify-email?token=' . $token;
+
+            if (config('services.emailjs.service_id') && config('services.emailjs.template_id') && config('services.emailjs.public_key')) {
+                try {
+                    \Illuminate\Support\Facades\Http::post('https://api.emailjs.com/api/v1.0/email/send', [
+                        'service_id' => config('services.emailjs.service_id'),
+                        'template_id' => config('services.emailjs.template_id'),
+                        'user_id' => config('services.emailjs.public_key'),
+                        'accessToken' => config('services.emailjs.private_key'),
+                        'template_params' => [
+                            'to_email' => $user->email,
+                            'message' => "Please verify your GeliScope email by clicking here: {$verificationLink}"
+                        ]
+                    ]);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('EmailJS verification failed: ' . $e->getMessage());
+                }
+            } else {
+                \Illuminate\Support\Facades\Log::info("EmailJS credentials missing. Simulated Verification Email to {$user->email}: {$verificationLink}");
+            }
 
             if ($validated['role'] === 'student') {
                 Student::create([
@@ -72,12 +99,18 @@ class UserController extends Controller
                     'date_of_birth' => $validated['date_of_birth'] ?? null,
                 ]);
             } elseif ($validated['role'] === 'teacher') {
-                Teacher::create([
+                $teacher = Teacher::create([
                     'user_id' => $user->id,
                     'employee_number' => $validated['employee_number'],
                     'school_id' => $validated['school_id'],
                     'specialization' => $validated['specialization'] ?? null,
                 ]);
+
+                if (!empty($validated['assigned_class_id']) && !empty($validated['assigned_subject_id'])) {
+                    $teacher->classes()->attach($validated['assigned_class_id'], [
+                        'subject_id' => $validated['assigned_subject_id']
+                    ]);
+                }
             } elseif ($validated['role'] === 'parent') {
                 ParentProfile::create([
                     'user_id' => $user->id,
@@ -88,7 +121,10 @@ class UserController extends Controller
 
             DB::commit();
 
-            return response()->json($user->load(['student.school', 'student.skills', 'teacher.school', 'parentProfile']), 201);
+            return response()->json([
+                'user' => $user->load(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'parentProfile']),
+                'message' => 'Registration successful. Please check your email to verify your account.'
+            ], 201);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json(['message' => 'Failed to create user', 'error' => $e->getMessage()], 500);
@@ -100,7 +136,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])->findOrFail($id);
+        $user = User::with(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'parentProfile'])->findOrFail($id);
         return response()->json($user);
     }
 
@@ -117,19 +153,22 @@ class UserController extends Controller
             'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
             'profile_photo_url' => 'nullable|string|url',
-            'personal_motto' => [
-                'nullable',
-                'string',
-                function ($attribute, $value, $fail) {
-                    if (str_word_count($value) > 7) {
-                        $fail('The personal motto must not exceed 7 words.');
-                    }
-                },
-            ],
+            
+            // Student
             'admission_number' => 'sometimes|required|string|unique:students,admission_number,' . optional($user->student)->id,
             'school_id' => 'sometimes|required|exists:schools,id',
             'current_class_id' => 'nullable|exists:classes,id',
             'date_of_birth' => 'nullable|date',
+            
+            // Parent
+            'phone_number' => 'nullable|string|max:20',
+            'occupation' => 'nullable|string|max:255',
+            
+            // Teacher
+            'employee_number' => 'sometimes|required|string|unique:teachers,employee_number,' . optional($user->teacher)->id,
+            'specialization' => 'nullable|string|max:255',
+            'assigned_class_id' => 'nullable|exists:classes,id',
+            'assigned_subject_id' => 'nullable|exists:subjects,id',
         ]);
 
         if (isset($validated['password'])) {
@@ -139,13 +178,30 @@ class UserController extends Controller
         $user->update($request->only(['first_name', 'last_name', 'email', 'password', 'profile_photo_url']));
 
         if ($user->role === 'student' && $user->student) {
-            $studentData = $request->only(['admission_number', 'school_id', 'current_class_id', 'date_of_birth', 'personal_motto']);
+            $studentData = $request->only(['admission_number', 'school_id', 'current_class_id', 'date_of_birth']);
             if (!empty($studentData)) {
                 $user->student->update($studentData);
             }
+        } elseif ($user->role === 'parent' && $user->parentProfile) {
+            $parentData = $request->only(['phone_number', 'occupation']);
+            if (!empty($parentData)) {
+                $user->parentProfile->update($parentData);
+            }
+        } elseif ($user->role === 'teacher' && $user->teacher) {
+            $teacherData = $request->only(['employee_number', 'specialization', 'school_id']);
+            if (!empty($teacherData)) {
+                $user->teacher->update($teacherData);
+            }
+            if ($request->has('assigned_class_id') && $request->has('assigned_subject_id') && $request->assigned_class_id) {
+                $user->teacher->classes()->sync([
+                    $request->assigned_class_id => ['subject_id' => $request->assigned_subject_id]
+                ]);
+            } elseif ($request->has('assigned_class_id') && !$request->assigned_class_id) {
+                $user->teacher->classes()->detach();
+            }
         }
 
-        return response()->json($user->fresh(['student.school', 'student.skills', 'teacher.school', 'parentProfile']));
+        return response()->json($user->fresh(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'teacher.classes', 'parentProfile']));
     }
 
     /**
@@ -194,7 +250,7 @@ class UserController extends Controller
             return response()->json([
                 'message' => 'Avatar uploaded successfully',
                 'profile_photo_url' => $url,
-                'user' => $user->fresh(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])
+                'user' => $user->fresh(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'parentProfile'])
             ], 200);
         }
 
@@ -221,7 +277,7 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'Avatar removed successfully',
-            'user' => $user->fresh(['student.school', 'student.skills', 'teacher.school', 'parentProfile'])
+            'user' => $user->fresh(['student.school', 'student.skills', 'teacher.school', 'teacher.classes', 'parentProfile'])
         ], 200);
     }
 }

@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import Features from '@/components/Features.vue'
 import HowItWorks from '@/components/HowItWorks.vue'
 import LandingPage from '@/components/LandingPage.vue'
 import Login from '@/components/Login.vue'
 import Pricing from '@/components/Pricing.vue'
 import Register from '@/components/Register.vue'
+import VerifyEmail from '@/components/VerifyEmail.vue'
 import Settings from '@/components/Settings.vue'
 import Performance from '@/components/Performance.vue'
 import StudentProfileP from '@/components/StudentProfileP.vue'
@@ -37,11 +37,6 @@ const router = createRouter({
     component: AuthCallBack
     },
     {
-      path: '/features',
-      component: Features,
-      meta: { requiresAuth: false }
-    },
-    {
       path: '/how-it-works',
       component: HowItWorks,
       meta: { requiresAuth: false }
@@ -64,6 +59,11 @@ const router = createRouter({
     {
       path: '/login',
       component: Login,
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/verify-email',
+      component: VerifyEmail,
       meta: { requiresAuth: false }
     },
     {
@@ -136,6 +136,8 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
   } else if ((to.path === '/login' || to.path === '/register') && authStore.isAuthenticated) {
+    next('/dashboard')
+  } else if (authStore.isAuthenticated && authStore.activeRole === 'parent' && (to.path === '/dashboard/leaderboard' || to.path === '/dashboard/exam-archives')) {
     next('/dashboard')
   } else {
     next()

@@ -223,6 +223,7 @@ const selectedParentStudent = ref(null)
 
 const childTeachers = ref([])
 const loadingChildTeachers = ref(false)
+const selectedTeacherForContact = ref(null)
 
 const fetchChildTeachers = async () => {
   if (!selectedParentStudent.value || activeRole.value !== 'parent') return;
@@ -231,6 +232,7 @@ const fetchChildTeachers = async () => {
   
   try {
     loadingChildTeachers.value = true;
+    selectedTeacherForContact.value = null;
     const response = await axios.get(`/api/v1/parents/${parentId}/students/${selectedParentStudent.value}/teachers`);
     childTeachers.value = response.data;
   } catch (err) {
@@ -361,11 +363,34 @@ const getBarColor = (score) => {
  
  <!-- Big Metric -->
  <v-row class="d-flex flex-column px-6">
- <v-card class=" pa-5 border d-flex flex-column justify-center">
- <h1 class="text-h3 font-weight-medium lh-tight mb-6">
- {{ displayData.title }}
- </h1>
- <div class="text-caption text-medium-emphasis mb-1">{{ displayData.subtitle }}</div>
+ <v-card class="pa-5 border d-flex flex-column justify-center">
+  <div class="d-flex flex-wrap align-center justify-space-between">
+    <div>
+      <h1 class="text-h3 font-weight-medium lh-tight mb-2">
+      {{ displayData.title }}
+      </h1>
+      <div class="text-caption text-medium-emphasis">{{ displayData.subtitle }}</div>
+    </div>
+    <v-select
+      v-if="activeRole === 'parent' && parentStudents.length > 1"
+      v-model="selectedParentStudent"
+      :items="parentStudents"
+      item-title="user.first_name"
+      item-value="id"
+      density="compact"
+      variant="outlined"
+      hide-details
+      style="max-width: 200px;"
+      label="Select Student"
+    >
+      <template v-slot:selection="{ item }">
+        {{ item.user.first_name }}
+      </template>
+      <template v-slot:item="{ props, item }">
+        <v-list-item v-bind="props" :title="item.user.first_name + ' ' + item.user.last_name"></v-list-item>
+      </template>
+    </v-select>
+  </div>
  </v-card>
  </v-row>
  <!-- Bar / Line Chart -->
@@ -472,7 +497,7 @@ const getBarColor = (score) => {
  :class="[getBarColor(exam.score).split(' ')[0]]"
  :style="`height: ${exam.score}%; max-width: 36px;`"></div>
  
- <div class="text-caption text-medium-emphasis font-weight-bold mt-2">{{ exam.id }}</div>
+ <div class="text-caption text-medium-emphasis font-weight-bold mt-2">{{ exam.name }}</div>
  </div>
  </div>
  
@@ -523,7 +548,7 @@ const getBarColor = (score) => {
  fill="currentColor" 
  class="text-medium-emphasis"
  >
- {{ p.id }}
+ {{ p.name }}
  </text>
  </g>
  </svg>
@@ -539,27 +564,8 @@ const getBarColor = (score) => {
       
       <!-- To-Do List for Students and Parents -->
       <v-card v-if="activeRole === 'student' || activeRole === 'parent'" class="pa-5 border d-flex flex-column">
-        <div class="d-flex align-center justify-space-between mb-1">
+        <div class="mb-1">
           <div class="text-h6 font-weight-regular">{{ activeRole === 'parent' ? "Student's To-Do List" : "Your To-Do List" }}</div>
-          
-          <v-select
-            v-if="activeRole === 'parent' && parentStudents.length > 1"
-            v-model="selectedParentStudent"
-            :items="parentStudents"
-            item-title="user.first_name"
-            item-value="id"
-            density="compact"
-            variant="outlined"
-            hide-details
-            style="max-width: 150px;"
-          >
-            <template v-slot:selection="{ item }">
-              {{ item.raw.user.first_name }}
-            </template>
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :title="item.raw.user.first_name + ' ' + item.raw.user.last_name"></v-list-item>
-            </template>
-          </v-select>
         </div>
         <div class="text-caption text-medium-emphasis mb-6">Action items pulled from exam analyses.</div>
         
@@ -611,10 +617,10 @@ const getBarColor = (score) => {
             hide-details
           >
             <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :title="item.raw.user.first_name + ' ' + item.raw.user.last_name + ' (' + item.raw.admission_number + ')'"></v-list-item>
+              <v-list-item v-bind="props" :title="item.user.first_name + ' ' + item.user.last_name + ' (' + item.admission_number + ')'"></v-list-item>
             </template>
             <template v-slot:selection="{ item }">
-              {{ item.raw.user.first_name }} {{ item.raw.user.last_name }}
+              {{ item.user.first_name }} {{ item.user.last_name }}
             </template>
           </v-autocomplete>
 
@@ -655,37 +661,59 @@ const getBarColor = (score) => {
         </template>
         
         <template v-else>
-          <div class="d-flex flex-column gap-4 flex-grow-1">
-            <div v-if="loadingChildTeachers" class="d-flex justify-center py-4">
-              <v-progress-circular indeterminate color="primary"></v-progress-circular>
-            </div>
-            <div v-else-if="childTeachers.length === 0" class="text-caption text-medium-emphasis text-center py-4">
-              No teacher contacts found for this student.
-            </div>
-            <template v-else>
-              <div v-for="(teacher, i) in childTeachers" :key="teacher.id" class="mb-4 border rounded-lg pa-3">
-                <div class="d-flex align-center justify-space-between mb-3">
-                  <div class="d-flex align-center gap-3">
-                    <v-avatar size="36" color="primary" variant="tonal">
-                      <span class="font-weight-bold text-caption">{{ teacher.user?.first_name?.charAt(0) }}</span>
-                    </v-avatar>
-                    <div>
-                      <div class="text-body-2 font-weight-medium">{{ teacher.user?.first_name }} {{ teacher.user?.last_name }}</div>
-                      <div class="text-caption text-medium-emphasis">Teacher</div>
-                    </div>
-                  </div>
-                  <div class="text-caption font-weight-medium">{{ teacher.user?.phone_number || 'N/A' }}</div>
-                </div>
-                <div class="d-flex gap-2">
-                  <v-btn color="success" size="small" variant="flat" class="flex-grow-1" prepend-icon="mdi-whatsapp" :href="teacher.user?.phone_number ? 'https://wa.me/' + teacher.user.phone_number.replace(/[^0-9]/g, '') : '#'" target="_blank" :disabled="!teacher.user?.phone_number">
-                    WhatsApp
-                  </v-btn>
-                  <v-btn color="primary" size="small" variant="tonal" class="flex-grow-1" prepend-icon="mdi-phone" :href="teacher.user?.phone_number ? 'tel:' + teacher.user.phone_number.replace(/[^0-9+]/g, '') : '#'" :disabled="!teacher.user?.phone_number">
-                    Call
-                  </v-btn>
-                </div>
-              </div>
+          <v-autocomplete
+            v-model="selectedTeacherForContact"
+            :items="childTeachers"
+            item-title="user.first_name"
+            item-value="id"
+            label="Select a teacher"
+            variant="outlined"
+            density="compact"
+            class="mb-4"
+            hide-details
+            :loading="loadingChildTeachers"
+          >
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :title="item.user.first_name + ' ' + item.user.last_name"></v-list-item>
             </template>
+            <template v-slot:selection="{ item }">
+              {{ item.user.first_name }} {{ item.user.last_name }}
+            </template>
+          </v-autocomplete>
+
+          <div class="d-flex flex-column gap-4 flex-grow-1" v-if="selectedTeacherForContact">
+            <template v-for="teacher in childTeachers" :key="teacher.id">
+              <template v-if="teacher.id === selectedTeacherForContact">
+                <div class="mb-4 border rounded-lg pa-3">
+                  <div class="d-flex align-center justify-space-between mb-3">
+                    <div class="d-flex align-center gap-3">
+                      <v-avatar size="36" color="primary" variant="tonal">
+                        <span class="font-weight-bold text-caption">{{ teacher.user?.first_name?.charAt(0) }}</span>
+                      </v-avatar>
+                      <div>
+                        <div class="text-body-2 font-weight-medium">{{ teacher.user?.first_name }} {{ teacher.user?.last_name }}</div>
+                        <div class="text-caption text-medium-emphasis">Teacher</div>
+                      </div>
+                    </div>
+                    <div class="text-caption font-weight-medium">{{ teacher.user?.phone_number || 'N/A' }}</div>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <v-btn color="success" size="small" variant="flat" class="flex-grow-1" prepend-icon="mdi-whatsapp" :href="teacher.user?.phone_number ? 'https://wa.me/' + teacher.user.phone_number.replace(/[^0-9]/g, '') : '#'" target="_blank" :disabled="!teacher.user?.phone_number">
+                      WhatsApp
+                    </v-btn>
+                    <v-btn color="primary" size="small" variant="tonal" class="flex-grow-1" prepend-icon="mdi-phone" :href="teacher.user?.phone_number ? 'tel:' + teacher.user.phone_number.replace(/[^0-9+]/g, '') : '#'" :disabled="!teacher.user?.phone_number">
+                      Call
+                    </v-btn>
+                  </div>
+                </div>
+              </template>
+            </template>
+          </div>
+          <div v-else-if="!loadingChildTeachers && childTeachers.length > 0" class="text-center text-caption text-medium-emphasis py-6">
+            Select a teacher to view contacts.
+          </div>
+          <div v-else-if="!loadingChildTeachers" class="text-center text-caption text-medium-emphasis py-6">
+            No teacher contacts found for this student.
           </div>
         </template>
       </v-card>

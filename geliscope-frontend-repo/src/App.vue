@@ -48,68 +48,40 @@ const teacherDashboardNavItems = [
   { title: 'Settings', icon: 'mdi-cog', to: '/dashboard/settings' },
 ]
 
+const parentDashboardNavItems = [
+  { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/dashboard' },
+  { title: 'Upload Centre', icon: 'mdi-cloud-upload', to: '/dashboard/upload-centre' },
+  { title: 'Performance', icon: 'mdi-speedometer', to: '/dashboard/performance' },
+  { title: 'Settings', icon: 'mdi-cog', to: '/dashboard/settings' },
+]
+
 const isDashboard = computed(() => {
   return route.path.startsWith('/dashboard') || route.path === '/admin-dashboard'
 })
 
 const currentMenuTitle = computed(() => {
   if (!isDashboard.value) return 'Dashboard'
-  const navItems = authStore.activeRole === 'teacher' ? teacherDashboardNavItems : dashboardNavItems
+  let navItems = dashboardNavItems;
+  if (authStore.activeRole === 'teacher') {
+    navItems = teacherDashboardNavItems;
+  } else if (authStore.activeRole === 'parent') {
+    navItems = parentDashboardNavItems;
+  }
   const currentItem = navItems.find(item => item.to === route.path)
   return currentItem ? currentItem.title : 'Dashboard'
+})
+
+const currentNavItems = computed(() => {
+  if (authStore.activeRole === 'teacher') return teacherDashboardNavItems;
+  if (authStore.activeRole === 'parent') return parentDashboardNavItems;
+  return dashboardNavItems;
 })
 </script>
 
 <template>
   <v-app class="app-container">
     
-    <!-- Public App Bar (Modern Floating Pill) -->
-    <v-app-bar v-if="!isDashboard" color="transparent" elevation="0" height="100">
-      <v-card class="mx-auto rounded-pill d-flex align-center px-4 px-md-8 w-100 border-opacity-10" max-width="1100" height="70"  elevation="8">
-        <v-app-bar-nav-icon @click="drawer = !drawer" class="hidden-md-and-up"></v-app-bar-nav-icon>
-        
-        <!-- Logo Area -->
-        <div class="d-flex align-center cursor-pointer" @click="router.push('/')">
-          <v-avatar color="secondary" size="40" class="mr-3 " rounded="lg">
-            <v-icon color="background">mdi-shield-check</v-icon>
-          </v-avatar>
-          <div class="text-h6 font-weight-bold d-flex align-center">
-            GeliScope 
-          </div>
-        </div>
-
-        <v-spacer></v-spacer>
-
-        <!-- Centered Links (Public only) -->
-        <div class="hidden-sm-and-down d-flex gap-6">
-          <router-link v-for="item in publicNavItems" :key="item.title" :to="item.to" class="text-decoration-none text-muted font-weight-medium px-4 py-2 transition-fast-in-fast-out hover:text-primary" style="transition: color 0.3s;" active-class="text-primary font-weight-bold">
-            {{ item.title }}
-          </router-link>
-        </div>
-
-        <v-spacer class="hidden-sm-and-down"></v-spacer>
-
-        <!-- Right Side Auth Actions -->
-        <template v-if="authStore.isAuthenticated">
-          <div class="hidden-sm-and-down d-flex align-center gap-2">
-            <v-btn color="secondary" variant="flat" to="/dashboard" class="pill-btn px-6 mx-2">Dashboard</v-btn>
-            <v-btn icon @click="toggleTheme" variant="text" class="ml-2">
-              <v-icon>{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
-            </v-btn>
-            <v-btn color="error" variant="flat" @click="handleLogout" class="pill-btn ml-2">Log Out</v-btn>
-          </div>
-        </template>
-        <template v-else>
-          <div class="hidden-sm-and-down d-flex align-center">
-            <v-btn icon @click="toggleTheme" variant="text" class="mx-2">
-              <v-icon>{{ theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-moon-waning-crescent' }}</v-icon>
-            </v-btn>
-            <v-btn variant="outlined" color="muted" class="pill-btn px-6 border-opacity-50 mx-2" to="/login">Log In</v-btn>
-            <v-btn color="secondary" variant="flat" class="pill-btn px-6 font-weight-bold" to="/register">Get Started</v-btn>
-          </div>
-        </template>
-      </v-card>
-    </v-app-bar>
+    <!-- Public App Bar removed: Landing pages now provide their own specific header -->
 
     <!-- Dashboard Top Bar (Mobile Only) -->
     <v-app-bar v-if="isDashboard" class="d-lg-none bg-surface border-b border-opacity-10" elevation="0" height="70">
@@ -128,9 +100,7 @@ const currentMenuTitle = computed(() => {
       style="height: 100vh; position: fixed; top: 0; left: 0;"
     >
       <div class="pa-4 d-flex align-center border-b border-opacity-10 cursor-pointer" @click="router.push('/')">
-        <v-avatar color="secondary" size="36" class="mr-3 " rounded="lg">
-          <v-icon color="background" size="small">mdi-shield-check</v-icon>
-        </v-avatar>
+        <v-img src="/IconOnly_Transparent.png" height="72px" width="12%"></v-img>
         <span class="font-weight-black text-h5 tracking-tight">GeliScope</span>
       </div>
       
@@ -140,7 +110,7 @@ const currentMenuTitle = computed(() => {
       
       <v-list density="compact" nav class="px-3">
         <template v-if="isDashboard && authStore.isAuthenticated">
-          <v-list-item v-for="(item, i) in (authStore.activeRole === 'teacher' ? teacherDashboardNavItems : dashboardNavItems)" :key="i" :to="item.to" :prepend-icon="item.icon" :title="item.title" class="mb-2 rounded-lg py-2 transition-all" active-class="bg-primary text-white font-weight-bold "></v-list-item>
+          <v-list-item v-for="(item, i) in currentNavItems" :key="i" :to="item.to" :prepend-icon="item.icon" :title="item.title" class="mb-2 rounded-lg py-2 transition-all" active-class="bg-primary text-white font-weight-bold "></v-list-item>
         </template>
         <template v-else>
           <v-list-item v-for="(item, i) in publicNavItems" :key="i" :to="item.to" :title="item.title" class="mb-2 rounded-lg py-2"></v-list-item>
@@ -183,8 +153,6 @@ const currentMenuTitle = computed(() => {
 
     <!-- Main Content Area -->
     <v-main class="bg-background position-relative w-100">
-      <div class="glow-blur-purple" style="top: -100px; left: -100px;"></div>
-      <div class="glow-blur-green" style="top: 40%; right: -150px;"></div>
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
@@ -193,7 +161,7 @@ const currentMenuTitle = computed(() => {
     </v-main>
 
     <!-- Footer -->
-    <v-footer v-if="!isDashboard" border="top" class="bg-background d-flex flex-column align-center text-center py-8 mt-16 border-opacity-10">
+    <!-- <v-footer v-if="!isDashboard" border="top" class="bg-background d-flex flex-column align-center text-center py-8 mt-16 border-opacity-10">
       <div class="d-flex align-center mb-4">
         <v-avatar color="secondary" size="24" class="mr-2" rounded="sm">
           <v-icon color="background" size="x-small">mdi-shield-check</v-icon>
@@ -206,7 +174,7 @@ const currentMenuTitle = computed(() => {
       <div class="text-caption text-muted mt-2">
         &copy; {{ new Date().getFullYear() }} GeliScope &mdash; All Rights Reserved
       </div>
-    </v-footer>
+    </v-footer> -->
   </v-app>
 </template>
 
@@ -231,5 +199,10 @@ const currentMenuTitle = computed(() => {
 }
 .tracking-widest {
   letter-spacing: 0.1em;
+}
+.aurora-bg {
+  background: 
+    radial-gradient(ellipse 65% 55% at 50% -10%, rgba(34, 211, 238, 0.22) 0%, rgba(139, 92, 246, 0.28) 45%, rgba(11, 17, 32, 0) 100%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 2px, transparent 2px, transparent 64px);
 }
 </style>

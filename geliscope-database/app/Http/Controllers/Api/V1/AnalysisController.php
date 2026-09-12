@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\ClassGroup;
 use App\Models\Exam;
 use App\Models\MongoDB\ExamAnalysis;
-use App\Models\MongoDB\StudentSkillProfile;
 use App\Models\MongoDB\StudentCognitiveProfile;
 use App\Models\MongoDB\ClassAnalysis;
 use App\Models\MongoDB\TeacherMarkingConfig;
@@ -14,7 +13,6 @@ use App\Models\MongoDB\ExamArchive;
 use App\Models\Student;
 use App\Models\ExamResult;
 use App\Models\ExamRound;
-use App\Models\QuestionScore;
 use App\Models\StudentTodo;
 use App\Models\Subject;
 use App\Models\Teacher;
@@ -57,6 +55,12 @@ class AnalysisController extends Controller
             'overall_summary' => 'nullable|string',
             'question_breakdown' => 'nullable|array',
         ]);
+
+        $validated['student_id'] = (int) $validated['student_id'];
+        $validated['exam_id'] = (int) $validated['exam_id'];
+        if (isset($validated['exam_result_id'])) {
+            $validated['exam_result_id'] = (int) $validated['exam_result_id'];
+        }
 
         $validated['generated_at'] = Carbon::now();
 
@@ -209,7 +213,7 @@ class AnalysisController extends Controller
     /**
      * Get student cognitive profile (Bloom's Taxonomy averages).
      */
-    public function cognitiveProfile($studentId)
+    public function cognitiveProfile(int $studentId)
     {
         $profile = StudentCognitiveProfile::where('student_id', (int) $studentId)->first();
 
@@ -251,6 +255,11 @@ class AnalysisController extends Controller
             'suggestions' => 'nullable|array',
         ]);
 
+        $validated['teacher_id'] = (int) $validated['teacher_id'];
+        $validated['class_id'] = (int) $validated['class_id'];
+        $validated['exam_id'] = (int) $validated['exam_id'];
+        $validated['subject_id'] = (int) $validated['subject_id'];
+
         $validated['generated_at'] = Carbon::now();
 
         $analysis = ClassAnalysis::updateOrCreate(
@@ -285,6 +294,9 @@ class AnalysisController extends Controller
             'exam_id' => 'required|integer',
             'instructions' => 'required|array',
         ]);
+
+        $validated['teacher_id'] = (int) $validated['teacher_id'];
+        $validated['exam_id'] = (int) $validated['exam_id'];
 
         $config = TeacherMarkingConfig::updateOrCreate(
             ['exam_id' => (int) $validated['exam_id']],
@@ -543,7 +555,7 @@ class AnalysisController extends Controller
      */
     public function teacherStudents(Request $request, $teacherId)
     {
-        $teacher = Teacher::with(['classes.students.user', 'classes.students.parents.user'])->find((int) $teacherId);
+        $teacher = Teacher::with(['classes.currentStudents.user', 'classes.currentStudents.parents.user'])->find((int) $teacherId);
         if (!$teacher) {
             return response()->json(['message' => 'Teacher not found'], 404);
         }
@@ -555,7 +567,7 @@ class AnalysisController extends Controller
             if ($class->school_id !== $teacher->school_id) continue;
             if ($classId && $class->id != $classId) continue;
 
-            foreach ($class->students as $student) {
+            foreach ($class->currentStudents as $student) {
                 if ($student->school_id !== $teacher->school_id) continue;
 
                 if (!$students->contains('id', $student->id)) {
@@ -666,14 +678,14 @@ class AnalysisController extends Controller
         $subjectId = (int) $validated['subject_id'];
         $teacherId = (int) $validated['teacher_id'];
 
-        $classGroup = ClassGroup::with('students')->find($classId);
+        $classGroup = ClassGroup::with('currentStudents')->find($classId);
         if (!$classGroup) {
             return response()->json(['message' => 'Class not found'], 404);
         }
-        $studentIds = $classGroup->students->pluck('id')->toArray();
+        $studentIds = $classGroup->currentStudents->pluck('id')->toArray();
 
         $analyses = ExamAnalysis::whereIn('student_id', $studentIds)
-            ->where('exam_id', $examId)
+            ->where('exam_id', (int) $examId)
             ->get();
 
         if ($analyses->isEmpty()) {
@@ -755,12 +767,12 @@ class AnalysisController extends Controller
 
         $analysis = ClassAnalysis::updateOrCreate(
             [
-                'class_id' => $classId,
-                'exam_id' => $examId,
+                'class_id' => (int) $classId,
+                'exam_id' => (int) $examId,
             ],
             [
-                'teacher_id' => $teacherId,
-                'subject_id' => $subjectId,
+                'teacher_id' => (int) $teacherId,
+                'subject_id' => (int) $subjectId,
                 'class_overview' => $aiData['class_overview'] ?? null,
                 'suggestions' => $aiData['suggestions'] ?? [],
                 'generated_at' => Carbon::now(),

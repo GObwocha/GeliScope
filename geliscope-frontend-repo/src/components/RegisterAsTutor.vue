@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
@@ -13,6 +13,9 @@ const loading = ref(false)
 const errorMsg = ref('')
 const formRef = ref(null)
 
+const subjects = ref([])
+const classesList = ref([])
+
 const form = ref({
  first_name: '',
  last_name: '',
@@ -21,6 +24,8 @@ const form = ref({
  password: '',
  employee_number: '',
  school_id: null,
+ assigned_class_id: null,
+ assigned_subject_id: null,
  specialization: '',
  role: 'teacher'
 })
@@ -31,8 +36,29 @@ const rules = {
  email: v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
 }
 
-onMounted(() => {
+onMounted(async () => {
  schoolStore.fetchSchools()
+ try {
+   const { data } = await axios.get('/api/v1/subjects')
+   subjects.value = data.data || data
+ } catch (err) {
+   console.error(err)
+ }
+})
+
+watch(() => form.value.school_id, async (newSchoolId) => {
+  form.value.assigned_class_id = null
+  if (newSchoolId) {
+    try {
+      const { data } = await axios.get(`/api/v1/schools/${newSchoolId}/classes`)
+      classesList.value = data.data || data
+    } catch (err) {
+      console.error(err)
+      classesList.value = []
+    }
+  } else {
+    classesList.value = []
+  }
 })
 
 const submit = async () => {
@@ -43,8 +69,7 @@ const submit = async () => {
  errorMsg.value = ''
  try {
  await axios.post('/api/v1/register-user', form.value)
- await authStore.login(form.value.email, form.value.password)
- router.push('/admin-dashboard')
+ router.push('/login?registered=true')
  } catch (error) {
  console.error(error)
  if (error.response?.data?.errors) {
@@ -70,7 +95,7 @@ const submit = async () => {
  v-model="form.first_name"
  label="First Name"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  :rules="[rules.required]"
  required
@@ -81,7 +106,7 @@ const submit = async () => {
  v-model="form.last_name"
  label="Last Name"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  :rules="[rules.required]"
  required
@@ -94,7 +119,7 @@ const submit = async () => {
  label="Email Address"
  type="email"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  :rules="[rules.required, rules.email]"
  required
@@ -104,7 +129,7 @@ const submit = async () => {
  v-model="form.phone_number"
  label="Phone Number"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  ></v-text-field>
 
@@ -113,7 +138,7 @@ const submit = async () => {
  label="Password"
  type="password"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  :rules="[rules.required, rules.min]"
  required
@@ -127,7 +152,7 @@ const submit = async () => {
  v-model="form.employee_number"
  label="Employee Number (TSC)"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  :rules="[rules.required]"
  required
@@ -138,7 +163,7 @@ const submit = async () => {
  v-model="form.specialization"
  label="Specialization (e.g., Mathematics)"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  ></v-text-field>
  </v-col>
@@ -151,12 +176,38 @@ const submit = async () => {
  item-value="id"
  label="Assigned School"
  variant="outlined"
- bg-color="surface"
+
  density="comfortable"
  :rules="[rules.required]"
  :loading="schoolStore.loading"
  required
  ></v-select>
+
+   <v-row dense>
+     <v-col cols="12" sm="6">
+       <v-select
+         v-model="form.assigned_class_id"
+         :items="classesList"
+         item-title="name"
+         item-value="id"
+         label="Assigned Class (Optional)"
+         variant="outlined"
+         density="comfortable"
+         :disabled="!form.school_id"
+       ></v-select>
+     </v-col>
+     <v-col cols="12" sm="6">
+       <v-select
+         v-model="form.assigned_subject_id"
+         :items="subjects"
+         item-title="name"
+         item-value="id"
+         label="Teaching Subject (Optional)"
+         variant="outlined"
+         density="comfortable"
+       ></v-select>
+     </v-col>
+   </v-row>
 
  <v-btn
  type="submit"

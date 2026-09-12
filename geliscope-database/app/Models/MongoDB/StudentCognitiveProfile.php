@@ -2,6 +2,7 @@
 
 namespace App\Models\MongoDB;
 
+use Illuminate\Support\Carbon;
 use MongoDB\Laravel\Eloquent\Model;
 
 /**
@@ -13,9 +14,9 @@ use MongoDB\Laravel\Eloquent\Model;
  * @property string       $_id
  * @property int          $student_id
  * @property array        $average_blooms_taxonomy
- * @property \Illuminate\Support\Carbon|null $last_updated
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property Carbon|null $last_updated
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  */
 class StudentCognitiveProfile extends Model
 {
@@ -52,7 +53,7 @@ class StudentCognitiveProfile extends Model
     protected function casts(): array
     {
         return [
-            'average_blooms_taxonomy' => 'array',
+            'average_blooms_taxonomy' => ,
             'last_updated' => 'datetime',
         ];
     }
