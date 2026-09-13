@@ -234,7 +234,8 @@ const fetchChildTeachers = async () => {
     loadingChildTeachers.value = true;
     selectedTeacherForContact.value = null;
     const response = await axios.get(`/api/v1/parents/${parentId}/students/${selectedParentStudent.value}/teachers`);
-    childTeachers.value = response.data;
+    console.log(response.data)
+    childTeachers.value = response.data
   } catch (err) {
     console.error('Failed to fetch child teachers', err);
   } finally {

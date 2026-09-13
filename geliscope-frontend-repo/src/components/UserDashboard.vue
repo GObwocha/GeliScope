@@ -312,13 +312,14 @@ const openAiReportDialog = async () => {
   aiReportDialog.value = true
   aiReport.value = null
   fetchingAiReport.value = true
-  
+    
   try {
     if (latestExamMean.value && latestExamMean.value.analysis_class_id && latestExamMean.value.analysis_exam_id) {
       const response = await axios.get(`/api/v1/analysis/class/${latestExamMean.value.analysis_class_id}/${latestExamMean.value.analysis_exam_id}`, {
         headers: { Authorization: `Bearer ${authStore.token}` }
       })
       aiReport.value = response.data
+      console.log(aiReport.value)
     }
   } catch (err) {
     console.error('Failed to fetch AI report', err)
