@@ -746,7 +746,7 @@ class AnalysisController extends Controller
             return response()->json(['message' => 'Gemini API key is missing.'], 500);
         }
 
-        $prompt = 'You are the GELISCOPE AI CLASS ANALYZER. Evaluate the performance of the class based on the average Bloom\'s Taxonomy scores out of 20 for each category: ' . json_encode($averages) . '. Return ONLY valid JSON in the following format: { "class_overview": { "class_average_percentage": 75, "highest_performing_area": "Remembering", "lowest_performing_area": "Evaluating" }, "suggestions": [ "Suggestion 1 for the teacher", "Suggestion 2" ] }. Do not include markdown code blocks, just raw JSON.';
+        $prompt = 'You are the GELISCOPE AI CLASS ANALYZER. Evaluate the performance of the class based on the average Bloom\'s Taxonomy scores out of 20 for each category: ' . json_encode($averages) . '. Return ONLY valid JSON in the following format: { "overall_summary": "A 2-3 sentence paragraph summarizing the class\'s overall performance, key strengths, and critical weaknesses.", "class_overview": { "class_average_percentage": 75, "highest_performing_area": "Remembering", "lowest_performing_area": "Evaluating" }, "suggestions": [ "Suggestion 1 for the teacher", "Suggestion 2" ] }. Do not include markdown code blocks, just raw JSON.';
 
         $payload = [
             'contents' => [
@@ -790,6 +790,7 @@ class AnalysisController extends Controller
             [
                 'teacher_id' => (int) $teacherId,
                 'subject_id' => (int) $subjectId,
+                'overall_summary' => $aiData['overall_summary'] ?? null,
                 'class_overview' => $aiData['class_overview'] ?? null,
                 'suggestions' => $aiData['suggestions'] ?? [],
                 'generated_at' => Carbon::now(),
