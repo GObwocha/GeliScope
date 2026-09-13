@@ -77,23 +77,6 @@ const roleComponents = {
  </v-btn>
  </div>
 
- <!-- Google Auth Button -->
- <v-btn 
- block 
- variant="outlined" 
- size="large" 
- class="mb-6 rounded-lg font-weight-bold text-none border-medium"
- prepend-icon="mdi-google"
- >
- Sign up with Google
- </v-btn>
-
- <div class="d-flex align-center mb-6">
- <v-divider></v-divider>
- <span class="text-medium-emphasis font-weight-bold text-uppercase">Or sign up with email</span>
- <v-divider></v-divider>
- </div>
-
  <!-- Dynamic Component Rendering -->
  <component :is="roleComponents[activeRole]" />
 
