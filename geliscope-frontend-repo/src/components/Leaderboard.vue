@@ -38,19 +38,47 @@ const fetchLeaderboard = async () => {
 }
 
 const openStudentProfile = async (student) => {
- selectedStudent.value = { ...student } // Set basic info immediately
+ selectedStudent.value = { ...student }
  isModalOpen.value = true
  modalLoading.value = true
  
  try {
- // Note: To make the modal work fully with real data, we would need a new endpoint 
- // for student summaries. For now, we will leave the modal chart blank but show the basic info.
- selectedStudent.value.marksHistory = []
- selectedStudent.value.strengths = []
+   const response = await axios.get(`/api/v1/students/${student.id}/exam-results`, {
+     headers: { Authorization: `Bearer ${authStore.token}` }
+   })
+   
+   if (response.data && response.data.length > 0) {
+     selectedStudent.value.marksHistory = response.data.map((r, i) => {
+       const score = r.max_score > 0 ? Math.round((r.total_score / r.max_score) * 100) : 0
+       return { score, id: `E${r.id}` }
+     })
+   } else {
+     selectedStudent.value.marksHistory = []
+   }
+   
+   // Try to fetch cognitive profile for strengths
+   try {
+     const cogRes = await axios.get(`/api/v1/analysis/cognitive-profile/${student.id}`, {
+       headers: { Authorization: `Bearer ${authStore.token}` }
+     })
+     if (cogRes.data && cogRes.data.average_blooms_taxonomy) {
+       const blooms = cogRes.data.average_blooms_taxonomy
+       // Get the top 2 blooms categories
+       const sorted = Object.entries(blooms).sort((a, b) => b[1] - a[1])
+       selectedStudent.value.strengths = sorted.slice(0, 2).map(s => s[0].charAt(0).toUpperCase() + s[0].slice(1))
+     } else {
+       selectedStudent.value.strengths = ['Diligent Learner']
+     }
+   } catch (e) {
+     selectedStudent.value.strengths = ['Diligent Learner']
+   }
+   
  } catch (e) {
- console.error(e)
+   console.error(e)
+   selectedStudent.value.marksHistory = []
+   selectedStudent.value.strengths = []
  } finally {
- modalLoading.value = false
+   modalLoading.value = false
  }
 }
 
@@ -75,7 +103,7 @@ const getScoreColor = (score) => {
 
 // Chart Logic for Modal
 const chartMetrics = computed(() => {
- if (!selectedStudent.value || !selectedStudent.value.marksHistory) return { points: [], polylineStr: '', width: 0, height: 0 }
+ if (!selectedStudent.value || !selectedStudent.value.marksHistory || selectedStudent.value.marksHistory.length === 0) return { points: [], polylineStr: '', width: 0, height: 0 }
  
  const history = selectedStudent.value.marksHistory
  const scores = history.map(e => e.score)
@@ -93,7 +121,7 @@ const chartMetrics = computed(() => {
  const plotHeight = height - padTop - padBottom
  
  const points = history.map((e, idx) => {
- const x = padLeft + (idx / (history.length - 1)) * plotWidth
+ const x = history.length > 1 ? padLeft + (idx / (history.length - 1)) * plotWidth : padLeft + plotWidth / 2
  const y = height - padBottom - (e.score / 100) * plotHeight
  return { ...e, x, y, isMax: e.score === maxScore, isMin: e.score === minScore }
  })
@@ -216,7 +244,7 @@ onMounted(async () => {
 
  <!-- Student Profile Modal -->
  <v-dialog v-model="isModalOpen" max-width="600px" persistent>
- <v-card class="rounded-xl bg-background border" v-if="selectedStudent">
+ <v-card class="rounded-xl bg-background border" v-if="!!selectedStudent">
  <!-- Modal Header -->
  <div class="d-flex justify-space-between align-center pa-6 border-bottom-light bg-surface">
  <div class="d-flex align-center gap-4">
@@ -231,7 +259,7 @@ onMounted(async () => {
  <v-btn icon="mdi-close" variant="text" density="compact" @click="closeModal"></v-btn>
  </div>
 
- <div class="pa-6 eoverflow-y: auto;">
+ <div class="pa-6" style="overflow-y: auto;">
  <div class="text-caption text-medium-emphasis font-weight-bold text-uppercase mb-4">Academic Year Progress</div>
  
  <!-- Graph -->
