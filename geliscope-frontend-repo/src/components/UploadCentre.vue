@@ -105,15 +105,6 @@ const submitCreateExamRound = async () => {
 const isDragging = ref(false);
 
 onMounted(async () => {
-  const cachedAnalysis = localStorage.getItem('unsaved_analysis')
-  if (cachedAnalysis) {
-    try {
-      analysisResult.value = JSON.parse(cachedAnalysis)
-    } catch (e) {
-      console.error('Error parsing cached analysis', e)
-    }
-  }
-
   loadingData.value = true
   try {
     const examResponse = await axios.get('/api/v1/exams')
@@ -169,6 +160,17 @@ onMounted(async () => {
 
 watch([selectedStudent, selectedExam], async ([newStudent, newExam]) => {
   if (newStudent && newExam) {
+    const cachedString = localStorage.getItem('unsaved_analysis')
+    if (cachedString) {
+      try {
+        const cached = JSON.parse(cachedString)
+        if (cached.student_id == newStudent && cached.exam_id == newExam) {
+          analysisResult.value = cached
+          return // Show the cached unsaved analysis instead of fetching
+        }
+      } catch (e) {}
+    }
+
     try {
       loadingData.value = true
       // Clear previous analysis to prevent showing old data for a new student
@@ -299,7 +301,8 @@ const saveToMongoDB = async () => {
  blooms_taxonomy: analysisResult.value.blooms_taxonomy,
  suggestions: analysisResult.value.suggestions,
  overall_summary: analysisResult.value.overall_summary,
- question_breakdown: analysisResult.value.question_breakdown
+ question_breakdown: analysisResult.value.question_breakdown,
+ extrapolated_skills: analysisResult.value.extrapolated_skills
  }
  
  await axios.post('/api/v1/analysis/exam', payload)
@@ -511,11 +514,12 @@ const removeFile = (index) => {
                   Mark & Analyze
                 </v-btn>
               </v-col>
-              <v-col :cols="currentUser.role == 'teacher' ? 6 : 12" md="6" >
+              <v-col cols="12" md="6" >
                 <v-btn
                   color="primary"
                   size="large"
                   block
+                  v-if="currentUser.role == 'teacher'"
                   :loading="analyzing"
                   prepend-icon="mdi-brain"
                   elevation="4"
@@ -523,6 +527,21 @@ const removeFile = (index) => {
                   @click="startAnalysis('analyze_only')"
                 >
                   Analyze Only
+                </v-btn>
+              </v-col>
+              <v-col cols="12" >
+                <v-btn
+                  color="primary"
+                  size="large"
+                  block
+                  v-if="currentUser.role == 'student' || currentUser.role == 'parent'"
+                  :loading="analyzing"
+                  prepend-icon="mdi-brain"
+                  elevation="4"
+                  class="mt-4 font-weight-bold"
+                  @click="startAnalysis('analyze_only')"
+                >
+                  Analyze Exam
                 </v-btn>
               </v-col>
             </v-row>
@@ -538,7 +557,7 @@ const removeFile = (index) => {
  <h3 class="text-h5 font-weight-bold mb-2">Analyzing Student Script...</h3>
  <p class="text-body-1 text-primary font-weight-medium mb-6">{{ progressStep }}</p>
  <div class="text-caption text-medium-emphasis max-w-md">
- Our Vision OCR neural network is extracting mathematical steps and evaluating them against the Kenyan curriculum rubric stored in MySQL (`question_scores`).
+ Our Vision OCR is extracting mathematical steps and evaluating them against the Kenyan curriculum rubric stored in the systems database.
  </div>
  </v-card>
 
@@ -546,7 +565,7 @@ const removeFile = (index) => {
  <v-icon size="80" color="medium-emphasis" class="mb-4 opacity-30">mdi-file-find-outline</v-icon>
  <h3 class="text-h5 font-weight-bold text-medium-emphasis">Awaiting Exam Paper Upload</h3>
  <p class="text-body-2 text-medium-emphasis max-w-md mt-2">
- Select a student, attach their scanned exam image on the left, and click **Analyze Exam Script with Vision AI** to generate a deep diagnostic Bloom's taxonomy report.
+ Select a student, attach their scanned exam image on the left, and click <b>Analyze Exam</b> to generate a deep diagnostic Bloom's taxonomy report.
  </p>
  </v-card>
 
@@ -628,6 +647,17 @@ const removeFile = (index) => {
  <v-list-item-title class="text-body-2 font-weight-medium text-wrap" >{{ sug }}</v-list-item-title>
  </v-list-item>
  </v-list>
+
+ <div v-if="analysisResult.extrapolated_skills && analysisResult.extrapolated_skills.length > 0" class="mt-6">
+   <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
+     <v-icon color="success" class="mr-2">mdi-star-circle-outline</v-icon> Extrapolated Skills & Strengths
+   </h4>
+   <div class="d-flex flex-wrap gap-2">
+     <v-chip v-for="(skill, idx) in analysisResult.extrapolated_skills" :key="idx" color="primary" variant="flat" size="small" class="ma-3">
+       {{ skill }}
+     </v-chip>
+   </div>
+ </div>
  </v-card>
       </v-col>
     </v-row>

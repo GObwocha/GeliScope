@@ -10,6 +10,8 @@ use App\Models\ParentProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
@@ -71,23 +73,24 @@ class UserController extends Controller
 
             $verificationLink = config('app.frontend_url') . '/verify-email?token=' . $token;
 
-            if (config('services.emailjs.service_id') && config('services.emailjs.template_id') && config('services.emailjs.public_key')) {
+            if (config('services.emailjs_ver.service_id') && config('services.emailjs_ver.template_id') && config('services.emailjs.public_key')) {
                 try {
-                    \Illuminate\Support\Facades\Http::post('https://api.emailjs.com/api/v1.0/email/send', [
-                        'service_id' => config('services.emailjs.service_id'),
-                        'template_id' => config('services.emailjs.template_id'),
+                    Http::post('https://api.emailjs.com/api/v1.0/email/send', [
+                        'service_id' => config('services.emailjs_ver.service_id'),
+                        'template_id' => config('services.emailjs_ver.template_id'),
                         'user_id' => config('services.emailjs.public_key'),
                         'accessToken' => config('services.emailjs.private_key'),
                         'template_params' => [
                             'to_email' => $user->email,
-                            'message' => "Please verify your GeliScope email by clicking here: {$verificationLink}"
+                            'message' => "Please verify your GeliScope email by clicking here: {$verificationLink}",
+                            'name' => $user->first_name,
                         ]
                     ]);
                 } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('EmailJS verification failed: ' . $e->getMessage());
+                    Log::error('EmailJS verification failed: ' . $e->getMessage());
                 }
             } else {
-                \Illuminate\Support\Facades\Log::info("EmailJS credentials missing. Simulated Verification Email to {$user->email}: {$verificationLink}");
+                Log::info("EmailJS credentials missing. Simulated Verification Email to {$user->email}: {$verificationLink}");
             }
 
             if ($validated['role'] === 'student') {

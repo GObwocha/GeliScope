@@ -53,7 +53,7 @@ class StudentCognitiveProfile extends Model
     protected function casts(): array
     {
         return [
-            'average_blooms_taxonomy' => ,
+            
             'last_updated' => 'datetime',
         ];
     }

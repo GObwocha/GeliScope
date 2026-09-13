@@ -13,6 +13,7 @@ use App\Models\MongoDB\ExamArchive;
 use App\Models\Student;
 use App\Models\ExamResult;
 use App\Models\ExamRound;
+use App\Models\Skill;
 use App\Models\StudentTodo;
 use App\Models\Subject;
 use App\Models\Teacher;
@@ -54,6 +55,7 @@ class AnalysisController extends Controller
             'suggestions' => 'nullable|array',
             'overall_summary' => 'nullable|string',
             'question_breakdown' => 'nullable|array',
+            'extrapolated_skills' => 'nullable|array',
         ]);
 
         $validated['student_id'] = (int) $validated['student_id'];
@@ -132,6 +134,19 @@ class AnalysisController extends Controller
             }
         }
         
+        // Save and attach extrapolated skills to the student
+        if (!empty($validated['extrapolated_skills'])) {
+            $student = Student::find((int) $validated['student_id']);
+            if ($student) {
+                $skillIds = [];
+                foreach ($validated['extrapolated_skills'] as $skillName) {
+                    $skill = Skill::firstOrCreate(['name' => $skillName]);
+                    $skillIds[] = $skill->id;
+                }
+                $student->skills()->syncWithoutDetaching($skillIds);
+            }
+        }
+        
         // Recalculate Bloom's Taxonomy Cognitive Profile Averages
         $allAnalyses = ExamAnalysis::where('student_id', (int) $validated['student_id'])->get();
         $bloomSums = [
@@ -175,40 +190,40 @@ class AnalysisController extends Controller
         return response()->json($analysis, 201);
     }
 
-    // /**
-    //  * Get student skill profile.
-    //  */
-    // public function skillProfile($studentId)
-    // {
-    //     $profile = StudentSkillProfile::where('student_id', (int) $studentId)->first();
+    /**
+     * Get student skill profile.
+     */
+    public function skillProfile($studentId)
+    {
+        $profile = Skill::where('student_id', (int) $studentId)->first();
 
-    //     if (!$profile) {
-    //         return response()->json(['message' => 'Skill profile not found'], 404);
-    //     }
+        if (!$profile) {
+            return response()->json(['message' => 'Skill profile not found'], 404);
+        }
 
-    //     return response()->json($profile);
-    // }
+        return response()->json($profile);
+    }
 
-    // /**
-    //  * Store or update student skill profile.
-    //  */
-    // public function storeSkillProfile(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'student_id' => 'required|integer',
-    //         'skill_sets' => 'required|array',
-    //         'suggested_careers' => 'nullable|array',
-    //     ]);
+    /**
+     * Store or update student skill profile.
+     */
+    public function storeSkillProfile(Request $request)
+    {
+        $validated = $request->validate([
+            'student_id' => 'required|integer',
+            'skill_sets' => 'required|array',
+            'suggested_careers' => 'nullable|array',
+        ]);
 
-    //     $validated['last_updated'] = Carbon::now();
+        $validated['last_updated'] = Carbon::now();
 
-    //     $profile = StudentSkillProfile::updateOrCreate(
-    //         ['student_id' => (int) $validated['student_id']],
-    //         $validated
-    //     );
+        $profile = Skill::updateOrCreate(
+            ['student_id' => (int) $validated['student_id']],
+            $validated
+        );
 
-    //     return response()->json($profile, 201);
-    // }
+        return response()->json($profile, 201);
+    }
 
     /**
      * Get student cognitive profile (Bloom's Taxonomy averages).
@@ -343,7 +358,7 @@ class AnalysisController extends Controller
             return response()->json(['message' => 'Gemini API key is missing.'], 500);
         }
 
-        $prompt = 'You are the GELISCOPE VISION & OCR ENGINE. Evaluate the provided exam script(s). Return ONLY valid JSON in the following format, with no markdown code blocks formatting, just the raw JSON: { "student_id": 1, "exam_id": 1, "ocr_raw_text": "[Extracted and structured text]", "blooms_taxonomy": { "remembering": 95, "understanding": 88, "applying": 82, "analyzing": 60, "evaluating": 45 }, "question_breakdown": [ { "q": 1, "topic": "Algebra", "score": 3, "max": 3, "status": "Perfect", "comment": "Excellent" } ], "overall_summary": "Summary text", "suggestions": [ "Suggestion 1" ] }';
+        $prompt = 'You are the GELISCOPE VISION & OCR ENGINE. Evaluate the provided exam script(s). Return ONLY valid JSON in the following format, with no markdown code blocks formatting, just the raw JSON: { "student_id": 1, "exam_id": 1, "ocr_raw_text": "[Extracted and structured text]", "blooms_taxonomy": { "remembering": 95, "understanding": 88, "applying": 82, "analyzing": 60, "evaluating": 45 }, "question_breakdown": [ { "q": 1, "topic": "Algebra", "score": 3, "max": 3, "status": "Perfect", "comment": "Excellent" } ], "overall_summary": "Summary text", "suggestions": [ "Suggestion 1" ], "extrapolated_skills": ["Analytical Thinking", "Problem Solving"] }';
 
         if ($action === 'mark_and_analyze') {
             $prompt .= ' SPECIAL INSTRUCTION: The teacher has requested you to strictly MARK this paper and provide an analysis. Use the following marking instructions when generating the question_breakdown scores and comments: "' . $markingInstructions . '"';
@@ -658,6 +673,8 @@ class AnalysisController extends Controller
             'class_mean' => $classMean,
             'exam_name' => $examName,
             'date_recorded' => $dateRecorded,
+            'analysis_class_id' => $latestClassAnalysis ? $latestClassAnalysis->class_id : null,
+            'analysis_exam_id' => $latestClassAnalysis ? $latestClassAnalysis->exam_id : null,
         ]);
     }
 
@@ -729,7 +746,7 @@ class AnalysisController extends Controller
             return response()->json(['message' => 'Gemini API key is missing.'], 500);
         }
 
-        $prompt = 'You are the GELISCOPE AI CLASS ANALYZER. Evaluate the performance of the class based on the average Bloom\'s Taxonomy scores out of 20 for each category: ' . json_encode($averages) . '. Return ONLY valid JSON in the following format: { "class_overview": { "class_average_percentage": 75, "highest_performing_area": "Remembering", "lowest_performing_area": "Evaluating" }, "suggestions": [ "Suggestion 1 for the teacher", "Suggestion 2" ] }. Do not include markdown code blocks, just raw JSON.';
+        $prompt = 'You are the GELISCOPE AI CLASS ANALYZER. Evaluate the performance of the class based on the average Bloom\'s Taxonomy scores out of 20 for each category: ' . json_encode($averages) . '. Return ONLY valid JSON in the following format: { "overall_summary": "A 2-3 sentence paragraph summarizing the class\'s overall performance, key strengths, and critical weaknesses.", "class_overview": { "class_average_percentage": 75, "highest_performing_area": "Remembering", "lowest_performing_area": "Evaluating" }, "suggestions": [ "Suggestion 1 for the teacher", "Suggestion 2" ] }. Do not include markdown code blocks, just raw JSON.';
 
         $payload = [
             'contents' => [
@@ -773,6 +790,7 @@ class AnalysisController extends Controller
             [
                 'teacher_id' => (int) $teacherId,
                 'subject_id' => (int) $subjectId,
+                'overall_summary' => $aiData['overall_summary'] ?? null,
                 'class_overview' => $aiData['class_overview'] ?? null,
                 'suggestions' => $aiData['suggestions'] ?? [],
                 'generated_at' => Carbon::now(),

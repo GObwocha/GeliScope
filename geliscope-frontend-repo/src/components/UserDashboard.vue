@@ -154,14 +154,16 @@ const fetchCognitiveProfile = async () => {
    const response = await axios.get(`/api/v1/analysis/cognitive-profile/${userProfile.value.student.id}`, {
      headers: { Authorization: `Bearer ${authStore.token}` }
    })
-   if (response.data && response.data.blooms_taxonomy) {
-     const avgs = response.data.blooms_taxonomy
+   if (response.data && response.data.average_blooms_taxonomy
+) {
+     const avgs = response.data.average_blooms_taxonomy
+
      bloomsMastery.value = {
-       remembering: avgs.remembering.score || 0,
-       understanding: avgs.understanding.score || 0,
-       applying: avgs.applying.score || 0,
-       analyzing: avgs.analyzing.score || 0,
-       evaluating: avgs.evaluating.score || 0,
+       remembering: avgs.remembering || 0,
+       understanding: avgs.understanding || 0,
+       applying: avgs.applying || 0,
+       analyzing: avgs.analyzing || 0,
+       evaluating: avgs.evaluating || 0,
        last_analyzed: new Date(response.data.last_updated).toLocaleDateString()
      }
    }
@@ -246,6 +248,38 @@ const teacherStreamSummary = ref({
 const latestExamMean = ref(null)
 const aiReportDialog = ref(false)
 
+const analysisDialog = ref(false)
+const fetchingAnalysis = ref(false)
+const analysisResult = ref(null)
+
+const openAnalysisDialog = async () => {
+  if (!activeExamPoint.value) return
+  analysisResult.value = null
+  analysisDialog.value = true
+  fetchingAnalysis.value = true
+  
+  try {
+    const studentId = userProfile.value.student.id
+    const examId = activeExamPoint.value.id
+    const response = await axios.get(`/api/v1/analysis/exam/${studentId}/${examId}`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+    analysisResult.value = response.data
+  } catch (err) {
+    console.error('Failed to fetch analysis', err)
+    if (err.response && err.response.status === 404) {
+      analysisResult.value = { error: 'No AI Analysis exists yet for this exam.' }
+    } else {
+      analysisResult.value = { error: 'Failed to fetch analysis.' }
+    }
+  } finally {
+    fetchingAnalysis.value = false
+  }
+}
+
+const fetchingAiReport = ref(false)
+const aiReport = ref(null)
+
 const fetchTeacherDashboard = async () => {
   if (activeRole.value !== 'teacher' || !userProfile.value.teacher?.id) return
   
@@ -265,10 +299,32 @@ const fetchTeacherDashboard = async () => {
     latestExamMean.value = {
       mean: response.data.class_mean,
       exam_name: response.data.exam_name,
-      date_recorded: response.data.date_recorded
+      date_recorded: response.data.date_recorded,
+      analysis_class_id: response.data.analysis_class_id,
+      analysis_exam_id: response.data.analysis_exam_id
     }
   } catch (error) {
     console.error('Failed to fetch teacher dashboard', error)
+  }
+}
+
+const openAiReportDialog = async () => {
+  aiReportDialog.value = true
+  aiReport.value = null
+  fetchingAiReport.value = true
+    
+  try {
+    if (latestExamMean.value && latestExamMean.value.analysis_class_id && latestExamMean.value.analysis_exam_id) {
+      const response = await axios.get(`/api/v1/analysis/class/${latestExamMean.value.analysis_class_id}/${latestExamMean.value.analysis_exam_id}`, {
+        headers: { Authorization: `Bearer ${authStore.token}` }
+      })
+      aiReport.value = response.data
+      console.log(aiReport.value)
+    }
+  } catch (err) {
+    console.error('Failed to fetch AI report', err)
+  } finally {
+    fetchingAiReport.value = false
   }
 }
 
@@ -415,7 +471,7 @@ onMounted(() => {
  <v-row>
  <!-- Career Suggestions -->
  <v-col cols="12" lg="4">
- <v-card class="pa-6 border  h-100 d-flex flex-column " elevation="4">
+ <v-card class="pa-6 border h-100 d-flex flex-column " elevation="4">
  <div class="mb-6">
  <div class="d-flex align-center justify-space-between mb-4">
  <v-avatar color="primary" size="48" variant="tonal">
@@ -693,8 +749,8 @@ onMounted(() => {
  <span class="text-body-2 font-weight-bold text-success ml-1">(+{{ (activeExamPoint.avg - activeExamPoint.stream_avg).toFixed(1) }}% vs stream)</span>
  </div>
  </div>
- <v-btn color="primary" variant="tonal" to="/dashboard/upload-centre" prepend-icon="mdi-file-find-outline" class="rounded-xl font-weight-bold align-self-stretch align-self-md-center ma-3" height="48">
- View AI OCR Script
+ <v-btn color="primary" variant="tonal" @click="openAnalysisDialog" prepend-icon="mdi-file-find-outline" class="rounded-xl font-weight-bold align-self-stretch align-self-md-center ma-3" height="48">
+ View AI OCR Analysis
  </v-btn>
  </div>
  </div>
@@ -730,8 +786,120 @@ onMounted(() => {
             <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click="deleteTodo(step.id)"></v-btn>
           </div>
         </div>
-      </v-card>
-   </div>
+        </v-card>
+
+        <!-- AI OCR Analysis Dialog -->
+        <v-dialog v-model="analysisDialog" max-width="800" scrollable>
+          <v-card class="rounded-xl bg-surface">
+            <v-card-title class="d-flex justify-space-between align-center border-b pa-4">
+              <span class="text-h6 font-weight-bold d-flex align-center">
+                <v-icon color="primary" class="mr-2">mdi-file-find-outline</v-icon>
+                AI OCR Analysis
+              </span>
+              <v-btn icon="mdi-close" variant="text" @click="analysisDialog = false"></v-btn>
+            </v-card-title>
+            <v-card-text class="pa-4 pa-sm-6 bg-surface-light">
+              <div v-if="fetchingAnalysis" class="d-flex flex-column justify-center align-center py-10">
+                <v-progress-circular indeterminate color="primary" size="48" class="mb-4"></v-progress-circular>
+                <span class="text-medium-emphasis font-weight-medium">Fetching deep cognitive analysis...</span>
+              </div>
+              <div v-else-if="analysisResult && analysisResult.error" class="text-center py-10">
+                <v-icon size="64" color="warning" class="mb-4">mdi-alert-circle-outline</v-icon>
+                <div class="text-h6 font-weight-medium text-medium-emphasis">{{ analysisResult.error }}</div>
+              </div>
+              <div v-else-if="analysisResult">
+                <div class="d-flex justify-space-between align-start mb-6">
+                  <div>
+                    <v-chip color="success" size="small" variant="flat" prepend-icon="mdi-check-decagram" class="mb-2 font-weight-bold">
+                      VISION ANALYSIS COMPLETE
+                    </v-chip>
+                    <h3 class="text-h5 font-weight-bold">Diagnostic Evaluation & Bloom's Breakdown</h3>
+                    <p class="text-caption text-medium-emphasis">Generated for Student ID #{{ analysisResult.student_id }} &bull; Exam ID #{{ analysisResult.exam_id }}</p>
+                  </div>
+                </div>
+
+                <v-alert color="primary" variant="tonal" icon="mdi-lightbulb-on" border="start" class="mb-6 rounded-lg">
+                  <div class="font-weight-bold mb-1">AI Executive Summary</div>
+                  <div class="text-body-2" style="line-height: 1.6;">{{ analysisResult.overall_summary }}</div>
+                </v-alert>
+
+                <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center mt-6">
+                  <v-icon color="secondary" class="mr-2">mdi-chart-bubble</v-icon> Bloom's Taxonomy Cognitive Mastery (%)
+                </h4>
+                <v-row class="mb-6">
+                  <v-col cols="12" sm="6" v-for="(val, key) in analysisResult.blooms_taxonomy" :key="key">
+                    <div class="d-flex justify-space-between text-caption font-weight-bold mb-1 text-capitalize">
+                      <span>{{ key }}</span>
+                      <span :class="val >= 80 ? 'text-success' : (val >= 60 ? 'text-warning' : 'text-error')">{{ val }}%</span>
+                    </div>
+                    <v-progress-linear
+                      :model-value="val"
+                      :color="val >= 80 ? 'success' : (val >= 60 ? 'warning' : 'error')"
+                      height="8"
+                      rounded
+                    ></v-progress-linear>
+                  </v-col>
+                </v-row>
+
+                <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center mt-6">
+                  <v-icon color="accent" class="mr-2">mdi-format-list-checks</v-icon> Question-Level Diagnostics
+                </h4>
+                <div class="border rounded-xl overflow-hidden mb-6">
+                  <v-table class="bg-surface">
+                    <thead class="bg-surface-light">
+                      <tr>
+                        <th class="font-weight-bold text-left">Q#</th>
+                        <th class="text-left">Topic</th>
+                        <th class="text-left">Score</th>
+                        <th class="text-left">Status</th>
+                        <th class="text-left">Comment</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="q in analysisResult.question_breakdown" :key="q.q">
+                        <td class="font-weight-bold">Q{{ q.q }}</td>
+                        <td><v-chip size="x-small" variant="outlined">{{ q.topic }}</v-chip></td>
+                        <td class="font-weight-black text-primary">{{ q.score }}/{{ q.max }}</td>
+                        <td>
+                          <v-chip size="x-small" :color="q.status === 'Perfect' ? 'success' : 'error'" variant="flat">
+                            {{ q.status }}
+                          </v-chip>
+                        </td>
+                        <td class="text-caption text-medium-emphasis">{{ q.comment }}</td>
+                      </tr>
+                    </tbody>
+                  </v-table>
+                </div>
+
+                <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center mt-6">
+                  <v-icon color="warning" class="mr-2">mdi-clipboard-list</v-icon> Actionable Revision Steps
+                </h4>
+                <v-list class="bg-surface rounded-xl border pa-0 mb-6">
+                  <v-list-item v-for="(sug, idx) in analysisResult.suggestions" :key="idx" class="pa-3 border-b">
+                    <template v-slot:prepend>
+                      <v-avatar color="warning" size="24" class="mr-3 text-caption font-weight-bold">
+                        {{ idx + 1 }}
+                      </v-avatar>
+                    </template>
+                    <v-list-item-title class="text-body-2 font-weight-medium text-wrap" style="line-height: 1.5;">{{ sug }}</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+
+                <div v-if="analysisResult.extrapolated_skills && analysisResult.extrapolated_skills.length > 0" class="mt-6 mb-2">
+                  <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
+                    <v-icon color="success" class="mr-2">mdi-star-circle-outline</v-icon> Extrapolated Skills & Strengths
+                  </h4>
+                  <div class="d-flex flex-wrap gap-2">
+                    <v-chip v-for="(skill, idx) in analysisResult.extrapolated_skills" :key="idx" color="primary" variant="flat" size="small">
+                      {{ skill }}
+                    </v-chip>
+                  </div>
+                </div>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-dialog>
+     </div>
   
   <!-- PARENT DASHBOARD WORKSPACE -->
  <div v-else-if="activeRole === 'parent'">
@@ -799,20 +967,20 @@ onMounted(() => {
  <v-card class="pa-6 rounded-3xl border bg-surface h-100 " elevation="4">
  <div class="d-flex justify-space-between align-center mb-4">
  <h2 class="text-h5 font-weight-black d-flex align-center">
- <v-icon color="secondary" class="mr-2">mdi-chart-bar</v-icon>
+ <v-icon color="primary" class="mr-2">mdi-chart-bar</v-icon>
  Stream Bottleneck Overview
  </h2>
- <v-chip color="secondary" variant="flat" size="small" class="font-weight-bold ">{{ teacherStreamSummary.class_name }}</v-chip>
+ <v-chip color="primary" variant="flat" size="small" class="font-weight-bold ">{{ teacherStreamSummary.class_name }}</v-chip>
  </div>
  <div class="mb-6">
- <div class="text-h3 font-weight-black text-secondary">{{ teacherStreamSummary.stream_average }}</div>
+ <div class="text-h3 font-weight-black text-primary">{{ teacherStreamSummary.stream_average }}</div>
  <div class="text-caption text-medium-emphasis">Average stream mastery across your assigned classes</div>
  </div>
  <div class="pa-4 rounded-2xl bg-surface border mb-6">
  <div class="text-caption font-weight-bold text-error uppercase mb-1">Top Pedagogical Bottleneck</div>
  <div class="font-weight-bold text-body-1">{{ teacherStreamSummary.top_error }}</div>
  </div>
- <v-btn color="secondary" block size="large" to="/dashboard/class-diagnosis" prepend-icon="mdi-google-circles-extended" class="font-weight-bold rounded-xl">
+ <v-btn color="primary" block size="large" to="/dashboard/class-diagnosis" prepend-icon="mdi-google-circles-extended" class="font-weight-bold rounded-xl">
  Open Class Diagnosis
  </v-btn>
  </v-card>
@@ -864,7 +1032,7 @@ onMounted(() => {
  </div>
  
  <div class="d-flex justify-end">
- <v-btn color="secondary" size="large" prepend-icon="mdi-robot-outline" class="font-weight-bold rounded-xl" @click="aiReportDialog = true">
+ <v-btn color="primary" size="large" prepend-icon="mdi-robot-outline" class="font-weight-bold rounded-xl" @click="openAiReportDialog">
  AI Report
  </v-btn>
  </div>
@@ -881,10 +1049,20 @@ onMounted(() => {
  <div class="mb-4 text-body-1">
  This feature summarizes the performance of all your assigned classes for the round: <strong>{{ latestExamMean?.exam_name }}</strong>.
  </div>
- <div class="pa-4 rounded-xl bg-surface-light border mb-4">
- <div class="font-weight-bold mb-2"><v-icon size="small" class="mr-2" color="success">mdi-check-circle</v-icon>Overall Impression</div>
- The classes showed strong foundational knowledge, averaging {{ latestExamMean?.mean }}%. However, advanced application questions remain a significant bottleneck for a large portion of the cohort.
+ 
+ <div v-if="fetchingAiReport" class="d-flex flex-column justify-center align-center py-6">
+   <v-progress-circular indeterminate color="primary" class="mb-2"></v-progress-circular>
+   <span class="text-medium-emphasis">Fetching AI summary...</span>
  </div>
+ <div v-else-if="aiReport && aiReport.overall_summary" class="pa-4 rounded-xl bg-surface-light border mb-4">
+   <div class="font-weight-bold mb-2"><v-icon size="small" class="mr-2" color="success">mdi-check-circle</v-icon>Overall Impression</div>
+   {{ aiReport.overall_summary }}
+ </div>
+ <div v-else class="pa-4 rounded-xl bg-surface-light border mb-4 text-center">
+   <v-icon color="warning" class="mb-2">mdi-alert-circle-outline</v-icon>
+   <div>No AI report available yet for this exam round.</div>
+ </div>
+ 
  <div class="text-body-2 text-medium-emphasis">
  To view specific, granular AI analysis per class and subject, please navigate to the <strong>Class Diagnosis</strong> section.
  </div>

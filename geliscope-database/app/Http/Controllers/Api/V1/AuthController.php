@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Socialite;
 
@@ -67,11 +69,11 @@ class AuthController extends Controller
         $user->save();
 
         // 1. Send via EmailJS (or log if credentials missing)
-        if (config('services.emailjs.service_id') && config('services.emailjs.template_id') && config('services.emailjs.public_key')) {
+        if (config('services.emailjs_otp.service_id') && config('services.emailjs_otp.template_id') && config('services.emailjs.public_key')) {
             try {
-                \Illuminate\Support\Facades\Http::post('https://api.emailjs.com/api/v1.0/email/send', [
-                    'service_id' => config('services.emailjs.service_id'),
-                    'template_id' => config('services.emailjs.template_id'),
+                Http::post('https://api.emailjs.com/api/v1.0/email/send', [
+                    'service_id' => config('services.emailjs_otp.service_id'),
+                    'template_id' => config('services.emailjs_otp.template_id'),
                     'user_id' => config('services.emailjs.public_key'),
                     'accessToken' => config('services.emailjs.private_key'),
                     'template_params' => [
@@ -81,16 +83,16 @@ class AuthController extends Controller
                     ]
                 ]);
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('EmailJS failed: ' . $e->getMessage());
+                Log::error('EmailJS failed: ' . $e->getMessage());
             }
         } else {
-            \Illuminate\Support\Facades\Log::info("EmailJS credentials not set. Simulated Email to {$user->email}: Your GeliScope login OTP is: {$otp}");
+            Log::info("EmailJS credentials not set. Simulated Email to {$user->email}: Your GeliScope login OTP is: {$otp}");
         }
 
         // 2. Send via Africa's Talking (SMS)
         if ($user->phone_number && config('services.africastalking.username') && config('services.africastalking.api_key')) {
             try {
-                \Illuminate\Support\Facades\Http::asForm()
+                Http::asForm()
                     ->withHeaders([
                         'Accept' => 'application/json',
                         'apiKey' => config('services.africastalking.api_key'),
@@ -101,10 +103,10 @@ class AuthController extends Controller
                         'message' => "Your GeliScope login OTP is: {$otp}",
                     ]);
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('AfricasTalking SMS failed: ' . $e->getMessage());
+                Log::error('AfricasTalking SMS failed: ' . $e->getMessage());
             }
         } else {
-            \Illuminate\Support\Facades\Log::info("AfricasTalking credentials not set. Simulated SMS to {$user->phone_number}: Your GeliScope login OTP is: {$otp}");
+            Log::info("AfricasTalking credentials not set. Simulated SMS to {$user->phone_number}: Your GeliScope login OTP is: {$otp}");
         }
 
         return response()->json([
