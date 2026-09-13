@@ -315,28 +315,6 @@ onMounted(async () => {
  </svg>
  </div>
  </v-card>
-
- <div class="text-caption text-medium-emphasis font-weight-bold text-uppercase mb-4">Core Competencies</div>
- 
- <!-- Strengths Dropdown -->
- <v-expansion-panels variant="accordion" v-if="!modalLoading">
- <v-expansion-panel class="bg-surface border rounded-lg overflow-hidden">
- <v-expansion-panel-title class="font-weight-bold text-success">
- <div class="d-flex align-center">
- <v-icon color="success" class="mr-3">mdi-star-circle-outline</v-icon> Academic Strengths
- </div>
- </v-expansion-panel-title>
- <v-expansion-panel-text class="pt-4 bg-background">
- <div v-for="(str, i) in selectedStudent.strengths" :key="i" class="mb-4 border-bottom-light pb-4 last:border-none last:pb-0">
- <div class="text-body-2 font-weight-bold">{{ str.title }}</div>
- <div class="text-caption text-medium-emphasis">{{ str.detail }}</div>
- </div>
- </v-expansion-panel-text>
- </v-expansion-panel>
- </v-expansion-panels>
- <div v-else class="d-flex justify-center align-center py-4">
- <v-progress-circular indeterminate color="primary" size="24"></v-progress-circular>
- </div>
  </div>
  </v-card>
  </v-dialog>

@@ -673,6 +673,10 @@ class AnalysisController extends Controller
             'class_mean' => $classMean,
             'exam_name' => $examName,
             'date_recorded' => $dateRecorded,
+            'ai_report' => $latestClassAnalysis ? [
+                'overview' => $latestClassAnalysis->class_overview,
+                'suggestions' => $latestClassAnalysis->suggestions,
+            ] : null,
         ]);
     }
 

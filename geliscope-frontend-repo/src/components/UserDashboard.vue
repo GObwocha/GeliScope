@@ -133,8 +133,6 @@ const chartMetrics = computed(() => {
  return { width, height, padTop, padBottom, padLeft, padRight, plotWidth, plotHeight, bottomY, points, linePath, areaPath, gridLines }
 })
 
-// (Removed old recentExams ref, now using computed from examStore)
-
 // MongoDB Unstructured AI Diagnostics (`exam_analyses` & `student_cognitive_profiles`)
 const fetchingCognitiveProfile = ref(false)
 const bloomsMastery = ref({
@@ -247,6 +245,7 @@ const teacherStreamSummary = ref({
 
 const latestExamMean = ref(null)
 const aiReportDialog = ref(false)
+const teacherAiReport = ref(null)
 
 const analysisDialog = ref(false)
 const fetchingAnalysis = ref(false)
@@ -298,9 +297,15 @@ const fetchTeacherDashboard = async () => {
       exam_name: response.data.exam_name,
       date_recorded: response.data.date_recorded
     }
+    
+    teacherAiReport.value = response.data.ai_report
   } catch (error) {
     console.error('Failed to fetch teacher dashboard', error)
   }
+}
+
+const closeModal = () => {
+ aiReportDialog.value = false
 }
 
 watch(activeRole, async (newRole) => {
@@ -942,20 +947,20 @@ onMounted(() => {
  <v-card class="pa-6 rounded-3xl border bg-surface h-100 " elevation="4">
  <div class="d-flex justify-space-between align-center mb-4">
  <h2 class="text-h5 font-weight-black d-flex align-center">
- <v-icon color="secondary" class="mr-2">mdi-chart-bar</v-icon>
+ <v-icon color="primary" class="mr-2">mdi-chart-bar</v-icon>
  Stream Bottleneck Overview
  </h2>
- <v-chip color="secondary" variant="flat" size="small" class="font-weight-bold ">{{ teacherStreamSummary.class_name }}</v-chip>
+ <v-chip color="primary" variant="flat" size="small" class="font-weight-bold ">{{ teacherStreamSummary.class_name }}</v-chip>
  </div>
  <div class="mb-6">
- <div class="text-h3 font-weight-black text-secondary">{{ teacherStreamSummary.stream_average }}</div>
+ <div class="text-h3 font-weight-black text-primary">{{ teacherStreamSummary.stream_average }}</div>
  <div class="text-caption text-medium-emphasis">Average stream mastery across your assigned classes</div>
  </div>
  <div class="pa-4 rounded-2xl bg-surface border mb-6">
  <div class="text-caption font-weight-bold text-error uppercase mb-1">Top Pedagogical Bottleneck</div>
  <div class="font-weight-bold text-body-1">{{ teacherStreamSummary.top_error }}</div>
  </div>
- <v-btn color="secondary" block size="large" to="/dashboard/class-diagnosis" prepend-icon="mdi-google-circles-extended" class="font-weight-bold rounded-xl">
+ <v-btn color="primary" block size="large" to="/dashboard/class-diagnosis" prepend-icon="mdi-google-circles-extended" class="font-weight-bold rounded-xl">
  Open Class Diagnosis
  </v-btn>
  </v-card>
@@ -1007,7 +1012,7 @@ onMounted(() => {
  </div>
  
  <div class="d-flex justify-end">
- <v-btn color="secondary" size="large" prepend-icon="mdi-robot-outline" class="font-weight-bold rounded-xl" @click="aiReportDialog = true">
+ <v-btn color="primary" size="large" prepend-icon="mdi-robot-outline" class="font-weight-bold rounded-xl" @click="aiReportDialog = true">
  AI Report
  </v-btn>
  </div>
@@ -1015,8 +1020,9 @@ onMounted(() => {
  </div>
 
  <!-- AI Report Dialog -->
- <v-dialog v-model="aiReportDialog" max-width="600">
+ <v-dialog v-model="aiReportDialog" max-width="700">
  <v-card class="rounded-3xl border bg-surface pa-2">
+  <v-btn icon="mdi-close" variant="text" density="compact" size="large" @click="closeModal"></v-btn>
  <v-card-title class="text-h5 font-weight-black d-flex align-center mt-4 mx-4">
  <v-icon color="primary" class="mr-2">mdi-robot-outline</v-icon> AI Round Summary
  </v-card-title>
@@ -1024,10 +1030,26 @@ onMounted(() => {
  <div class="mb-4 text-body-1">
  This feature summarizes the performance of all your assigned classes for the round: <strong>{{ latestExamMean?.exam_name }}</strong>.
  </div>
- <div class="pa-4 rounded-xl bg-surface-light border mb-4">
- <div class="font-weight-bold mb-2"><v-icon size="small" class="mr-2" color="success">mdi-check-circle</v-icon>Overall Impression</div>
- The classes showed strong foundational knowledge, averaging {{ latestExamMean?.mean }}%. However, advanced application questions remain a significant bottleneck for a large portion of the cohort.
+ 
+ <div v-if="teacherAiReport">
+   <div class="pa-4 rounded-xl bg-surface-light border mb-4">
+     <div class="font-weight-bold mb-2"><v-icon size="small" class="mr-2" color="success">mdi-check-circle</v-icon>Overall Class Impression</div>
+     <div class="mb-2"><strong>Average Mastery:</strong> {{ teacherAiReport.overview.class_average_percentage || latestExamMean?.mean }}%</div>
+     <div class="mb-2"><strong>Highest Performing Area:</strong> <v-chip size="small" color="success" variant="flat">{{ teacherAiReport.overview.highest_performing_area }}</v-chip></div>
+     <div class="mb-4"><strong>Lowest Performing Area:</strong> <v-chip size="small" color="error" variant="flat">{{ teacherAiReport.overview.lowest_performing_area }}</v-chip></div>
+     
+     <div class="font-weight-bold mt-4 mb-2"><v-icon size="small" class="mr-2" color="warning">mdi-lightbulb-on</v-icon>Actionable Pedagogical Suggestions</div>
+     <ul class="pl-4">
+       <li v-for="(suggestion, i) in teacherAiReport.suggestions" :key="i" class="mb-1 text-body-2">{{ suggestion }}</li>
+     </ul>
+   </div>
  </div>
+ <div v-else class="pa-4 rounded-xl bg-surface-light border mb-4 text-center">
+   <v-icon size="32" color="medium-emphasis" class="mb-2">mdi-alert-circle-outline</v-icon>
+   <div>No AI diagnosis has been generated for this round yet.</div>
+   <div class="text-caption mt-1">Generate a class diagnosis first.</div>
+ </div>
+
  <div class="text-body-2 text-medium-emphasis">
  To view specific, granular AI analysis per class and subject, please navigate to the <strong>Class Diagnosis</strong> section.
  </div>

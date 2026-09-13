@@ -653,7 +653,7 @@ const removeFile = (index) => {
      <v-icon color="success" class="mr-2">mdi-star-circle-outline</v-icon> Extrapolated Skills & Strengths
    </h4>
    <div class="d-flex flex-wrap gap-2">
-     <v-chip v-for="(skill, idx) in analysisResult.extrapolated_skills" :key="idx" color="primary" variant="flat" size="small">
+     <v-chip v-for="(skill, idx) in analysisResult.extrapolated_skills" :key="idx" color="primary" variant="flat" size="small" class="ma-3">
        {{ skill }}
      </v-chip>
    </div>
