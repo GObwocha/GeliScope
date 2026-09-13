@@ -534,7 +534,7 @@ const removeFile = (index) => {
                   color="primary"
                   size="large"
                   block
-                  v-if="currentUser.role == 'student'"
+                  v-if="currentUser.role == 'student' || currentUser.role == 'parent'"
                   :loading="analyzing"
                   prepend-icon="mdi-brain"
                   elevation="4"
