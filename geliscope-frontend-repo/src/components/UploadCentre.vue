@@ -86,8 +86,11 @@ const submitCreateExamRound = async () => {
   
   creatingExamRound.value = true
   try {
-    const response = await axios.post('/api/v1/exam-rounds', examRoundForm.value)
-    alert(response.data.data)
+    const payload = { ...examRoundForm.value }
+    if (!payload.start_date) delete payload.start_date
+    if (!payload.end_date) delete payload.end_date
+      
+    const response = await axios.post('/api/v1/exam-rounds', payload)
     examRounds.value.unshift(response.data.data) // Add to the dropdown options
     examForm.value.exam_round_id = response.data.data.id // Auto-select it
     createExamRoundDialog.value = false
@@ -97,7 +100,7 @@ const submitCreateExamRound = async () => {
     examRoundForm.value = { name: '', term: 1, academic_year: '2025', start_date: '', end_date: '' }
   } catch (e) {
     console.error(e)
-    alert('Failed to create Exam Round.')
+    alert('Failed to create Exam Round: ' + (e.response?.data?.message || e.message))
   } finally {
     creatingExamRound.value = false
   }
