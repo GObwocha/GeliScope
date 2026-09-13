@@ -248,6 +248,35 @@ const teacherStreamSummary = ref({
 const latestExamMean = ref(null)
 const aiReportDialog = ref(false)
 
+const analysisDialog = ref(false)
+const fetchingAnalysis = ref(false)
+const analysisResult = ref(null)
+
+const openAnalysisDialog = async () => {
+  if (!activeExamPoint.value) return
+  analysisResult.value = null
+  analysisDialog.value = true
+  fetchingAnalysis.value = true
+  
+  try {
+    const studentId = userProfile.value.student.id
+    const examId = activeExamPoint.value.id
+    const response = await axios.get(`/api/v1/analysis/exam/${studentId}/${examId}`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+    analysisResult.value = response.data
+  } catch (err) {
+    console.error('Failed to fetch analysis', err)
+    if (err.response && err.response.status === 404) {
+      analysisResult.value = { error: 'No AI Analysis exists yet for this exam.' }
+    } else {
+      analysisResult.value = { error: 'Failed to fetch analysis.' }
+    }
+  } finally {
+    fetchingAnalysis.value = false
+  }
+}
+
 const fetchTeacherDashboard = async () => {
   if (activeRole.value !== 'teacher' || !userProfile.value.teacher?.id) return
   
@@ -417,7 +446,7 @@ onMounted(() => {
  <v-row>
  <!-- Career Suggestions -->
  <v-col cols="12" lg="4">
- <v-card class="pa-6 border  h-100 d-flex flex-column " elevation="4">
+ <v-card class="pa-6 border h-100 d-flex flex-column " elevation="4">
  <div class="mb-6">
  <div class="d-flex align-center justify-space-between mb-4">
  <v-avatar color="primary" size="48" variant="tonal">
@@ -695,8 +724,8 @@ onMounted(() => {
  <span class="text-body-2 font-weight-bold text-success ml-1">(+{{ (activeExamPoint.avg - activeExamPoint.stream_avg).toFixed(1) }}% vs stream)</span>
  </div>
  </div>
- <v-btn color="primary" variant="tonal" to="/dashboard/upload-centre" prepend-icon="mdi-file-find-outline" class="rounded-xl font-weight-bold align-self-stretch align-self-md-center ma-3" height="48">
- View AI OCR Script
+ <v-btn color="primary" variant="tonal" @click="openAnalysisDialog" prepend-icon="mdi-file-find-outline" class="rounded-xl font-weight-bold align-self-stretch align-self-md-center ma-3" height="48">
+ View AI OCR Analysis
  </v-btn>
  </div>
  </div>
@@ -732,8 +761,120 @@ onMounted(() => {
             <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click="deleteTodo(step.id)"></v-btn>
           </div>
         </div>
-      </v-card>
-   </div>
+        </v-card>
+
+        <!-- AI OCR Analysis Dialog -->
+        <v-dialog v-model="analysisDialog" max-width="800" scrollable>
+          <v-card class="rounded-xl bg-surface">
+            <v-card-title class="d-flex justify-space-between align-center border-b pa-4">
+              <span class="text-h6 font-weight-bold d-flex align-center">
+                <v-icon color="primary" class="mr-2">mdi-file-find-outline</v-icon>
+                AI OCR Analysis
+              </span>
+              <v-btn icon="mdi-close" variant="text" @click="analysisDialog = false"></v-btn>
+            </v-card-title>
+            <v-card-text class="pa-4 pa-sm-6 bg-surface-light">
+              <div v-if="fetchingAnalysis" class="d-flex flex-column justify-center align-center py-10">
+                <v-progress-circular indeterminate color="primary" size="48" class="mb-4"></v-progress-circular>
+                <span class="text-medium-emphasis font-weight-medium">Fetching deep cognitive analysis...</span>
+              </div>
+              <div v-else-if="analysisResult && analysisResult.error" class="text-center py-10">
+                <v-icon size="64" color="warning" class="mb-4">mdi-alert-circle-outline</v-icon>
+                <div class="text-h6 font-weight-medium text-medium-emphasis">{{ analysisResult.error }}</div>
+              </div>
+              <div v-else-if="analysisResult">
+                <div class="d-flex justify-space-between align-start mb-6">
+                  <div>
+                    <v-chip color="success" size="small" variant="flat" prepend-icon="mdi-check-decagram" class="mb-2 font-weight-bold">
+                      VISION ANALYSIS COMPLETE
+                    </v-chip>
+                    <h3 class="text-h5 font-weight-bold">Diagnostic Evaluation & Bloom's Breakdown</h3>
+                    <p class="text-caption text-medium-emphasis">Generated for Student ID #{{ analysisResult.student_id }} &bull; Exam ID #{{ analysisResult.exam_id }}</p>
+                  </div>
+                </div>
+
+                <v-alert color="primary" variant="tonal" icon="mdi-lightbulb-on" border="start" class="mb-6 rounded-lg">
+                  <div class="font-weight-bold mb-1">AI Executive Summary</div>
+                  <div class="text-body-2" style="line-height: 1.6;">{{ analysisResult.overall_summary }}</div>
+                </v-alert>
+
+                <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center mt-6">
+                  <v-icon color="secondary" class="mr-2">mdi-chart-bubble</v-icon> Bloom's Taxonomy Cognitive Mastery (%)
+                </h4>
+                <v-row class="mb-6">
+                  <v-col cols="12" sm="6" v-for="(val, key) in analysisResult.blooms_taxonomy" :key="key">
+                    <div class="d-flex justify-space-between text-caption font-weight-bold mb-1 text-capitalize">
+                      <span>{{ key }}</span>
+                      <span :class="val >= 80 ? 'text-success' : (val >= 60 ? 'text-warning' : 'text-error')">{{ val }}%</span>
+                    </div>
+                    <v-progress-linear
+                      :model-value="val"
+                      :color="val >= 80 ? 'success' : (val >= 60 ? 'warning' : 'error')"
+                      height="8"
+                      rounded
+                    ></v-progress-linear>
+                  </v-col>
+                </v-row>
+
+                <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center mt-6">
+                  <v-icon color="accent" class="mr-2">mdi-format-list-checks</v-icon> Question-Level Diagnostics
+                </h4>
+                <div class="border rounded-xl overflow-hidden mb-6">
+                  <v-table class="bg-surface">
+                    <thead class="bg-surface-light">
+                      <tr>
+                        <th class="font-weight-bold text-left">Q#</th>
+                        <th class="text-left">Topic</th>
+                        <th class="text-left">Score</th>
+                        <th class="text-left">Status</th>
+                        <th class="text-left">Comment</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="q in analysisResult.question_breakdown" :key="q.q">
+                        <td class="font-weight-bold">Q{{ q.q }}</td>
+                        <td><v-chip size="x-small" variant="outlined">{{ q.topic }}</v-chip></td>
+                        <td class="font-weight-black text-primary">{{ q.score }}/{{ q.max }}</td>
+                        <td>
+                          <v-chip size="x-small" :color="q.status === 'Perfect' ? 'success' : 'error'" variant="flat">
+                            {{ q.status }}
+                          </v-chip>
+                        </td>
+                        <td class="text-caption text-medium-emphasis">{{ q.comment }}</td>
+                      </tr>
+                    </tbody>
+                  </v-table>
+                </div>
+
+                <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center mt-6">
+                  <v-icon color="warning" class="mr-2">mdi-clipboard-list</v-icon> Actionable Revision Steps
+                </h4>
+                <v-list class="bg-surface rounded-xl border pa-0 mb-6">
+                  <v-list-item v-for="(sug, idx) in analysisResult.suggestions" :key="idx" class="pa-3 border-b">
+                    <template v-slot:prepend>
+                      <v-avatar color="warning" size="24" class="mr-3 text-caption font-weight-bold">
+                        {{ idx + 1 }}
+                      </v-avatar>
+                    </template>
+                    <v-list-item-title class="text-body-2 font-weight-medium text-wrap" style="line-height: 1.5;">{{ sug }}</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+
+                <div v-if="analysisResult.extrapolated_skills && analysisResult.extrapolated_skills.length > 0" class="mt-6 mb-2">
+                  <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
+                    <v-icon color="success" class="mr-2">mdi-star-circle-outline</v-icon> Extrapolated Skills & Strengths
+                  </h4>
+                  <div class="d-flex flex-wrap gap-2">
+                    <v-chip v-for="(skill, idx) in analysisResult.extrapolated_skills" :key="idx" color="primary" variant="flat" size="small">
+                      {{ skill }}
+                    </v-chip>
+                  </div>
+                </div>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-dialog>
+     </div>
   
   <!-- PARENT DASHBOARD WORKSPACE -->
  <div v-else-if="activeRole === 'parent'">
