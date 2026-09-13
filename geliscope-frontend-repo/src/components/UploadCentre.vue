@@ -87,6 +87,7 @@ const submitCreateExamRound = async () => {
   creatingExamRound.value = true
   try {
     const response = await axios.post('/api/v1/exam-rounds', examRoundForm.value)
+    alert(response.data.data)
     examRounds.value.unshift(response.data.data) // Add to the dropdown options
     examForm.value.exam_round_id = response.data.data.id // Auto-select it
     createExamRoundDialog.value = false
