@@ -301,7 +301,8 @@ const saveToMongoDB = async () => {
  blooms_taxonomy: analysisResult.value.blooms_taxonomy,
  suggestions: analysisResult.value.suggestions,
  overall_summary: analysisResult.value.overall_summary,
- question_breakdown: analysisResult.value.question_breakdown
+ question_breakdown: analysisResult.value.question_breakdown,
+ extrapolated_skills: analysisResult.value.extrapolated_skills
  }
  
  await axios.post('/api/v1/analysis/exam', payload)
@@ -646,6 +647,17 @@ const removeFile = (index) => {
  <v-list-item-title class="text-body-2 font-weight-medium text-wrap" >{{ sug }}</v-list-item-title>
  </v-list-item>
  </v-list>
+
+ <div v-if="analysisResult.extrapolated_skills && analysisResult.extrapolated_skills.length > 0" class="mt-6">
+   <h4 class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
+     <v-icon color="success" class="mr-2">mdi-star-circle-outline</v-icon> Extrapolated Skills & Strengths
+   </h4>
+   <div class="d-flex flex-wrap gap-2">
+     <v-chip v-for="(skill, idx) in analysisResult.extrapolated_skills" :key="idx" color="primary" variant="flat" size="small">
+       {{ skill }}
+     </v-chip>
+   </div>
+ </div>
  </v-card>
       </v-col>
     </v-row>
