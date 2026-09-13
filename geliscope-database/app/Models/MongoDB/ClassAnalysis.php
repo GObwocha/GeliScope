@@ -62,9 +62,9 @@ class ClassAnalysis extends Model
     protected function casts(): array
     {
         return [
-            'question_analyses' => ,
-            'class_overview' => ,
-            'suggestions' => ,
+            
+            
+            
             'generated_at' => 'datetime',
         ];
     }

@@ -175,41 +175,6 @@ class AnalysisController extends Controller
         return response()->json($analysis, 201);
     }
 
-    // /**
-    //  * Get student skill profile.
-    //  */
-    // public function skillProfile($studentId)
-    // {
-    //     $profile = StudentSkillProfile::where('student_id', (int) $studentId)->first();
-
-    //     if (!$profile) {
-    //         return response()->json(['message' => 'Skill profile not found'], 404);
-    //     }
-
-    //     return response()->json($profile);
-    // }
-
-    // /**
-    //  * Store or update student skill profile.
-    //  */
-    // public function storeSkillProfile(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'student_id' => 'required|integer',
-    //         'skill_sets' => 'required|array',
-    //         'suggested_careers' => 'nullable|array',
-    //     ]);
-
-    //     $validated['last_updated'] = Carbon::now();
-
-    //     $profile = StudentSkillProfile::updateOrCreate(
-    //         ['student_id' => (int) $validated['student_id']],
-    //         $validated
-    //     );
-
-    //     return response()->json($profile, 201);
-    // }
-
     /**
      * Get student cognitive profile (Bloom's Taxonomy averages).
      */

@@ -154,14 +154,16 @@ const fetchCognitiveProfile = async () => {
    const response = await axios.get(`/api/v1/analysis/cognitive-profile/${userProfile.value.student.id}`, {
      headers: { Authorization: `Bearer ${authStore.token}` }
    })
-   if (response.data && response.data.blooms_taxonomy) {
-     const avgs = response.data.blooms_taxonomy
+   if (response.data && response.data.average_blooms_taxonomy
+) {
+     const avgs = response.data.average_blooms_taxonomy
+
      bloomsMastery.value = {
-       remembering: avgs.remembering.score || 0,
-       understanding: avgs.understanding.score || 0,
-       applying: avgs.applying.score || 0,
-       analyzing: avgs.analyzing.score || 0,
-       evaluating: avgs.evaluating.score || 0,
+       remembering: avgs.remembering || 0,
+       understanding: avgs.understanding || 0,
+       applying: avgs.applying || 0,
+       analyzing: avgs.analyzing || 0,
+       evaluating: avgs.evaluating || 0,
        last_analyzed: new Date(response.data.last_updated).toLocaleDateString()
      }
    }

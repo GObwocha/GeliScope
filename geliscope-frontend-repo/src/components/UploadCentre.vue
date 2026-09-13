@@ -105,15 +105,6 @@ const submitCreateExamRound = async () => {
 const isDragging = ref(false);
 
 onMounted(async () => {
-  const cachedAnalysis = localStorage.getItem('unsaved_analysis')
-  if (cachedAnalysis) {
-    try {
-      analysisResult.value = JSON.parse(cachedAnalysis)
-    } catch (e) {
-      console.error('Error parsing cached analysis', e)
-    }
-  }
-
   loadingData.value = true
   try {
     const examResponse = await axios.get('/api/v1/exams')
@@ -169,6 +160,17 @@ onMounted(async () => {
 
 watch([selectedStudent, selectedExam], async ([newStudent, newExam]) => {
   if (newStudent && newExam) {
+    const cachedString = localStorage.getItem('unsaved_analysis')
+    if (cachedString) {
+      try {
+        const cached = JSON.parse(cachedString)
+        if (cached.student_id == newStudent && cached.exam_id == newExam) {
+          analysisResult.value = cached
+          return // Show the cached unsaved analysis instead of fetching
+        }
+      } catch (e) {}
+    }
+
     try {
       loadingData.value = true
       // Clear previous analysis to prevent showing old data for a new student
