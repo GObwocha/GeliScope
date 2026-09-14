@@ -158,7 +158,13 @@ const classChartOptions = {
 const fetchExamHistory = async () => {
   try {
     loadingHistory.value = true
-    const studentId = authStore.currentUser?.student?.id
+    let studentId = null;
+    if (activeRole.value === 'student') {
+      studentId = authStore.currentUser?.student?.id
+    } else if (activeRole.value === 'parent') {
+      studentId = selectedParentStudent.value
+    }
+    
     if (!studentId) return
 
     let url = `/api/v1/students/${studentId}/exam-results`
@@ -245,6 +251,7 @@ const fetchChildTeachers = async () => {
 
 watch(selectedParentStudent, async (newVal) => {
   if (newVal) {
+    await fetchExamHistory()
     await loadTodos()
     await fetchChildTeachers()
   }
