@@ -1075,17 +1075,17 @@ onMounted(() => {
  </v-card>
  </v-dialog>
 
- <!-- MySQL Relational Assessment Table (Shown strictly for Parent and Teacher workspaces) -->
- <v-card v-if="activeRole !== 'student'" class="pa-4 pa-md-6 rounded-3xl border bg-surface mt-8 " elevation="4">
- <div class="d-flex flex-column flex-md-row justify-space-between align-md-center mb-4">
- <div class="mb-3 mb-md-0">
- <h2 class="text-h5 font-weight-black d-flex align-center" style="word-break: break-word;">
- <v-icon color="primary" class="mr-2">mdi-table-check</v-icon>
- Verified Assessment Records
- </h2>
- <p class="text-caption text-medium-emphasis mb-0">Structured ACID grade</p>
- </div>
- <v-btn v-if="activeRole !== 'parent'" color="primary" variant="tonal" to="/dashboard/leaderboard" class="align-self-start align-self-md-center">View Academic Leaderboard</v-btn>
+  <!-- MySQL Relational Assessment Table (Shown strictly for Teacher workspace) -->
+  <v-card v-if="activeRole === 'teacher'" class="pa-4 pa-md-6 rounded-3xl border bg-surface mt-8 " elevation="4">
+  <div class="d-flex flex-column flex-md-row justify-space-between align-md-center mb-4">
+  <div class="mb-3 mb-md-0">
+  <h2 class="text-h5 font-weight-black d-flex align-center" style="word-break: break-word;">
+  <v-icon color="primary" class="mr-2">mdi-table-check</v-icon>
+  Verified Assessment Records
+  </h2>
+  <p class="text-caption text-medium-emphasis mb-0">Structured ACID grade</p>
+  </div>
+  <v-btn color="primary" variant="tonal" to="/dashboard/leaderboard" class="align-self-start align-self-md-center">View Academic Leaderboard</v-btn>
  </div>
 
  <div class="overflow-x-auto">
