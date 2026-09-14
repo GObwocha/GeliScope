@@ -97,7 +97,7 @@ const submitCreateExamRound = async () => {
     alert('Exam Round created successfully!')
     
     // Reset form
-    examRoundForm.value = { name: '', term: 1, academic_year: '2025', start_date: '', end_date: '' }
+    examRoundForm.value = { name: '', term: 1, academic_year: '', start_date: '', end_date: '' }
   } catch (e) {
     console.error(e)
     alert('Failed to create Exam Round: ' + (e.response?.data?.message || e.message))
