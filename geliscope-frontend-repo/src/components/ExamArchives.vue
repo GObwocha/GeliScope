@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
@@ -49,9 +49,17 @@ const loadDocument = async (archiveId) => {
  headers: { Authorization: `Bearer ${authStore.token}` }
  })
  
- const { mime_type, file_data } = response.data
- documentMime.value = mime_type
- documentUrl.value = `data:${mime_type};base64,${file_data}`
+  const { mime_type, file_data } = response.data
+  documentMime.value = mime_type
+  
+  // Convert base64 to Blob URL to bypass browser data URI iframe restrictions
+  const base64Response = await fetch(`data:${mime_type};base64,${file_data}`)
+  const blob = await base64Response.blob()
+  
+  if (documentUrl.value && documentUrl.value.startsWith('blob:')) {
+    URL.revokeObjectURL(documentUrl.value)
+  }
+  documentUrl.value = URL.createObjectURL(blob)
  } catch (error) {
  console.error('Error loading document:', error)
  } finally {
@@ -70,8 +78,11 @@ onMounted(async () => {
  }
 })
 
-
-
+onUnmounted(() => {
+  if (documentUrl.value && documentUrl.value.startsWith('blob:')) {
+    URL.revokeObjectURL(documentUrl.value)
+  }
+})
 
 </script>
 
